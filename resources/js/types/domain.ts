@@ -40,7 +40,7 @@ export type Shift = {
 
 export type StatusPengajuan =
     'pending' | 'disetujui' | 'ditolak' | 'dibatalkan';
-export type StatusApproval = 'pending' | 'disetujui' | 'ditolak';
+export type StatusApproval = 'pending' | 'disetujui' | 'ditolak' | 'dibatalkan';
 
 export type SaldoCuti = {
     id: number;

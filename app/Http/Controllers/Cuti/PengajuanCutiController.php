@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Cuti;
 
-use App\Enums\StatusPengajuan;
 use App\Exceptions\SaldoCutiTidakCukupException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cuti\StorePengajuanCutiRequest;
@@ -85,11 +84,11 @@ class PengajuanCutiController extends Controller
         ]);
     }
 
-    public function batalkan(Request $request, PengajuanCuti $pengajuan): RedirectResponse
+    public function batalkan(Request $request, PengajuanCuti $pengajuan, PengajuanCutiService $service): RedirectResponse
     {
         $this->authorize('cancel', $pengajuan);
 
-        $pengajuan->update(['status' => StatusPengajuan::Dibatalkan]);
+        $service->batalkan($pengajuan);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Pengajuan cuti berhasil dibatalkan.']);
 

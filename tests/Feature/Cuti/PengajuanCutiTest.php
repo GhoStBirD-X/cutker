@@ -311,6 +311,53 @@ class PengajuanCutiTest extends TestCase
         $this->assertDatabaseCount('pengajuan_cutis', 0);
     }
 
+    public function test_karyawan_can_cancel_own_pending_leave_request_and_its_pending_approval_is_cancelled_too(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $kepalaBagian = $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id])->karyawan;
+
+        $jenisCuti = JenisCuti::factory()->create();
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(7)->toDateString(),
+            'tanggal_selesai' => now()->addDays(8)->toDateString(),
+            'alasan' => 'Acara keluarga',
+        ]);
+
+        $pengajuan = PengajuanCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail();
+
+        $response = $this->actingAs($karyawan->user)->patch(route('cuti.batalkan', $pengajuan));
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('pengajuan_cutis', [
+            'id' => $pengajuan->id,
+            'status' => 'dibatalkan',
+        ]);
+
+        $this->assertDatabaseHas('approvals', [
+            'pengajuan_cuti_id' => $pengajuan->id,
+            'level' => 1,
+            'status' => 'dibatalkan',
+        ]);
+
+        // Approver tidak lagi bisa memproses approval yang sudah dibatalkan.
+        $approval = $pengajuan->approvals()->firstOrFail();
+        $approveResponse = $this->actingAs($kepalaBagian->user)->post(route('approval.approve', $approval), [
+            'catatan' => null,
+        ]);
+        $approveResponse->assertForbidden();
+    }
+
     public function test_leave_request_is_rejected_when_it_conflicts_with_shift_schedule(): void
     {
         $karyawan = $this->karyawanUser('karyawan')->karyawan;

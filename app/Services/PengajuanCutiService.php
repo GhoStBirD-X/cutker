@@ -79,6 +79,22 @@ class PengajuanCutiService
     }
 
     /**
+     * Karyawan membatalkan pengajuannya sendiri. Approval level yang masih
+     * pending ikut ditandai dibatalkan supaya tidak lagi muncul di daftar
+     * approval milik approver-nya dan tidak bisa diproses lebih lanjut.
+     */
+    public function batalkan(PengajuanCuti $pengajuanCuti): void
+    {
+        DB::transaction(function () use ($pengajuanCuti) {
+            $pengajuanCuti->update(['status' => StatusPengajuan::Dibatalkan]);
+
+            $pengajuanCuti->approvals()
+                ->where('status', StatusApproval::Pending)
+                ->update(['status' => StatusApproval::Dibatalkan]);
+        });
+    }
+
+    /**
      * Kepala Bagian ditentukan dari karyawan lain di departemen yang sama
      * yang memegang role "kepala_bagian".
      */
