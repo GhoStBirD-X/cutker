@@ -1,0 +1,216 @@
+<?php
+
+namespace App\Services;
+
+use App\Enums\StatusKaryawan;
+use App\Models\JenisCuti;
+use App\Models\Karyawan;
+use App\Models\SaldoCuti;
+use Illuminate\Support\Carbon;
+
+class SaldoCutiService
+{
+    /**
+     * Generate SaldoCuti baru untuk setiap karyawan aktif & setiap jenis
+     * cuti bertipe kalender (masa_kerja_minimal_bulan null) pada tahun
+     * tertentu, berdasarkan kuota_default jenis cuti. Jenis cuti bertipe
+     * periode (Cuti Tahunan, Cuti Besar) tidak disentuh di sini — siklusnya
+     * ditangani PeriodeCutiService berdasarkan tanggal_masuk tiap karyawan.
+     * Karyawan yang sudah punya saldo di tahun tersebut dilewati (idempotent).
+     */
+    public function resetTahunan(int $tahun): int
+    {
+        $dibuat = 0;
+
+        foreach (JenisCuti::query()->whereNull('masa_kerja_minimal_bulan')->get() as $jenisCuti) {
+            $dibuat += $this->generateUntukJenisCuti($jenisCuti, $tahun);
+        }
+
+        return $dibuat;
+    }
+
+    /**
+     * Generate SaldoCuti untuk satu jenis cuti kalender ke semua karyawan
+     * aktif pada tahun tertentu. Dipakai saat jenis cuti baru dibuat lewat
+     * Master Data di tengah tahun, supaya karyawan langsung punya saldo
+     * tanpa menunggu reset tahunan berikutnya. Idempotent seperti
+     * resetTahunan(). Baris tahun sebelumnya (bila ada) ditutup agar query
+     * "saldo aktif" tetap konsisten.
+     */
+    public function generateUntukJenisCuti(JenisCuti $jenisCuti, int $tahun): int
+    {
+        $dibuat = 0;
+
+        Karyawan::query()
+            ->where('status', StatusKaryawan::Aktif)
+            ->chunkById(100, function ($karyawans) use ($jenisCuti, $tahun, &$dibuat) {
+                foreach ($karyawans as $karyawan) {
+                    $sudahAda = SaldoCuti::query()
+                        ->where('karyawan_id', $karyawan->id)
+                        ->where('jenis_cuti_id', $jenisCuti->id)
+                        ->where('tahun', $tahun)
+                        ->exists();
+
+                    if ($sudahAda) {
+                        continue;
+                    }
+
+                    SaldoCuti::query()
+                        ->where('karyawan_id', $karyawan->id)
+                        ->where('jenis_cuti_id', $jenisCuti->id)
+                        ->aktif()
+                        ->update(['ditutup_pada' => now()]);
+
+                    SaldoCuti::query()->create([
+                        'karyawan_id' => $karyawan->id,
+                        'jenis_cuti_id' => $jenisCuti->id,
+                        'tahun' => $tahun,
+                        'kuota' => $jenisCuti->kuota_default,
+                        'terpakai' => 0,
+                        'sisa' => $jenisCuti->kuota_default,
+                    ]);
+
+                    $dibuat++;
+                }
+            });
+
+        return $dibuat;
+    }
+
+    /**
+     * Generate periode ke-1 (berbasis tanggal_masuk masing-masing) untuk
+     * satu jenis cuti bertipe periode ke semua karyawan aktif yang belum
+     * punya baris aktif untuk jenis cuti tsb. Dipakai saat jenis cuti
+     * bertipe periode baru dibuat lewat Master Data di tengah jalan.
+     */
+    public function generatePeriodeAwalUntukJenisCuti(JenisCuti $jenisCuti): int
+    {
+        $dibuat = 0;
+
+        Karyawan::query()
+            ->where('status', StatusKaryawan::Aktif)
+            ->chunkById(100, function ($karyawans) use ($jenisCuti, &$dibuat) {
+                foreach ($karyawans as $karyawan) {
+                    $mulai = $karyawan->tanggal_masuk->copy();
+                    $selesai = $mulai->copy()->addMonths($jenisCuti->masa_kerja_minimal_bulan)->subDay();
+
+                    $saldo = SaldoCuti::query()->firstOrCreate(
+                        ['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $jenisCuti->id, 'periode_ke' => 1],
+                        [
+                            'tahun' => $mulai->year,
+                            'periode_mulai' => $mulai,
+                            'periode_selesai' => $selesai,
+                            'kuota' => $jenisCuti->kuota_default,
+                            'terpakai' => 0,
+                            'sisa' => $jenisCuti->kuota_default,
+                        ],
+                    );
+
+                    if ($saldo->wasRecentlyCreated) {
+                        $dibuat++;
+                    }
+                }
+            });
+
+        return $dibuat;
+    }
+
+    /**
+     * Bootstrap saldo cuti awal untuk karyawan yang baru dibuat. Jenis cuti
+     * bertipe periode (masa_kerja_minimal_bulan terisi) langsung mendapat
+     * periode ke-1 mengikuti tanggal_masuk; jenis cuti bertipe kalender
+     * mendapat baris tahun berjalan seperti karyawan lama.
+     */
+    public function bootstrapUntukKaryawanBaru(Karyawan $karyawan): void
+    {
+        foreach (JenisCuti::all() as $jenisCuti) {
+            if ($jenisCuti->masa_kerja_minimal_bulan !== null) {
+                $mulai = $karyawan->tanggal_masuk->copy();
+                $selesai = $mulai->copy()->addMonths($jenisCuti->masa_kerja_minimal_bulan)->subDay();
+
+                SaldoCuti::query()->firstOrCreate(
+                    ['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $jenisCuti->id, 'periode_ke' => 1],
+                    [
+                        'tahun' => $mulai->year,
+                        'periode_mulai' => $mulai,
+                        'periode_selesai' => $selesai,
+                        'kuota' => $jenisCuti->kuota_default,
+                        'terpakai' => 0,
+                        'sisa' => $jenisCuti->kuota_default,
+                    ],
+                );
+
+                continue;
+            }
+
+            SaldoCuti::query()->firstOrCreate(
+                ['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $jenisCuti->id, 'tahun' => (int) now()->year],
+                ['kuota' => $jenisCuti->kuota_default, 'terpakai' => 0, 'sisa' => $jenisCuti->kuota_default],
+            );
+        }
+    }
+
+    /**
+     * Baris SaldoCuti yang sedang berlaku untuk kombinasi karyawan+jenis
+     * cuti tertentu, baik tipe kalender maupun tipe periode. Menggantikan
+     * lookup lama berbasis `where('tahun', ...)` yang tidak berlaku lagi
+     * untuk jenis cuti bertipe periode.
+     */
+    public function untukPeriodeAktif(Karyawan $karyawan, JenisCuti $jenisCuti): ?SaldoCuti
+    {
+        return SaldoCuti::query()
+            ->where('karyawan_id', $karyawan->id)
+            ->where('jenis_cuti_id', $jenisCuti->id)
+            ->aktif()
+            ->latest('id')
+            ->first();
+    }
+
+    /**
+     * HRD membuat baris saldo baru secara manual untuk kombinasi karyawan +
+     * jenis cuti yang belum punya baris aktif — dipakai saat migrasi data
+     * karyawan lama ke sistem ini, atau kasus lain di luar alur otomatis.
+     *
+     * @param  array{karyawan_id: int, jenis_cuti_id: int, tahun?: int|null, periode_ke?: int|null, periode_mulai?: string|null, periode_selesai?: string|null, kuota: int, terpakai: int, sisa: int, catatan: string}  $data
+     */
+    public function buatManual(array $data, Karyawan $olehSiapa): SaldoCuti
+    {
+        return SaldoCuti::query()->create([
+            'karyawan_id' => $data['karyawan_id'],
+            'jenis_cuti_id' => $data['jenis_cuti_id'],
+            'tahun' => $data['tahun'] ?? Carbon::parse($data['periode_mulai'])->year,
+            'periode_ke' => $data['periode_ke'] ?? null,
+            'periode_mulai' => $data['periode_mulai'] ?? null,
+            'periode_selesai' => $data['periode_selesai'] ?? null,
+            'kuota' => $data['kuota'],
+            'terpakai' => $data['terpakai'],
+            'sisa' => $data['sisa'],
+            'catatan' => $data['catatan'],
+            'diubah_oleh_id' => $olehSiapa->id,
+            'diubah_pada' => now(),
+        ]);
+    }
+
+    /**
+     * HRD mengoreksi kuota/terpakai/sisa (atau tanggal periode) pada baris
+     * saldo yang sudah ada. Alasan koreksi wajib diisi setiap kali sebagai
+     * jejak audit minimal.
+     *
+     * @param  array{kuota?: int, terpakai?: int, sisa?: int, periode_mulai?: string|null, periode_selesai?: string|null, catatan: string}  $data
+     */
+    public function sesuaikanManual(SaldoCuti $saldo, array $data, Karyawan $olehSiapa): SaldoCuti
+    {
+        $saldo->update([
+            'kuota' => $data['kuota'],
+            'terpakai' => $data['terpakai'],
+            'sisa' => $data['sisa'],
+            'periode_mulai' => $data['periode_mulai'] ?? $saldo->periode_mulai,
+            'periode_selesai' => $data['periode_selesai'] ?? $saldo->periode_selesai,
+            'catatan' => $data['catatan'],
+            'diubah_oleh_id' => $olehSiapa->id,
+            'diubah_pada' => now(),
+        ]);
+
+        return $saldo;
+    }
+}

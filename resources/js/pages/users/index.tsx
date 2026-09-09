@@ -1,0 +1,252 @@
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
+import UserController from '@/actions/App/Http/Controllers/UserManagement/UserController';
+import InputError from '@/components/input-error';
+import { Pagination } from '@/components/pagination';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { dashboard } from '@/routes';
+import { index as usersIndex } from '@/routes/users';
+import type { Paginated, Role, User } from '@/types';
+
+type UserRow = User & { roles: { name: Role }[] };
+
+type PageProps = {
+    users: Paginated<UserRow>;
+    karyawans: { id: number; nama: string; nip: string }[];
+    filters: { search: string };
+};
+
+const ROLES: Role[] = [
+    'karyawan',
+    'kepala_bagian',
+    'koordinator_shift',
+    'hrd',
+    'manager',
+    'admin',
+];
+
+export default function UsersIndex() {
+    const { users, karyawans, filters } = usePage<PageProps>().props;
+    const [editing, setEditing] = useState<UserRow | null>(null);
+    const [search, setSearch] = useState(filters.search ?? '');
+
+    const { data, setData, post, put, processing, errors, reset } = useForm({
+        name: '',
+        email: '',
+        password: '',
+        role: 'karyawan' as Role,
+        karyawan_id: '',
+    });
+
+    const startEdit = (user: UserRow) => {
+        setEditing(user);
+        setData({
+            name: user.name,
+            email: user.email,
+            password: '',
+            role: user.roles[0]?.name ?? 'karyawan',
+            karyawan_id: user.karyawan_id ? String(user.karyawan_id) : '',
+        });
+    };
+
+    const cancelEdit = () => {
+        setEditing(null);
+        reset();
+    };
+
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (editing) {
+            put(UserController.update.url(editing.id), {
+                onSuccess: () => cancelEdit(),
+            });
+        } else {
+            post(UserController.store.url(), { onSuccess: () => reset() });
+        }
+    };
+
+    const destroy = (user: UserRow) => {
+        if (confirm(`Hapus user "${user.name}"?`)) {
+            router.delete(UserController.destroy.url(user.id));
+        }
+    };
+
+    const runSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        router.get(usersIndex.url(), { search }, { preserveState: true });
+    };
+
+    return (
+        <>
+            <Head title="Kelola User" />
+            <div className="flex flex-1 flex-col gap-4 p-4">
+                <h1 className="text-xl font-semibold">Kelola User & Role</h1>
+
+                <Card className="max-w-3xl">
+                    <CardContent>
+                        <form
+                            onSubmit={submit}
+                            className="grid grid-cols-2 gap-3 md:grid-cols-3"
+                        >
+                            <div className="grid gap-2">
+                                <Label htmlFor="name">Nama</Label>
+                                <Input
+                                    id="name"
+                                    value={data.name}
+                                    onChange={(e) =>
+                                        setData('name', e.target.value)
+                                    }
+                                />
+                                <InputError message={errors.name} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={data.email}
+                                    onChange={(e) =>
+                                        setData('email', e.target.value)
+                                    }
+                                />
+                                <InputError message={errors.email} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="password">
+                                    Password{' '}
+                                    {editing && '(kosongkan jika tidak diubah)'}
+                                </Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    value={data.password}
+                                    onChange={(e) =>
+                                        setData('password', e.target.value)
+                                    }
+                                />
+                                <InputError message={errors.password} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="role">Role</Label>
+                                <select
+                                    id="role"
+                                    className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                    value={data.role}
+                                    onChange={(e) =>
+                                        setData('role', e.target.value as Role)
+                                    }
+                                >
+                                    {ROLES.map((role) => (
+                                        <option key={role} value={role}>
+                                            {role}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={errors.role} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="karyawan_id">
+                                    Hubungkan ke Karyawan (opsional)
+                                </Label>
+                                <select
+                                    id="karyawan_id"
+                                    className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                    value={data.karyawan_id}
+                                    onChange={(e) =>
+                                        setData('karyawan_id', e.target.value)
+                                    }
+                                >
+                                    <option value="">- Tidak ada -</option>
+                                    {karyawans.map((k) => (
+                                        <option key={k.id} value={k.id}>
+                                            {k.nama} ({k.nip})
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={errors.karyawan_id} />
+                            </div>
+                            <div className="flex items-end gap-2">
+                                <Button type="submit" disabled={processing}>
+                                    {editing ? 'Simpan' : 'Tambah User'}
+                                </Button>
+                                {editing && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={cancelEdit}
+                                    >
+                                        Batal
+                                    </Button>
+                                )}
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+
+                <form onSubmit={runSearch} className="max-w-sm">
+                    <Input
+                        placeholder="Cari user..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                </form>
+
+                <Card>
+                    <CardContent className="divide-y p-0">
+                        {users.data.map((user) => (
+                            <div
+                                key={user.id}
+                                className="flex items-center justify-between p-4 text-sm"
+                            >
+                                <div>
+                                    <div className="font-medium">
+                                        {user.name}{' '}
+                                        <Badge variant="secondary">
+                                            {user.roles[0]?.name}
+                                        </Badge>
+                                    </div>
+                                    <div className="text-muted-foreground">
+                                        {user.email}
+                                        {user.karyawan
+                                            ? ` · terhubung ke ${user.karyawan.nama}`
+                                            : ''}
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => startEdit(user)}
+                                    >
+                                        Edit
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        onClick={() => destroy(user)}
+                                    >
+                                        Hapus
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+
+                <Pagination links={users.links} />
+            </div>
+        </>
+    );
+}
+
+UsersIndex.layout = {
+    breadcrumbs: [
+        { title: 'Dashboard', href: dashboard() },
+        { title: 'Kelola User', href: usersIndex() },
+    ],
+};

@@ -1,0 +1,53 @@
+<?php
+
+namespace App\Http\Controllers\Cuti;
+
+use App\Enums\StatusKonfirmasiKontrak;
+use App\Http\Controllers\Controller;
+use App\Models\KonfirmasiKontrakCuti;
+use App\Services\PeriodeCutiService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class KonfirmasiKontrakController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $konfirmasiKontraks = KonfirmasiKontrakCuti::query()
+            ->with(['karyawan', 'saldoCuti.jenisCuti'])
+            ->latest('id')
+            ->paginate(15)
+            ->withQueryString();
+
+        return Inertia::render('cuti/konfirmasi-kontrak/index', [
+            'konfirmasiKontraks' => $konfirmasiKontraks,
+        ]);
+    }
+
+    public function konfirmasi(Request $request, KonfirmasiKontrakCuti $konfirmasi_kontrak, PeriodeCutiService $periodeCutiService): RedirectResponse
+    {
+        if ($konfirmasi_kontrak->status !== StatusKonfirmasiKontrak::Menunggu) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Konfirmasi ini sudah diproses sebelumnya.']);
+
+            return back();
+        }
+
+        $data = $request->validate([
+            'diperpanjang' => ['required', 'boolean'],
+            'catatan' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $periodeCutiService->konfirmasiPerpanjangan(
+            $konfirmasi_kontrak,
+            $request->user()->karyawan,
+            (bool) $data['diperpanjang'],
+            $data['catatan'] ?? null,
+        );
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Konfirmasi perpanjangan kontrak berhasil disimpan.']);
+
+        return back();
+    }
+}
