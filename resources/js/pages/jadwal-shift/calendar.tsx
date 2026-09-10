@@ -447,7 +447,7 @@ export default function JadwalShiftCalendar() {
                                         key={jadwal.id}
                                         className="px-4 py-2.5"
                                     >
-                                        <div className="flex items-center justify-between text-sm">
+                                        <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <span className="font-medium">
                                                     {jadwal.karyawan?.nama}

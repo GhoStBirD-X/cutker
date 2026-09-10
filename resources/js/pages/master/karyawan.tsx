@@ -155,7 +155,7 @@ export default function MasterKaryawan() {
                     <CardContent>
                         <form
                             onSubmit={submit}
-                            className="grid grid-cols-2 gap-3 md:grid-cols-4"
+                            className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4"
                         >
                             <div className="grid gap-2">
                                 <Label htmlFor="nip">NIP</Label>
@@ -377,10 +377,10 @@ export default function MasterKaryawan() {
                         {karyawans.data.map((karyawan) => (
                             <div
                                 key={karyawan.id}
-                                className="flex items-center justify-between p-4 text-sm"
+                                className="flex flex-col gap-3 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <div>
-                                    <div className="flex items-center gap-2 font-medium">
+                                    <div className="flex flex-wrap items-center gap-2 font-medium">
                                         {karyawan.nama}
                                         {karyawan.user?.roles.map((role) => (
                                             <Badge
@@ -409,7 +409,7 @@ export default function MasterKaryawan() {
                                         {karyawan.jabatan?.nama_jabatan}
                                     </div>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"

@@ -91,7 +91,7 @@ export default function UsersIndex() {
                     <CardContent>
                         <form
                             onSubmit={submit}
-                            className="grid grid-cols-2 gap-3 md:grid-cols-3"
+                            className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3"
                         >
                             <div className="grid gap-2">
                                 <Label htmlFor="name">Nama</Label>
@@ -201,11 +201,11 @@ export default function UsersIndex() {
                         {users.data.map((user) => (
                             <div
                                 key={user.id}
-                                className="flex items-center justify-between p-4 text-sm"
+                                className="flex flex-col gap-3 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <div>
-                                    <div className="font-medium">
-                                        {user.name}{' '}
+                                    <div className="flex flex-wrap items-center gap-2 font-medium">
+                                        {user.name}
                                         <Badge variant="secondary">
                                             {user.roles[0]?.name}
                                         </Badge>
@@ -217,7 +217,7 @@ export default function UsersIndex() {
                                             : ''}
                                     </div>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"

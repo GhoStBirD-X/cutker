@@ -71,7 +71,7 @@ export default function MasterJabatan() {
                     <CardContent>
                         <form
                             onSubmit={submit}
-                            className="grid grid-cols-[1fr_auto] items-end gap-3"
+                            className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[1fr_auto]"
                         >
                             <div className="grid gap-2">
                                 <Label htmlFor="nama_jabatan">
@@ -117,7 +117,7 @@ export default function MasterJabatan() {
                         {jabatans.data.map((jabatan) => (
                             <div
                                 key={jabatan.id}
-                                className="flex items-center justify-between p-4 text-sm"
+                                className="flex flex-col gap-3 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <div>
                                     <div className="font-medium">
@@ -127,7 +127,7 @@ export default function MasterJabatan() {
                                         {jabatan.karyawans_count ?? 0} karyawan
                                     </div>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"

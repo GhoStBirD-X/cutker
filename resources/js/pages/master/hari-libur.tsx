@@ -87,7 +87,7 @@ export default function MasterHariLibur() {
                     <CardContent>
                         <form
                             onSubmit={submit}
-                            className="grid grid-cols-[160px_1fr_auto] items-end gap-3"
+                            className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[160px_1fr_auto]"
                         >
                             <div className="grid gap-2">
                                 <Label htmlFor="tanggal">Tanggal</Label>
@@ -148,10 +148,10 @@ export default function MasterHariLibur() {
                         {hariLiburs.data.map((hariLibur) => (
                             <div
                                 key={hariLibur.id}
-                                className="flex items-center justify-between p-4 text-sm"
+                                className="flex flex-col gap-3 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <div>
-                                    <div className="flex items-center gap-2 font-medium">
+                                    <div className="flex flex-wrap items-center gap-2 font-medium">
                                         {formatDate(hariLibur.tanggal)}
                                         <Badge
                                             variant={
@@ -169,7 +169,7 @@ export default function MasterHariLibur() {
                                         {hariLibur.keterangan}
                                     </div>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"

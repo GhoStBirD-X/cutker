@@ -23,7 +23,7 @@ export default function CutiIndex() {
         <>
             <Head title="Riwayat Cuti" />
             <div className="flex flex-1 flex-col gap-4 p-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                     <h1 className="text-xl font-semibold">
                         Riwayat Pengajuan Cuti
                     </h1>
@@ -43,7 +43,7 @@ export default function CutiIndex() {
                             <Link
                                 key={pengajuan.id}
                                 href={cutiShow(pengajuan.id)}
-                                className="flex items-center justify-between p-4 text-sm hover:bg-accent"
+                                className="flex flex-col gap-2 p-4 text-sm hover:bg-accent sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <div>
                                     <div className="font-medium">

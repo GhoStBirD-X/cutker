@@ -112,7 +112,7 @@ export default function CutiShow() {
                         {(pengajuan.approvals ?? []).map((approval) => (
                             <div
                                 key={approval.id}
-                                className="flex items-center justify-between p-4 text-sm"
+                                className="flex flex-col gap-2 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <div>
                                     <div className="font-medium">

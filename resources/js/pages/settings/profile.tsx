@@ -37,6 +37,51 @@ export default function Profile({
                     description="Update your name and email address"
                 />
 
+                {auth.user.karyawan && (
+                    <div className="grid gap-4 rounded-lg border p-4 sm:grid-cols-2">
+                        <div className="grid gap-1">
+                            <Label className="text-muted-foreground">
+                                NIP
+                            </Label>
+                            <p className="text-sm font-medium">
+                                {auth.user.karyawan.nip}
+                            </p>
+                        </div>
+
+                        <div className="grid gap-1">
+                            <Label className="text-muted-foreground">
+                                Jenis Kelamin
+                            </Label>
+                            <p className="text-sm font-medium">
+                                {auth.user.karyawan.jenis_kelamin ===
+                                'laki_laki'
+                                    ? 'Laki-laki'
+                                    : 'Perempuan'}
+                            </p>
+                        </div>
+
+                        <div className="grid gap-1">
+                            <Label className="text-muted-foreground">
+                                Departemen
+                            </Label>
+                            <p className="text-sm font-medium">
+                                {auth.user.karyawan.departemen
+                                    ?.nama_departemen ?? '-'}
+                            </p>
+                        </div>
+
+                        <div className="grid gap-1">
+                            <Label className="text-muted-foreground">
+                                Jabatan
+                            </Label>
+                            <p className="text-sm font-medium">
+                                {auth.user.karyawan.jabatan?.nama_jabatan ??
+                                    '-'}
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 <Form
                     {...ProfileController.update.form()}
                     options={{

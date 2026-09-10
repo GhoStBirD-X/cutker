@@ -77,7 +77,7 @@ export default function MasterShift() {
                     <CardContent>
                         <form
                             onSubmit={submit}
-                            className="grid grid-cols-[1fr_110px_110px_auto] items-end gap-3"
+                            className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_110px_110px_auto]"
                         >
                             <div className="grid gap-2">
                                 <Label htmlFor="nama_shift">Nama Shift</Label>
@@ -145,7 +145,7 @@ export default function MasterShift() {
                         {shifts.data.map((shift) => (
                             <div
                                 key={shift.id}
-                                className="flex items-center justify-between p-4 text-sm"
+                                className="flex flex-col gap-3 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <div>
                                     <div className="font-medium">
@@ -155,7 +155,7 @@ export default function MasterShift() {
                                         {shift.jam_mulai} - {shift.jam_selesai}
                                     </div>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"

@@ -59,7 +59,7 @@ export default function LaporanIndex() {
                     <CardContent>
                         <form
                             onSubmit={applyFilter}
-                            className="grid grid-cols-[1fr_1fr_1fr_auto_auto] items-end gap-3"
+                            className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto_auto]"
                         >
                             <div className="grid gap-2">
                                 <Label htmlFor="departemen_id">
@@ -112,8 +112,8 @@ export default function LaporanIndex() {
                                     }
                                 />
                             </div>
-                            <Button type="submit">Filter</Button>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2">
+                                <Button type="submit">Filter</Button>
                                 <Button asChild variant="outline">
                                     <a href={exportExcel.url({ query: form })}>
                                         Excel
@@ -139,7 +139,7 @@ export default function LaporanIndex() {
                         {pengajuans.data.map((pengajuan) => (
                             <div
                                 key={pengajuan.id}
-                                className="flex items-center justify-between p-4 text-sm"
+                                className="flex flex-col gap-2 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <div>
                                     <div className="font-medium">
@@ -178,7 +178,7 @@ export default function LaporanIndex() {
                         {lemburSummary.map((ringkasan) => (
                             <div
                                 key={ringkasan.karyawan_id}
-                                className="flex items-center justify-between p-4 text-sm"
+                                className="flex flex-col gap-1 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <div>
                                     <div className="font-medium">

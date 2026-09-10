@@ -114,7 +114,7 @@ export default function MasterSaldoCuti() {
                     <CardContent>
                         <form
                             onSubmit={submit}
-                            className="grid grid-cols-2 gap-3 md:grid-cols-4"
+                            className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4"
                         >
                             <div className="grid gap-2">
                                 <Label htmlFor="karyawan_id">Karyawan</Label>
@@ -279,7 +279,7 @@ export default function MasterSaldoCuti() {
                                 />
                                 <InputError message={errors.sisa} />
                             </div>
-                            <div className="col-span-2 grid gap-2 md:col-span-4">
+                            <div className="col-span-1 grid gap-2 sm:col-span-2 md:col-span-4">
                                 <Label htmlFor="catatan">
                                     Catatan{' '}
                                     {editing
@@ -295,7 +295,7 @@ export default function MasterSaldoCuti() {
                                 />
                                 <InputError message={errors.catatan} />
                             </div>
-                            <div className="col-span-2 flex items-end gap-2 md:col-span-4">
+                            <div className="col-span-1 flex flex-wrap items-end gap-2 sm:col-span-2 md:col-span-4">
                                 <Button type="submit" disabled={processing}>
                                     {editing ? 'Simpan Koreksi' : 'Tambah'}
                                 </Button>
@@ -331,7 +331,7 @@ export default function MasterSaldoCuti() {
                         {saldoCutis.data.map((saldo) => (
                             <div
                                 key={saldo.id}
-                                className="flex items-center justify-between p-4 text-sm"
+                                className="flex flex-col gap-3 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <div>
                                     <div className="font-medium">
@@ -348,7 +348,7 @@ export default function MasterSaldoCuti() {
                                         {saldo.sisa ?? 'tanpa batas'}
                                     </div>
                                     {saldo.catatan && (
-                                        <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                                        <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                                             <Badge variant="outline">
                                                 Disesuaikan manual
                                             </Badge>
@@ -360,6 +360,7 @@ export default function MasterSaldoCuti() {
                                 <Button
                                     size="sm"
                                     variant="outline"
+                                    className="self-start sm:self-center"
                                     onClick={() => startEdit(saldo)}
                                 >
                                     Sesuaikan

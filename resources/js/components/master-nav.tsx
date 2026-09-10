@@ -31,13 +31,13 @@ export function MasterNav() {
     ];
 
     return (
-        <nav className="flex gap-1 border-b">
+        <nav className="flex gap-1 overflow-x-auto border-b">
             {items.map((item) => (
                 <Link
                     key={item.title}
                     href={item.href}
                     className={cn(
-                        'border-b-2 px-3 py-2 text-sm font-medium',
+                        'shrink-0 border-b-2 px-3 py-2 text-sm font-medium whitespace-nowrap',
                         isCurrentUrl(item.href)
                             ? 'border-primary text-foreground'
                             : 'border-transparent text-muted-foreground hover:text-foreground',

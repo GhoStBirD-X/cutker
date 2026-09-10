@@ -190,7 +190,7 @@ export default function Dashboard() {
                                     <Link
                                         key={pengajuan.id}
                                         href={cutiShow(pengajuan.id)}
-                                        className="flex items-center justify-between p-4 text-sm hover:bg-accent"
+                                        className="flex flex-col gap-2 p-4 text-sm hover:bg-accent sm:flex-row sm:items-center sm:justify-between"
                                     >
                                         <div>
                                             <div className="font-medium">
@@ -230,7 +230,7 @@ export default function Dashboard() {
                                 {resumeCuti.map((riwayat) => (
                                     <div
                                         key={riwayat.id}
-                                        className="flex items-center justify-between p-4 text-sm"
+                                        className="flex flex-col gap-2 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
                                     >
                                         <div>
                                             <div className="font-medium">

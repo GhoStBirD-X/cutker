@@ -90,7 +90,7 @@ export default function MasterAlasanCuti() {
                     <CardContent>
                         <form
                             onSubmit={submit}
-                            className="grid grid-cols-[1fr_1fr_100px_1fr_auto] items-end gap-3"
+                            className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_100px_1fr_auto]"
                         >
                             <div className="grid gap-2">
                                 <Label htmlFor="jenis_cuti_id">
@@ -195,7 +195,7 @@ export default function MasterAlasanCuti() {
                         {alasanCutis.data.map((alasan) => (
                             <div
                                 key={alasan.id}
-                                className="flex items-center justify-between p-4 text-sm"
+                                className="flex flex-col gap-3 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <div>
                                     <div className="font-medium">
@@ -216,7 +216,7 @@ export default function MasterAlasanCuti() {
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"
