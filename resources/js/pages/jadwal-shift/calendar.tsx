@@ -267,7 +267,7 @@ export default function JadwalShiftCalendar() {
 
                         {bisaPilihDepartemen && (
                             <select
-                                className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm sm:w-auto"
                                 value={filters.departemen_id ?? ''}
                                 onChange={(e) =>
                                     gantiDepartemen(e.target.value)
@@ -298,7 +298,7 @@ export default function JadwalShiftCalendar() {
                                         <Label htmlFor="shift_id">Shift</Label>
                                         <select
                                             id="shift_id"
-                                            className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                            className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
                                             value={data.shift_id}
                                             onChange={(e) =>
                                                 setData(

@@ -68,7 +68,24 @@ const mediaQuery = (): MediaQueryList | null => {
     return window.matchMedia('(prefers-color-scheme: dark)');
 };
 
-const handleSystemThemeChange = (): void => applyTheme(currentAppearance);
+const handleSystemThemeChange = (): void => {
+    applyTheme(currentAppearance);
+    notify();
+};
+
+// The server has no OS preference to read, so it always assumes light. Route
+// the live `prefers-color-scheme` reading through useSyncExternalStore (like
+// `appearance` above) so React reconciles the client's real value safely
+// after hydration instead of a Sun/Moon icon mismatch during render.
+const subscribeSystemPrefersDark = (callback: () => void) => {
+    const query = mediaQuery();
+    query?.addEventListener('change', callback);
+
+    return () => query?.removeEventListener('change', callback);
+};
+
+const getSystemPrefersDark = (): boolean => prefersDark();
+const getServerSystemPrefersDark = (): boolean => false;
 
 export function initializeTheme(): void {
     if (typeof window === 'undefined') {
@@ -94,9 +111,16 @@ export function useAppearance(): UseAppearanceReturn {
         () => 'system',
     );
 
-    const resolvedAppearance: ResolvedAppearance = isDarkMode(appearance)
-        ? 'dark'
-        : 'light';
+    const systemPrefersDark = useSyncExternalStore(
+        subscribeSystemPrefersDark,
+        getSystemPrefersDark,
+        getServerSystemPrefersDark,
+    );
+
+    const resolvedAppearance: ResolvedAppearance =
+        appearance === 'dark' || (appearance === 'system' && systemPrefersDark)
+            ? 'dark'
+            : 'light';
 
     const updateAppearance = (mode: Appearance): void => {
         currentAppearance = mode;

@@ -169,7 +169,7 @@ export default function MasterHariLibur() {
                                         {hariLibur.keterangan}
                                     </div>
                                 </div>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex shrink-0 flex-wrap gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"

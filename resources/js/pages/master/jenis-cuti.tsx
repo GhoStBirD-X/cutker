@@ -82,7 +82,7 @@ export default function MasterJenisCuti() {
                     <CardContent>
                         <form
                             onSubmit={submit}
-                            className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_100px_120px_140px_1fr_auto]"
+                            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
                         >
                             <div className="grid gap-2">
                                 <Label htmlFor="nama_jenis">Nama Jenis</Label>
@@ -143,7 +143,7 @@ export default function MasterJenisCuti() {
                                 </Label>
                                 <select
                                     id="khusus_gender"
-                                    className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
                                     value={data.khusus_gender}
                                     onChange={(e) =>
                                         setData(
@@ -170,19 +170,22 @@ export default function MasterJenisCuti() {
                                 />
                                 <InputError message={errors.keterangan} />
                             </div>
-                            <div className="flex gap-2">
-                                <Button type="submit" disabled={processing}>
-                                    {editing ? 'Simpan' : 'Tambah'}
-                                </Button>
-                                {editing && (
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={cancelEdit}
-                                    >
-                                        Batal
+                            <div className="grid gap-2">
+                                <Label className="invisible">Aksi</Label>
+                                <div className="flex gap-2">
+                                    <Button type="submit" disabled={processing}>
+                                        {editing ? 'Simpan' : 'Tambah'}
                                     </Button>
-                                )}
+                                    {editing && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={cancelEdit}
+                                        >
+                                            Batal
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         </form>
                     </CardContent>
@@ -240,7 +243,7 @@ export default function MasterJenisCuti() {
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex shrink-0 flex-wrap gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"

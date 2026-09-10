@@ -90,7 +90,7 @@ export default function MasterAlasanCuti() {
                     <CardContent>
                         <form
                             onSubmit={submit}
-                            className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_100px_1fr_auto]"
+                            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
                         >
                             <div className="grid gap-2">
                                 <Label htmlFor="jenis_cuti_id">
@@ -164,19 +164,22 @@ export default function MasterAlasanCuti() {
                                 />
                                 <InputError message={errors.keterangan} />
                             </div>
-                            <div className="flex gap-2">
-                                <Button type="submit" disabled={processing}>
-                                    {editing ? 'Simpan' : 'Tambah'}
-                                </Button>
-                                {editing && (
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={cancelEdit}
-                                    >
-                                        Batal
+                            <div className="grid gap-2">
+                                <Label className="invisible">Aksi</Label>
+                                <div className="flex gap-2">
+                                    <Button type="submit" disabled={processing}>
+                                        {editing ? 'Simpan' : 'Tambah'}
                                     </Button>
-                                )}
+                                    {editing && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={cancelEdit}
+                                        >
+                                            Batal
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         </form>
                     </CardContent>
@@ -216,7 +219,7 @@ export default function MasterAlasanCuti() {
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex shrink-0 flex-wrap gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"

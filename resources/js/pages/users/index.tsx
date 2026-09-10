@@ -135,7 +135,7 @@ export default function UsersIndex() {
                                 <Label htmlFor="role">Role</Label>
                                 <select
                                     id="role"
-                                    className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
                                     value={data.role}
                                     onChange={(e) =>
                                         setData('role', e.target.value as Role)
@@ -155,7 +155,7 @@ export default function UsersIndex() {
                                 </Label>
                                 <select
                                     id="karyawan_id"
-                                    className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
                                     value={data.karyawan_id}
                                     onChange={(e) =>
                                         setData('karyawan_id', e.target.value)
@@ -217,7 +217,7 @@ export default function UsersIndex() {
                                             : ''}
                                     </div>
                                 </div>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex shrink-0 flex-wrap gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"

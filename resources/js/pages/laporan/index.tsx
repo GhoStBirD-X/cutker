@@ -67,7 +67,7 @@ export default function LaporanIndex() {
                                 </Label>
                                 <select
                                     id="departemen_id"
-                                    className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
                                     value={form.departemen_id}
                                     onChange={(e) =>
                                         setForm({

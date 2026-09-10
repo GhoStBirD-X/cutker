@@ -120,7 +120,7 @@ export default function MasterSaldoCuti() {
                                 <Label htmlFor="karyawan_id">Karyawan</Label>
                                 <select
                                     id="karyawan_id"
-                                    className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
                                     value={data.karyawan_id}
                                     disabled={!!editing}
                                     onChange={(e) =>
@@ -142,7 +142,7 @@ export default function MasterSaldoCuti() {
                                 </Label>
                                 <select
                                     id="jenis_cuti_id"
-                                    className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
                                     value={data.jenis_cuti_id}
                                     disabled={!!editing}
                                     onChange={(e) =>

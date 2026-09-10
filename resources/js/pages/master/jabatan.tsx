@@ -127,7 +127,7 @@ export default function MasterJabatan() {
                                         {jabatan.karyawans_count ?? 0} karyawan
                                     </div>
                                 </div>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex shrink-0 flex-wrap gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"

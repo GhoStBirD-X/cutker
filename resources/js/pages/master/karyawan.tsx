@@ -208,7 +208,7 @@ export default function MasterKaryawan() {
                                 </Label>
                                 <select
                                     id="jenis_kelamin"
-                                    className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
                                     value={data.jenis_kelamin}
                                     onChange={(e) =>
                                         setData('jenis_kelamin', e.target.value)
@@ -225,7 +225,7 @@ export default function MasterKaryawan() {
                                 </Label>
                                 <select
                                     id="departemen_id"
-                                    className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
                                     value={data.departemen_id}
                                     onChange={(e) =>
                                         setData('departemen_id', e.target.value)
@@ -244,7 +244,7 @@ export default function MasterKaryawan() {
                                 <Label htmlFor="jabatan_id">Jabatan</Label>
                                 <select
                                     id="jabatan_id"
-                                    className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
                                     value={data.jabatan_id}
                                     onChange={(e) =>
                                         setData('jabatan_id', e.target.value)
@@ -277,7 +277,7 @@ export default function MasterKaryawan() {
                                 <Label htmlFor="status">Status</Label>
                                 <select
                                     id="status"
-                                    className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
                                     value={data.status}
                                     onChange={(e) =>
                                         setData('status', e.target.value)
@@ -294,7 +294,7 @@ export default function MasterKaryawan() {
                                 </Label>
                                 <select
                                     id="tipe_karyawan"
-                                    className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
                                     value={data.tipe_karyawan}
                                     onChange={(e) =>
                                         setData('tipe_karyawan', e.target.value)
@@ -356,7 +356,7 @@ export default function MasterKaryawan() {
                         className="max-w-sm"
                     />
                     <select
-                        className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+                        className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm sm:w-auto"
                         value={departemenFilter}
                         onChange={(e) => setDepartemenFilter(e.target.value)}
                     >
@@ -409,7 +409,7 @@ export default function MasterKaryawan() {
                                         {karyawan.jabatan?.nama_jabatan}
                                     </div>
                                 </div>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex shrink-0 flex-wrap gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"

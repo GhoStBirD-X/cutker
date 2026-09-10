@@ -155,7 +155,7 @@ export default function MasterShift() {
                                         {shift.jam_mulai} - {shift.jam_selesai}
                                     </div>
                                 </div>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex shrink-0 flex-wrap gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"
