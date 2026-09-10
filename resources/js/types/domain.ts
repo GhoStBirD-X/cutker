@@ -67,6 +67,7 @@ export type PengajuanCuti = {
     karyawan_id: number;
     jenis_cuti_id: number;
     alasan_cuti_id: number | null;
+    cuti_massal_id: number | null;
     tanggal_mulai: string;
     tanggal_selesai: string;
     jumlah_hari: number;
@@ -79,6 +80,42 @@ export type PengajuanCuti = {
     jenis_cuti?: JenisCuti;
     alasan_cuti?: AlasanCuti;
     approvals?: Approval[];
+    cuti_massal?: CutiMassal;
+};
+
+export type StatusCutiMassal = 'aktif' | 'dibatalkan';
+
+export type CutiMassalDilewati = {
+    karyawan_id: number;
+    nama: string;
+    alasan: string;
+};
+
+export type CutiMassal = {
+    id: number;
+    jenis_cuti_id: number;
+    tanggal_mulai: string;
+    tanggal_selesai: string;
+    jumlah_hari: number;
+    jumlah_hari_kalender: number;
+    alasan: string;
+    dibuat_oleh_id: number;
+    jumlah_karyawan: number;
+    dilewati: CutiMassalDilewati[] | null;
+    status: StatusCutiMassal;
+    dibatalkan_oleh_id: number | null;
+    dibatalkan_pada: string | null;
+    catatan_pembatalan: string | null;
+    jenis_cuti?: JenisCuti;
+    dibuat_oleh?: Karyawan;
+    dibatalkan_oleh?: Karyawan;
+    pengajuan_cutis?: PengajuanCuti[];
+};
+
+export type KaryawanEligiblePreview = {
+    karyawan: Karyawan;
+    saldo: SaldoCuti | null;
+    akan_minus: boolean;
 };
 
 export type HariLibur = {

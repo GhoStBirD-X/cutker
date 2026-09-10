@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Cuti\CutiMassalController;
 use App\Http\Controllers\Cuti\KompensasiCutiController;
 use App\Http\Controllers\Cuti\KonfirmasiKontrakController;
 use Illuminate\Support\Facades\Route;
@@ -10,4 +11,10 @@ Route::middleware(['auth', 'verified', 'role:hrd|admin', 'karyawan.linked'])->pr
 
     Route::get('kompensasi', [KompensasiCutiController::class, 'index'])->name('kompensasi.index');
     Route::post('kompensasi/{kompensasi_cuti}', [KompensasiCutiController::class, 'proses'])->name('kompensasi.proses');
+
+    Route::get('massal', [CutiMassalController::class, 'index'])->name('massal.index');
+    Route::get('massal/buat', [CutiMassalController::class, 'create'])->name('massal.create');
+    Route::post('massal', [CutiMassalController::class, 'store'])->name('massal.store');
+    Route::get('massal/{cuti_massal}', [CutiMassalController::class, 'show'])->name('massal.show');
+    Route::patch('massal/{cuti_massal}/batalkan', [CutiMassalController::class, 'batalkan'])->name('massal.batalkan');
 });

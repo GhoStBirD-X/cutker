@@ -3,6 +3,7 @@ import {
     Banknote,
     Building2,
     CalendarDays,
+    CalendarRange,
     ClipboardCheck,
     FileBarChart,
     FilePlus2,
@@ -29,6 +30,7 @@ import { index as approvalIndex } from '@/routes/approval';
 import { create as cutiCreate, index as cutiIndex } from '@/routes/cuti';
 import { index as kompensasiIndex } from '@/routes/cuti/kompensasi';
 import { index as konfirmasiKontrakIndex } from '@/routes/cuti/konfirmasi-kontrak';
+import { index as cutiMassalIndex } from '@/routes/cuti/massal';
 import { index as jadwalShiftIndex } from '@/routes/jadwal-shift';
 import { index as laporanIndex } from '@/routes/laporan';
 import { index as karyawanIndex } from '@/routes/master/karyawan';
@@ -75,6 +77,11 @@ function buildNavItems(roles: Role[]): NavItem[] {
             title: 'Kompensasi Cuti',
             href: kompensasiIndex(),
             icon: Banknote,
+        });
+        items.push({
+            title: 'Cuti Massal',
+            href: cutiMassalIndex(),
+            icon: CalendarRange,
         });
     }
 

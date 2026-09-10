@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property int $karyawan_id
  * @property int $jenis_cuti_id
  * @property int|null $alasan_cuti_id
+ * @property int|null $cuti_massal_id
  * @property Carbon $tanggal_mulai
  * @property Carbon $tanggal_selesai
  * @property int $jumlah_hari
@@ -29,6 +30,7 @@ use Illuminate\Support\Carbon;
     'karyawan_id',
     'jenis_cuti_id',
     'alasan_cuti_id',
+    'cuti_massal_id',
     'tanggal_mulai',
     'tanggal_selesai',
     'jumlah_hari',
@@ -86,5 +88,13 @@ class PengajuanCuti extends Model
     public function approvals(): HasMany
     {
         return $this->hasMany(Approval::class);
+    }
+
+    /**
+     * @return BelongsTo<CutiMassal, $this>
+     */
+    public function cutiMassal(): BelongsTo
+    {
+        return $this->belongsTo(CutiMassal::class);
     }
 }
