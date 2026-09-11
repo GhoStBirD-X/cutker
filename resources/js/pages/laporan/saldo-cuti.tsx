@@ -41,13 +41,23 @@ export default function LaporanSaldoCuti() {
     const toggle = (id: number) => {
         setExpanded((prev) => {
             const next = new Set(prev);
+
             if (next.has(id)) {
                 next.delete(id);
             } else {
                 next.add(id);
             }
+
             return next;
         });
+    };
+
+    const expandAll = () => {
+        setExpanded(new Set(karyawans.data.map((k) => k.id)));
+    };
+
+    const collapseAll = () => {
+        setExpanded(new Set());
     };
 
     return (
@@ -109,6 +119,27 @@ export default function LaporanSaldoCuti() {
                         </form>
                     </CardContent>
                 </Card>
+
+                <div className="flex justify-end gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={expandAll}
+                        disabled={karyawans.data.length === 0}
+                    >
+                        Buka Semua
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={collapseAll}
+                        disabled={expanded.size === 0}
+                    >
+                        Tutup Semua
+                    </Button>
+                </div>
 
                 <Card>
                     <CardContent className="divide-y p-0">
