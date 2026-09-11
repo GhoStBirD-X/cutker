@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Laporan;
 
+use App\Models\Karyawan;
 use App\Models\SaldoCuti;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -32,17 +33,20 @@ class SaldoCutiTest extends TestCase
     }
 
     #[DataProvider('allowedRoles')]
-    public function test_allowed_role_can_view_all_karyawan_saldo_cuti(string $role): void
+    public function test_allowed_role_can_view_karyawan_grouped_saldo_cuti(string $role): void
     {
         $user = $this->karyawanUser($role);
         $saldo = SaldoCuti::factory()->create(['sisa' => 8]);
 
-        $response = $this->actingAs($user)->get(route('laporan.saldo-cuti'));
+        $response = $this->actingAs($user)->get(route('laporan.saldo-cuti', [
+            'search' => $saldo->karyawan->nip,
+        ]));
 
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
             ->component('laporan/saldo-cuti')
-            ->where('saldoCutis.data.0.id', $saldo->id)
+            ->where('karyawans.data.0.id', $saldo->karyawan_id)
+            ->where('karyawans.data.0.saldo_cutis.0.id', $saldo->id)
         );
     }
 
@@ -58,17 +62,31 @@ class SaldoCutiTest extends TestCase
     public function test_search_filters_by_karyawan_name(): void
     {
         $hrd = $this->karyawanUser('hrd');
-        $cocok = SaldoCuti::factory()->create();
-        $cocok->karyawan()->update(['nama' => 'Budi Santoso']);
-        $lain = SaldoCuti::factory()->create();
-        $lain->karyawan()->update(['nama' => 'Siti Aminah']);
+        $cocok = Karyawan::factory()->create(['nama' => 'Budi Santoso']);
+        Karyawan::factory()->create(['nama' => 'Siti Aminah']);
 
         $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti', ['search' => 'Budi']));
 
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
-            ->has('saldoCutis.data', 1)
-            ->where('saldoCutis.data.0.id', $cocok->id)
+            ->has('karyawans.data', 1)
+            ->where('karyawans.data.0.id', $cocok->id)
+        );
+    }
+
+    public function test_karyawan_without_active_saldo_still_lists_with_empty_children(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawan = Karyawan::factory()->create();
+
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti', [
+            'search' => $karyawan->nip,
+        ]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->has('karyawans.data', 1)
+            ->where('karyawans.data.0.saldo_cutis', [])
         );
     }
 }

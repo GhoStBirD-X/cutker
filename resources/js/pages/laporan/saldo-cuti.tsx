@@ -1,8 +1,9 @@
 import { Head, router, usePage } from '@inertiajs/react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Pagination } from '@/components/pagination';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
@@ -10,26 +11,43 @@ import {
     index as laporanIndex,
     saldoCuti as saldoCutiIndex,
 } from '@/routes/laporan';
-import type { Departemen, Paginated, SaldoCuti } from '@/types';
+import type { Departemen, Karyawan, Paginated, SaldoCuti } from '@/types';
+
+type KaryawanRow = Karyawan & { saldo_cutis: SaldoCuti[] };
 
 type PageProps = {
-    saldoCutis: Paginated<SaldoCuti>;
+    karyawans: Paginated<KaryawanRow>;
     departemens: Departemen[];
     filters: { search: string; departemen_id: number | null };
 };
 
 export default function LaporanSaldoCuti() {
-    const { saldoCutis, departemens, filters } = usePage<PageProps>().props;
+    const { karyawans, departemens, filters } = usePage<PageProps>().props;
     const [form, setForm] = useState({
         search: filters.search ?? '',
         departemen_id: filters.departemen_id
             ? String(filters.departemen_id)
             : '',
     });
+    const [expanded, setExpanded] = useState<Set<number>>(
+        () => new Set(karyawans.data.map((k) => k.id)),
+    );
 
     const applyFilter = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(saldoCutiIndex.url(), form, { preserveState: true });
+    };
+
+    const toggle = (id: number) => {
+        setExpanded((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
     };
 
     return (
@@ -39,7 +57,7 @@ export default function LaporanSaldoCuti() {
                 <h1 className="text-xl font-semibold">Saldo Cuti Karyawan</h1>
                 <p className="text-sm text-muted-foreground">
                     Menampilkan sisa saldo cuti seluruh karyawan yang masih
-                    berjalan.
+                    berjalan, dikelompokkan per karyawan.
                 </p>
 
                 <Card>
@@ -49,9 +67,7 @@ export default function LaporanSaldoCuti() {
                             className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto]"
                         >
                             <div className="grid gap-2">
-                                <Label htmlFor="search">
-                                    Cari Nama/NIP
-                                </Label>
+                                <Label htmlFor="search">Cari Nama/NIP</Label>
                                 <Input
                                     id="search"
                                     placeholder="Cari nama/NIP karyawan..."
@@ -95,89 +111,105 @@ export default function LaporanSaldoCuti() {
                 </Card>
 
                 <Card>
-                    <CardContent className="p-0">
-                        {saldoCutis.data.length === 0 ? (
+                    <CardContent className="divide-y p-0">
+                        {karyawans.data.length === 0 && (
                             <p className="p-4 text-sm text-muted-foreground">
-                                Tidak ada data saldo cuti pada filter ini.
+                                Tidak ada karyawan pada filter ini.
                             </p>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="border-b text-left text-muted-foreground">
-                                            <th className="p-3 font-medium">
-                                                Karyawan
-                                            </th>
-                                            <th className="p-3 font-medium">
-                                                Departemen
-                                            </th>
-                                            <th className="p-3 font-medium">
-                                                Jenis Cuti
-                                            </th>
-                                            <th className="p-3 font-medium">
-                                                Periode
-                                            </th>
-                                            <th className="p-3 text-right font-medium">
-                                                Kuota
-                                            </th>
-                                            <th className="p-3 text-right font-medium">
-                                                Terpakai
-                                            </th>
-                                            <th className="p-3 text-right font-medium">
-                                                Sisa
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y">
-                                        {saldoCutis.data.map((saldo) => (
-                                            <tr key={saldo.id}>
-                                                <td className="p-3">
-                                                    <div className="font-medium">
-                                                        {saldo.karyawan?.nama}
-                                                    </div>
-                                                    <div className="text-xs text-muted-foreground">
-                                                        {saldo.karyawan?.nip}
-                                                    </div>
-                                                </td>
-                                                <td className="p-3">
-                                                    {
-                                                        saldo.karyawan
-                                                            ?.departemen
-                                                            ?.nama_departemen
-                                                    }
-                                                </td>
-                                                <td className="p-3">
-                                                    {
-                                                        saldo.jenis_cuti
-                                                            ?.nama_jenis
-                                                    }
-                                                </td>
-                                                <td className="p-3 text-muted-foreground">
-                                                    {saldo.periode_ke
-                                                        ? `Periode ke-${saldo.periode_ke}`
-                                                        : `Tahun ${saldo.tahun}`}
-                                                </td>
-                                                <td className="p-3 text-right">
-                                                    {saldo.kuota ??
-                                                        'Tanpa batas'}
-                                                </td>
-                                                <td className="p-3 text-right">
-                                                    {saldo.terpakai}
-                                                </td>
-                                                <td className="p-3 text-right font-medium">
-                                                    {saldo.sisa ??
-                                                        'Tanpa batas'}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
                         )}
+                        {karyawans.data.map((karyawan) => {
+                            const isOpen = expanded.has(karyawan.id);
+
+                            return (
+                                <div key={karyawan.id}>
+                                    <button
+                                        type="button"
+                                        onClick={() => toggle(karyawan.id)}
+                                        className="flex w-full items-center gap-2 p-4 text-left text-sm hover:bg-muted/50"
+                                    >
+                                        {isOpen ? (
+                                            <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                                        ) : (
+                                            <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                                        )}
+                                        <div className="flex-1">
+                                            <div className="font-medium">
+                                                {karyawan.nama}
+                                            </div>
+                                            <div className="text-muted-foreground">
+                                                {karyawan.nip} &middot;{' '}
+                                                {
+                                                    karyawan.departemen
+                                                        ?.nama_departemen
+                                                }{' '}
+                                                &middot;{' '}
+                                                {karyawan.jabatan?.nama_jabatan}
+                                            </div>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                            {karyawan.saldo_cutis.length} jenis
+                                            cuti
+                                        </div>
+                                    </button>
+
+                                    {isOpen && (
+                                        <div className="bg-muted/20 pl-10">
+                                            {karyawan.saldo_cutis.length ===
+                                            0 ? (
+                                                <p className="p-4 text-sm text-muted-foreground">
+                                                    Belum ada saldo cuti aktif.
+                                                </p>
+                                            ) : (
+                                                <div className="divide-y">
+                                                    {karyawan.saldo_cutis.map(
+                                                        (saldo) => (
+                                                            <div
+                                                                key={saldo.id}
+                                                                className="flex flex-col gap-1 py-3 pr-4 text-sm sm:flex-row sm:items-center sm:justify-between"
+                                                            >
+                                                                <div>
+                                                                    <div className="font-medium">
+                                                                        {
+                                                                            saldo
+                                                                                .jenis_cuti
+                                                                                ?.nama_jenis
+                                                                        }
+                                                                    </div>
+                                                                    <div className="text-muted-foreground">
+                                                                        {saldo.periode_ke
+                                                                            ? `Periode ke-${saldo.periode_ke}`
+                                                                            : `Tahun ${saldo.tahun}`}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="text-muted-foreground">
+                                                                    Kuota{' '}
+                                                                    {saldo.kuota ??
+                                                                        'tanpa batas'}
+                                                                    , terpakai{' '}
+                                                                    {
+                                                                        saldo.terpakai
+                                                                    }
+                                                                    ,{' '}
+                                                                    <span className="font-medium text-foreground">
+                                                                        sisa{' '}
+                                                                        {saldo.sisa ??
+                                                                            'tanpa batas'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        ),
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </CardContent>
                 </Card>
 
-                <Pagination links={saldoCutis.links} />
+                <Pagination links={karyawans.links} />
             </div>
         </>
     );
