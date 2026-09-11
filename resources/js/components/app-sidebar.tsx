@@ -11,6 +11,7 @@ import {
     ListChecks,
     UserCheck,
     Users,
+    Wallet,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -32,7 +33,10 @@ import { index as kompensasiIndex } from '@/routes/cuti/kompensasi';
 import { index as konfirmasiKontrakIndex } from '@/routes/cuti/konfirmasi-kontrak';
 import { index as cutiMassalIndex } from '@/routes/cuti/massal';
 import { index as jadwalShiftIndex } from '@/routes/jadwal-shift';
-import { index as laporanIndex } from '@/routes/laporan';
+import {
+    index as laporanIndex,
+    saldoCuti as saldoCutiLaporanIndex,
+} from '@/routes/laporan';
 import { index as karyawanIndex } from '@/routes/master/karyawan';
 import { index as usersIndex } from '@/routes/users';
 import type { Auth, NavItem, Role } from '@/types';
@@ -94,6 +98,19 @@ function buildNavItems(roles: Role[]): NavItem[] {
             title: 'Laporan',
             href: laporanIndex(),
             icon: FileBarChart,
+        });
+    }
+
+    if (
+        roles.includes('hrd') ||
+        roles.includes('admin') ||
+        roles.includes('manager') ||
+        roles.includes('kepala_bagian')
+    ) {
+        items.push({
+            title: 'Saldo Cuti',
+            href: saldoCutiLaporanIndex(),
+            icon: Wallet,
         });
     }
 
