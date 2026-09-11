@@ -10,7 +10,6 @@ import {
     LayoutGrid,
     ListChecks,
     UserCheck,
-    Users,
     Wallet,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -37,12 +36,24 @@ import {
     index as laporanIndex,
     saldoCuti as saldoCutiLaporanIndex,
 } from '@/routes/laporan';
+import { index as alasanCutiIndex } from '@/routes/master/alasan-cuti';
+import { index as departemenIndex } from '@/routes/master/departemen';
+import { index as hariLiburIndex } from '@/routes/master/hari-libur';
+import { index as jabatanIndex } from '@/routes/master/jabatan';
+import { index as jenisCutiIndex } from '@/routes/master/jenis-cuti';
 import { index as karyawanIndex } from '@/routes/master/karyawan';
+import { index as saldoCutiMasterIndex } from '@/routes/master/saldo-cuti';
+import { index as shiftIndex } from '@/routes/master/shift';
 import { index as usersIndex } from '@/routes/users';
 import type { Auth, NavItem, Role } from '@/types';
 
-function buildNavItems(roles: Role[]): NavItem[] {
-    const items: NavItem[] = [
+type NavGroup = { label: string; items: NavItem[] };
+
+function buildNavGroups(roles: Role[]): NavGroup[] {
+    const isHrdAdmin = roles.includes('hrd') || roles.includes('admin');
+    const groups: NavGroup[] = [];
+
+    const menuItems: NavItem[] = [
         { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
         { title: 'Riwayat Cuti', href: cutiIndex(), icon: ListChecks },
         { title: 'Ajukan Cuti', href: cutiCreate(), icon: FilePlus2 },
@@ -53,48 +64,72 @@ function buildNavItems(roles: Role[]): NavItem[] {
         roles.includes('hrd') ||
         roles.includes('manager')
     ) {
-        items.push({
+        menuItems.push({
             title: 'Approval',
             href: approvalIndex(),
             icon: ClipboardCheck,
         });
     }
 
-    items.push({
+    menuItems.push({
         title: 'Jadwal Shift',
         href: jadwalShiftIndex(),
         icon: CalendarDays,
     });
 
-    if (roles.includes('hrd') || roles.includes('admin')) {
-        items.push({
-            title: 'Master Data',
-            href: karyawanIndex(),
-            icon: Building2,
-        });
-        items.push({
-            title: 'Konfirmasi Kontrak',
-            href: konfirmasiKontrakIndex(),
-            icon: UserCheck,
-        });
-        items.push({
-            title: 'Kompensasi Cuti',
-            href: kompensasiIndex(),
-            icon: Banknote,
-        });
-        items.push({
-            title: 'Cuti Massal',
-            href: cutiMassalIndex(),
-            icon: CalendarRange,
+    groups.push({ label: 'Menu', items: menuItems });
+
+    if (isHrdAdmin) {
+        const masterDataChildren: NavItem[] = [
+            { title: 'Karyawan', href: karyawanIndex() },
+            { title: 'Departemen', href: departemenIndex() },
+            { title: 'Jabatan', href: jabatanIndex() },
+            { title: 'Jenis Cuti', href: jenisCutiIndex() },
+            { title: 'Alasan Cuti', href: alasanCutiIndex() },
+            { title: 'Saldo Cuti', href: saldoCutiMasterIndex() },
+            { title: 'Hari Libur', href: hariLiburIndex() },
+            { title: 'Shift', href: shiftIndex() },
+        ];
+
+        if (roles.includes('admin')) {
+            masterDataChildren.push({
+                title: 'User & Role',
+                href: usersIndex(),
+            });
+        }
+
+        groups.push({
+            label: 'Manajemen',
+            items: [
+                {
+                    title: 'Master Data',
+                    href: karyawanIndex(),
+                    icon: Building2,
+                    children: masterDataChildren,
+                },
+                {
+                    title: 'Konfirmasi Kontrak',
+                    href: konfirmasiKontrakIndex(),
+                    icon: UserCheck,
+                },
+                {
+                    title: 'Kompensasi Cuti',
+                    href: kompensasiIndex(),
+                    icon: Banknote,
+                },
+                {
+                    title: 'Cuti Massal',
+                    href: cutiMassalIndex(),
+                    icon: CalendarRange,
+                },
+            ],
         });
     }
 
-    if (
-        roles.includes('hrd') ||
-        roles.includes('admin') ||
-        roles.includes('manager')
-    ) {
-        items.push({
+    const laporanItems: NavItem[] = [];
+
+    if (isHrdAdmin || roles.includes('manager')) {
+        laporanItems.push({
             title: 'Laporan',
             href: laporanIndex(),
             icon: FileBarChart,
@@ -102,28 +137,27 @@ function buildNavItems(roles: Role[]): NavItem[] {
     }
 
     if (
-        roles.includes('hrd') ||
-        roles.includes('admin') ||
+        isHrdAdmin ||
         roles.includes('manager') ||
         roles.includes('kepala_bagian')
     ) {
-        items.push({
+        laporanItems.push({
             title: 'Saldo Cuti',
             href: saldoCutiLaporanIndex(),
             icon: Wallet,
         });
     }
 
-    if (roles.includes('admin')) {
-        items.push({ title: 'Kelola User', href: usersIndex(), icon: Users });
+    if (laporanItems.length > 0) {
+        groups.push({ label: 'Laporan', items: laporanItems });
     }
 
-    return items;
+    return groups;
 }
 
 export function AppSidebar() {
     const { auth } = usePage<{ auth: Auth }>().props;
-    const mainNavItems = buildNavItems(auth.roles ?? []);
+    const navGroups = buildNavGroups(auth.roles ?? []);
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -140,7 +174,13 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                {navGroups.map((group) => (
+                    <NavMain
+                        key={group.label}
+                        label={group.label}
+                        items={group.items}
+                    />
+                ))}
             </SidebarContent>
 
             <SidebarFooter>
