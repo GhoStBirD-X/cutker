@@ -26,7 +26,8 @@ class JadwalShiftController extends Controller
         $bulan = (int) ($request->input('bulan') ?? now()->month);
         $tahun = (int) ($request->input('tahun') ?? now()->year);
 
-        $bisaLihatSemua = $user->hasRole(['hrd', 'admin']);
+        $bisaKelola = $user->hasRole(['hrd', 'admin', 'koordinator_shift']);
+        $bisaLihatSemua = $user->hasRole(['hrd', 'admin', 'kepala_bagian', 'manager']);
         $bisaLihatDepartemen = ! $bisaLihatSemua && $karyawan && $user->hasPermissionTo('jadwal-shift.manage');
 
         // Koordinator shift dikunci ke departemennya sendiri, tidak bisa memilih departemen lain.
@@ -55,7 +56,12 @@ class JadwalShiftController extends Controller
                 ->get();
         }
 
+        // Daftar karyawan untuk formulir "Tambah Jadwal Shift" hanya perlu
+        // dikirim ke role yang benar-benar bisa mengelola jadwal (hrd, admin,
+        // koordinator_shift). Kepala bagian/manager hanya melihat jadwal,
+        // jadi tidak perlu daftar ini.
         $karyawans = match (true) {
+            ! $bisaKelola => collect(),
             $bisaLihatSemua => Karyawan::orderBy('nama')->get(['id', 'nama', 'departemen_id']),
             $bisaLihatDepartemen => Karyawan::where('departemen_id', $karyawan->departemen_id)->orderBy('nama')->get(['id', 'nama', 'departemen_id']),
             default => collect(),

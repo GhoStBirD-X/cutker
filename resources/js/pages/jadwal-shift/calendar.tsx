@@ -1,4 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import JadwalShiftController from '@/actions/App/Http/Controllers/JadwalShift/JadwalShiftController';
 import InputError from '@/components/input-error';
@@ -65,9 +66,12 @@ export default function JadwalShiftCalendar() {
         auth.roles.includes('hrd') ||
         auth.roles.includes('admin') ||
         auth.roles.includes('koordinator_shift');
-    const bisaPilihDepartemen =
-        (auth.roles.includes('hrd') || auth.roles.includes('admin')) &&
-        !departemenTerkunci;
+    const bisaLihatSemuaDepartemen =
+        auth.roles.includes('hrd') ||
+        auth.roles.includes('admin') ||
+        auth.roles.includes('kepala_bagian') ||
+        auth.roles.includes('manager');
+    const bisaPilihDepartemen = bisaLihatSemuaDepartemen && !departemenTerkunci;
 
     const departemenSaatIni = departemens.find(
         (d) => d.id === filters.departemen_id,
@@ -199,6 +203,24 @@ export default function JadwalShiftCalendar() {
             ? { bulan: 1, tahun: filters.tahun + 1 }
             : { bulan: filters.bulan + 1, tahun: filters.tahun };
 
+    const [expandedTanggal, setExpandedTanggal] = useState<Set<string>>(
+        () => new Set(),
+    );
+
+    const toggleTanggal = (tanggal: string) => {
+        setExpandedTanggal((prev) => {
+            const next = new Set(prev);
+
+            if (next.has(tanggal)) {
+                next.delete(tanggal);
+            } else {
+                next.add(tanggal);
+            }
+
+            return next;
+        });
+    };
+
     const jadwalPerTanggal = useMemo(() => {
         const groups = new Map<string, JadwalShift[]>();
 
@@ -222,6 +244,16 @@ export default function JadwalShiftCalendar() {
                     ] as const,
             );
     }, [jadwals]);
+
+    const expandAllTanggal = () => {
+        setExpandedTanggal(
+            new Set(jadwalPerTanggal.map(([tanggal]) => tanggal)),
+        );
+    };
+
+    const collapseAllTanggal = () => {
+        setExpandedTanggal(new Set());
+    };
 
     return (
         <>
@@ -433,158 +465,235 @@ export default function JadwalShiftCalendar() {
                     </Card>
                 )}
 
+                {jadwalPerTanggal.length > 0 && (
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={expandAllTanggal}
+                            disabled={
+                                expandedTanggal.size === jadwalPerTanggal.length
+                            }
+                        >
+                            Buka Semua
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={collapseAllTanggal}
+                            disabled={expandedTanggal.size === 0}
+                        >
+                            Tutup Semua
+                        </Button>
+                    </div>
+                )}
+
                 <div className="grid gap-3">
-                    {jadwalPerTanggal.map(([tanggal, items]) => (
-                        <Card key={tanggal}>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium capitalize">
-                                    {weekdayFormatter.format(new Date(tanggal))}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="divide-y p-0">
-                                {items.map((jadwal) => (
-                                    <div
-                                        key={jadwal.id}
-                                        className="px-4 py-2.5"
-                                    >
-                                        <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <span className="font-medium">
-                                                    {jadwal.karyawan?.nama}
-                                                </span>
-                                                <Badge
-                                                    className={cn(
-                                                        jadwal.shift &&
-                                                            SHIFT_BADGE_CLASS[
+                    {jadwalPerTanggal.map(([tanggal, items]) => {
+                        const isOpen = expandedTanggal.has(tanggal);
+
+                        return (
+                            <Card key={tanggal} className="gap-0 py-0">
+                                <button
+                                    type="button"
+                                    onClick={() => toggleTanggal(tanggal)}
+                                    className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-muted/50"
+                                >
+                                    {isOpen ? (
+                                        <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                                    ) : (
+                                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                                    )}
+                                    <CardTitle className="flex-1 text-sm font-medium capitalize">
+                                        {weekdayFormatter.format(
+                                            new Date(tanggal),
+                                        )}
+                                    </CardTitle>
+                                    <span className="text-xs text-muted-foreground">
+                                        {items.length} jadwal
+                                    </span>
+                                </button>
+                                {isOpen && (
+                                    <CardContent className="divide-y border-t p-0">
+                                        {items.map((jadwal) => (
+                                            <div
+                                                key={jadwal.id}
+                                                className="px-4 py-2.5"
+                                            >
+                                                <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <span className="font-medium">
+                                                            {
+                                                                jadwal.karyawan
+                                                                    ?.nama
+                                                            }
+                                                        </span>
+                                                        <Badge
+                                                            className={cn(
+                                                                jadwal.shift &&
+                                                                    SHIFT_BADGE_CLASS[
+                                                                        jadwal
+                                                                            .shift
+                                                                            .nama_shift
+                                                                    ],
+                                                            )}
+                                                            variant="outline"
+                                                        >
+                                                            {
                                                                 jadwal.shift
-                                                                    .nama_shift
-                                                            ],
+                                                                    ?.nama_shift
+                                                            }{' '}
+                                                            &middot;{' '}
+                                                            {
+                                                                jadwal.shift
+                                                                    ?.jam_mulai
+                                                            }
+                                                            -
+                                                            {
+                                                                jadwal.shift
+                                                                    ?.jam_selesai
+                                                            }
+                                                        </Badge>
+                                                        {jadwal.jam_lembur && (
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="border-orange-200 bg-orange-100 text-orange-800 dark:border-orange-900 dark:bg-orange-950 dark:text-orange-300"
+                                                            >
+                                                                {
+                                                                    jadwal.jam_lembur
+                                                                }{' '}
+                                                                jam lembur
+                                                                {jadwal.catatan_lembur
+                                                                    ? ` · ${jadwal.catatan_lembur}`
+                                                                    : ''}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    {bisaKelola && (
+                                                        <div className="flex gap-1">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                onClick={() =>
+                                                                    editingLemburId ===
+                                                                    jadwal.id
+                                                                        ? cancelEditLembur()
+                                                                        : startEditLembur(
+                                                                              jadwal,
+                                                                          )
+                                                                }
+                                                            >
+                                                                Lembur
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className="text-destructive"
+                                                                onClick={() =>
+                                                                    destroy(
+                                                                        jadwal,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Hapus
+                                                            </Button>
+                                                        </div>
                                                     )}
-                                                    variant="outline"
-                                                >
-                                                    {jadwal.shift?.nama_shift}{' '}
-                                                    &middot;{' '}
-                                                    {jadwal.shift?.jam_mulai}-
-                                                    {jadwal.shift?.jam_selesai}
-                                                </Badge>
-                                                {jadwal.jam_lembur && (
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="border-orange-200 bg-orange-100 text-orange-800 dark:border-orange-900 dark:bg-orange-950 dark:text-orange-300"
-                                                    >
-                                                        {jadwal.jam_lembur} jam
-                                                        lembur
-                                                        {jadwal.catatan_lembur
-                                                            ? ` · ${jadwal.catatan_lembur}`
-                                                            : ''}
-                                                    </Badge>
+                                                </div>
+
+                                                {editingLemburId ===
+                                                    jadwal.id && (
+                                                    <div className="mt-2 grid grid-cols-1 gap-2 rounded-md border bg-muted/30 p-3 sm:grid-cols-[100px_1fr_auto_auto]">
+                                                        <div className="grid gap-1">
+                                                            <Label
+                                                                htmlFor={`jam-lembur-${jadwal.id}`}
+                                                                className="text-xs"
+                                                            >
+                                                                Jam Lembur
+                                                            </Label>
+                                                            <Input
+                                                                id={`jam-lembur-${jadwal.id}`}
+                                                                type="number"
+                                                                step="0.5"
+                                                                min={0}
+                                                                max={12}
+                                                                value={
+                                                                    lemburJam
+                                                                }
+                                                                onChange={(e) =>
+                                                                    setLemburJam(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                            />
+                                                            <InputError
+                                                                message={
+                                                                    lemburErrors.jam_lembur
+                                                                }
+                                                            />
+                                                        </div>
+                                                        <div className="grid gap-1">
+                                                            <Label
+                                                                htmlFor={`catatan-lembur-${jadwal.id}`}
+                                                                className="text-xs"
+                                                            >
+                                                                Catatan
+                                                                (opsional)
+                                                            </Label>
+                                                            <Input
+                                                                id={`catatan-lembur-${jadwal.id}`}
+                                                                value={
+                                                                    lemburCatatan
+                                                                }
+                                                                onChange={(e) =>
+                                                                    setLemburCatatan(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                            />
+                                                            <InputError
+                                                                message={
+                                                                    lemburErrors.catatan_lembur
+                                                                }
+                                                            />
+                                                        </div>
+                                                        <Button
+                                                            size="sm"
+                                                            className="self-end"
+                                                            disabled={
+                                                                lemburProcessing
+                                                            }
+                                                            onClick={() =>
+                                                                submitLembur(
+                                                                    jadwal,
+                                                                )
+                                                            }
+                                                        >
+                                                            Simpan
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="self-end"
+                                                            onClick={
+                                                                cancelEditLembur
+                                                            }
+                                                        >
+                                                            Batal
+                                                        </Button>
+                                                    </div>
                                                 )}
                                             </div>
-                                            {bisaKelola && (
-                                                <div className="flex gap-1">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        onClick={() =>
-                                                            editingLemburId ===
-                                                            jadwal.id
-                                                                ? cancelEditLembur()
-                                                                : startEditLembur(
-                                                                      jadwal,
-                                                                  )
-                                                        }
-                                                    >
-                                                        Lembur
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        className="text-destructive"
-                                                        onClick={() =>
-                                                            destroy(jadwal)
-                                                        }
-                                                    >
-                                                        Hapus
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {editingLemburId === jadwal.id && (
-                                            <div className="mt-2 grid grid-cols-1 gap-2 rounded-md border bg-muted/30 p-3 sm:grid-cols-[100px_1fr_auto_auto]">
-                                                <div className="grid gap-1">
-                                                    <Label
-                                                        htmlFor={`jam-lembur-${jadwal.id}`}
-                                                        className="text-xs"
-                                                    >
-                                                        Jam Lembur
-                                                    </Label>
-                                                    <Input
-                                                        id={`jam-lembur-${jadwal.id}`}
-                                                        type="number"
-                                                        step="0.5"
-                                                        min={0}
-                                                        max={12}
-                                                        value={lemburJam}
-                                                        onChange={(e) =>
-                                                            setLemburJam(
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                    />
-                                                    <InputError
-                                                        message={
-                                                            lemburErrors.jam_lembur
-                                                        }
-                                                    />
-                                                </div>
-                                                <div className="grid gap-1">
-                                                    <Label
-                                                        htmlFor={`catatan-lembur-${jadwal.id}`}
-                                                        className="text-xs"
-                                                    >
-                                                        Catatan (opsional)
-                                                    </Label>
-                                                    <Input
-                                                        id={`catatan-lembur-${jadwal.id}`}
-                                                        value={lemburCatatan}
-                                                        onChange={(e) =>
-                                                            setLemburCatatan(
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                    />
-                                                    <InputError
-                                                        message={
-                                                            lemburErrors.catatan_lembur
-                                                        }
-                                                    />
-                                                </div>
-                                                <Button
-                                                    size="sm"
-                                                    className="self-end"
-                                                    disabled={lemburProcessing}
-                                                    onClick={() =>
-                                                        submitLembur(jadwal)
-                                                    }
-                                                >
-                                                    Simpan
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="self-end"
-                                                    onClick={cancelEditLembur}
-                                                >
-                                                    Batal
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-                    ))}
+                                        ))}
+                                    </CardContent>
+                                )}
+                            </Card>
+                        );
+                    })}
                 </div>
             </div>
         </>

@@ -209,4 +209,72 @@ class JadwalShiftManagementTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    public function test_kepala_bagian_can_view_jadwal_shift_across_all_departments(): void
+    {
+        $kepalaBagian = $this->karyawanUser('kepala_bagian');
+        $karyawanDepartemenLain = $this->karyawanUser('karyawan');
+        $shift = Shift::factory()->create();
+        $tanggal = now()->startOfMonth()->addDays(2)->toDateString();
+
+        JadwalShift::factory()->create([
+            'karyawan_id' => $karyawanDepartemenLain->karyawan->id,
+            'shift_id' => $shift->id,
+            'tanggal' => $tanggal,
+        ]);
+
+        $response = $this->actingAs($kepalaBagian)->get(route('jadwal-shift.index', [
+            'bulan' => now()->month,
+            'tahun' => now()->year,
+        ]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->has('jadwals', 1)
+            ->where('jadwals.0.karyawan_id', $karyawanDepartemenLain->karyawan->id)
+            ->where('karyawans', [])
+        );
+    }
+
+    public function test_manager_can_view_jadwal_shift_across_all_departments(): void
+    {
+        $manager = $this->karyawanUser('manager');
+        $karyawanDepartemenLain = $this->karyawanUser('karyawan');
+        $shift = Shift::factory()->create();
+        $tanggal = now()->startOfMonth()->addDays(2)->toDateString();
+
+        JadwalShift::factory()->create([
+            'karyawan_id' => $karyawanDepartemenLain->karyawan->id,
+            'shift_id' => $shift->id,
+            'tanggal' => $tanggal,
+        ]);
+
+        $response = $this->actingAs($manager)->get(route('jadwal-shift.index', [
+            'bulan' => now()->month,
+            'tahun' => now()->year,
+        ]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->has('jadwals', 1)
+            ->where('jadwals.0.karyawan_id', $karyawanDepartemenLain->karyawan->id)
+            ->where('karyawans', [])
+        );
+    }
+
+    public function test_kepala_bagian_cannot_create_jadwal_shift(): void
+    {
+        $kepalaBagian = $this->karyawanUser('kepala_bagian');
+        $karyawan = $this->karyawanUser('karyawan');
+        $shift = Shift::factory()->create();
+
+        $response = $this->actingAs($kepalaBagian)->post(route('jadwal-shift.store'), [
+            'karyawan_ids' => [$karyawan->karyawan->id],
+            'shift_id' => $shift->id,
+            'tanggal_mulai' => now()->addDay()->toDateString(),
+            'tanggal_selesai' => now()->addDay()->toDateString(),
+        ]);
+
+        $response->assertForbidden();
+    }
 }
