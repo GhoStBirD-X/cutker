@@ -29,9 +29,7 @@ export default function LaporanSaldoCuti() {
             ? String(filters.departemen_id)
             : '',
     });
-    const [expanded, setExpanded] = useState<Set<number>>(
-        () => new Set(karyawans.data.map((k) => k.id)),
-    );
+    const [expanded, setExpanded] = useState<Set<number>>(() => new Set());
 
     const applyFilter = (e: React.FormEvent) => {
         e.preventDefault();
