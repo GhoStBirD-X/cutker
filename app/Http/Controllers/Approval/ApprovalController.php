@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Approval;
 
 use App\Enums\StatusApproval;
+use App\Exceptions\ApprovalSudahDiprosesException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Approval\ApprovalActionRequest;
 use App\Models\Approval;
@@ -18,12 +19,23 @@ class ApprovalController extends Controller
     {
         $this->authorize('viewAny', Approval::class);
 
-        $karyawan = $request->user()->karyawan;
+        $user = $request->user();
+        $karyawan = $user->karyawan;
 
         $approvals = Approval::query()
             ->with(['pengajuanCuti.karyawan', 'pengajuanCuti.jenisCuti'])
-            ->where('approver_id', $karyawan->id)
             ->where('status', StatusApproval::Pending)
+            ->where(function ($query) use ($user, $karyawan) {
+                $query->where('approver_id', $karyawan?->id);
+
+                if ($user->hasRole('hrd')) {
+                    $query->orWhere('level', ApprovalService::LEVEL_HRD);
+                }
+
+                if ($user->hasRole('manager')) {
+                    $query->orWhere('level', ApprovalService::LEVEL_MANAGER);
+                }
+            })
             ->latest()
             ->paginate(10)
             ->withQueryString();
@@ -47,7 +59,13 @@ class ApprovalController extends Controller
 
     public function approve(ApprovalActionRequest $request, Approval $approval, ApprovalService $service): RedirectResponse
     {
-        $service->approve($approval, $request->user()->karyawan, $request->validated('catatan'));
+        try {
+            $service->approve($approval, $request->user()->karyawan, $request->validated('catatan'));
+        } catch (ApprovalSudahDiprosesException $e) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => $e->getMessage()]);
+
+            return to_route('approval.index');
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Pengajuan cuti berhasil disetujui.']);
 
@@ -56,7 +74,13 @@ class ApprovalController extends Controller
 
     public function reject(ApprovalActionRequest $request, Approval $approval, ApprovalService $service): RedirectResponse
     {
-        $service->reject($approval, $request->user()->karyawan, $request->validated('catatan'));
+        try {
+            $service->reject($approval, $request->user()->karyawan, $request->validated('catatan'));
+        } catch (ApprovalSudahDiprosesException $e) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => $e->getMessage()]);
+
+            return to_route('approval.index');
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Pengajuan cuti berhasil ditolak.']);
 

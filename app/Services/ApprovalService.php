@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\StatusApproval;
 use App\Enums\StatusPengajuan;
+use App\Exceptions\ApprovalSudahDiprosesException;
 use App\Models\Approval;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
@@ -28,6 +29,13 @@ class ApprovalService
     /**
      * Menyetujui approval pada level saat ini.
      *
+     * Level HRD & Manager adalah kolam bersama: siapa pun user dengan role
+     * tersebut boleh bertindak, tidak hanya approver yang tercatat di
+     * approver_id (itu cuma nilai awal/hint, lihat cariApproverPalingLuang).
+     * Approval di-lock dan dicek masih pending di dalam transaction supaya
+     * dua approver yang bertindak bersamaan tidak memproses hal yang sama
+     * dua kali (mis. memotong saldo dua kali).
+     *
      * Level 1 (Kepala Bagian) & Level 2 (HRD): meneruskan pengajuan ke level
      * berikutnya. Level 3 (Manager, final): memotong saldo cuti & mengubah
      * status pengajuan dalam satu DB transaction agar saldo dan status
@@ -35,9 +43,16 @@ class ApprovalService
      */
     public function approve(Approval $approval, Karyawan $approver, ?string $catatan = null): Approval
     {
-        return DB::transaction(function () use ($approval, $catatan) {
+        return DB::transaction(function () use ($approval, $approver, $catatan) {
+            $approval = Approval::query()->whereKey($approval->id)->lockForUpdate()->firstOrFail();
+
+            if ($approval->status !== StatusApproval::Pending) {
+                throw new ApprovalSudahDiprosesException;
+            }
+
             $approval->update([
                 'status' => StatusApproval::Disetujui,
+                'approver_id' => $approver->id,
                 'tanggal_approval' => now(),
                 'catatan' => $catatan,
             ]);
@@ -45,8 +60,8 @@ class ApprovalService
             $pengajuan = $approval->pengajuanCuti()->lockForUpdate()->first();
 
             match ($approval->level) {
-                self::LEVEL_KEPALA_BAGIAN => $this->teruskan($pengajuan, self::LEVEL_HRD, $this->cariHrd()),
-                self::LEVEL_HRD => $this->teruskan($pengajuan, self::LEVEL_MANAGER, $this->cariManager()),
+                self::LEVEL_KEPALA_BAGIAN => $this->teruskan($pengajuan, self::LEVEL_HRD, 'hrd'),
+                self::LEVEL_HRD => $this->teruskan($pengajuan, self::LEVEL_MANAGER, 'manager'),
                 self::LEVEL_MANAGER => $this->setujuiFinal($pengajuan),
                 default => null,
             };
@@ -57,9 +72,16 @@ class ApprovalService
 
     public function reject(Approval $approval, Karyawan $approver, ?string $catatan = null): Approval
     {
-        return DB::transaction(function () use ($approval, $catatan) {
+        return DB::transaction(function () use ($approval, $approver, $catatan) {
+            $approval = Approval::query()->whereKey($approval->id)->lockForUpdate()->firstOrFail();
+
+            if ($approval->status !== StatusApproval::Pending) {
+                throw new ApprovalSudahDiprosesException;
+            }
+
             $approval->update([
                 'status' => StatusApproval::Ditolak,
+                'approver_id' => $approver->id,
                 'tanggal_approval' => now(),
                 'catatan' => $catatan,
             ]);
@@ -74,18 +96,24 @@ class ApprovalService
     }
 
     /**
-     * Membuat Approval level berikutnya dan memberi notifikasi ke approver-nya.
+     * Membuat Approval level berikutnya dan memberi notifikasi ke SELURUH
+     * user dengan role tersebut (HRD/Manager melihat & bisa memproses
+     * approval siapa pun, bukan cuma satu orang yang ditugaskan).
      */
-    protected function teruskan(PengajuanCuti $pengajuan, int $levelBerikutnya, ?Karyawan $approver): void
+    protected function teruskan(PengajuanCuti $pengajuan, int $levelBerikutnya, string $role): void
     {
+        $approverAwal = $this->cariApproverPalingLuang($role);
+
         Approval::query()->create([
             'pengajuan_cuti_id' => $pengajuan->id,
-            'approver_id' => $approver?->id,
+            'approver_id' => $approverAwal?->id,
             'level' => $levelBerikutnya,
             'status' => StatusApproval::Pending,
         ]);
 
-        $approver?->user?->notify(new PengajuanCutiDiajukan($pengajuan));
+        User::role($role)->get()->each(
+            fn (User $user) => $user->notify(new PengajuanCutiDiajukan($pengajuan))
+        );
     }
 
     /**
@@ -112,22 +140,10 @@ class ApprovalService
     }
 
     /**
-     * HRD dengan approval pending paling sedikit dipilih agar beban kerja merata.
+     * Dipakai sebagai approver_id awal saat approval dibuat (nilai default
+     * sebelum ada yang bertindak) — bukan pembatas siapa yang boleh
+     * memproses, karena level HRD & Manager adalah kolam bersama.
      */
-    protected function cariHrd(): ?Karyawan
-    {
-        return $this->cariApproverPalingLuang('hrd');
-    }
-
-    /**
-     * Manager (company-wide, approver final) dengan approval pending paling
-     * sedikit dipilih agar beban kerja merata, sama seperti pemilihan HRD.
-     */
-    protected function cariManager(): ?Karyawan
-    {
-        return $this->cariApproverPalingLuang('manager');
-    }
-
     protected function cariApproverPalingLuang(string $role): ?Karyawan
     {
         $karyawanIds = User::role($role)->pluck('karyawan_id');

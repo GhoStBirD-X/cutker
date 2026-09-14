@@ -4,6 +4,7 @@ namespace Tests\Feature\Approval;
 
 use App\Enums\StatusApproval;
 use App\Enums\StatusPengajuan;
+use App\Exceptions\ApprovalSudahDiprosesException;
 use App\Models\Approval;
 use App\Models\Departemen;
 use App\Models\JenisCuti;
@@ -282,6 +283,67 @@ class ApprovalFlowTest extends TestCase
             'approver_id' => $hrd->karyawan->id,
             'status' => 'pending',
         ]);
+    }
+
+    public function test_any_hrd_can_view_and_approve_a_pending_request_even_if_not_originally_assigned(): void
+    {
+        ['approvalLevel2' => $approvalLevel2] = $this->buatPengajuanDenganApprovalLevel2();
+        $hrdLain = $this->karyawanUser('hrd');
+        $this->karyawanUser('manager');
+
+        $this->actingAs($hrdLain)->get(route('approval.show', $approvalLevel2))->assertOk();
+
+        $this->actingAs($hrdLain)->get(route('approval.index'))
+            ->assertInertia(fn ($page) => $page->has('approvals.data', 1));
+
+        $response = $this->actingAs($hrdLain)->post(route('approval.approve', $approvalLevel2), [
+            'catatan' => 'Disetujui HRD lain',
+        ]);
+
+        $response->assertRedirect(route('approval.index'));
+        $this->assertDatabaseHas('approvals', [
+            'id' => $approvalLevel2->id,
+            'status' => 'disetujui',
+            'approver_id' => $hrdLain->karyawan->id,
+        ]);
+    }
+
+    public function test_any_manager_can_approve_a_pending_request_even_if_not_originally_assigned(): void
+    {
+        ['pengajuan' => $pengajuan] = $this->buatPengajuanDenganApprovalLevel2();
+        $managerAwal = $this->karyawanUser('manager');
+
+        $approvalLevel3 = Approval::factory()->create([
+            'pengajuan_cuti_id' => $pengajuan->id,
+            'approver_id' => $managerAwal->karyawan->id,
+            'level' => ApprovalService::LEVEL_MANAGER,
+            'status' => StatusApproval::Pending,
+        ]);
+
+        $managerLain = $this->karyawanUser('manager');
+
+        $response = $this->actingAs($managerLain)->post(route('approval.approve', $approvalLevel3), [
+            'catatan' => 'Disetujui manager lain',
+        ]);
+
+        $response->assertRedirect(route('approval.index'));
+        $this->assertDatabaseHas('approvals', [
+            'id' => $approvalLevel3->id,
+            'status' => 'disetujui',
+            'approver_id' => $managerLain->karyawan->id,
+        ]);
+    }
+
+    public function test_approving_an_already_processed_approval_throws_instead_of_double_processing(): void
+    {
+        ['approvalLevel2' => $approvalLevel2, 'hrd' => $hrd] = $this->buatPengajuanDenganApprovalLevel2();
+
+        $approvalStaleDiTangan = Approval::query()->findOrFail($approvalLevel2->id);
+        $approvalLevel2->update(['status' => StatusApproval::Disetujui]);
+
+        $this->expectException(ApprovalSudahDiprosesException::class);
+
+        $this->app->make(ApprovalService::class)->approve($approvalStaleDiTangan, $hrd->karyawan, 'Terlambat');
     }
 
     public function test_karyawan_without_approval_role_cannot_approve_a_request(): void
