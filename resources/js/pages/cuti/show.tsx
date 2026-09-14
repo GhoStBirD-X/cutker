@@ -4,7 +4,12 @@ import { StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { approvalLevelLabel, formatDate, formatDateTime } from '@/lib/format';
+import {
+    approvalLevelLabel,
+    approverDisplayName,
+    formatDate,
+    formatDateTime,
+} from '@/lib/format';
 import { dashboard } from '@/routes';
 import { index as cutiIndex } from '@/routes/cuti';
 import type { Auth, PengajuanCuti } from '@/types';
@@ -138,8 +143,7 @@ export default function CutiShow() {
                                         Level {approval.level} (
                                         {approvalLevelLabel(approval.level)})
                                         &middot;{' '}
-                                        {approval.approver?.nama ??
-                                            'Belum ditentukan'}
+                                        {approverDisplayName(approval)}
                                     </div>
                                     {approval.catatan && (
                                         <div className="text-muted-foreground">

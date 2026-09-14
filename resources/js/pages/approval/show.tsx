@@ -7,7 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { approvalLevelLabel, formatDate } from '@/lib/format';
+import {
+    approvalLevelLabel,
+    approverDisplayName,
+    formatDate,
+} from '@/lib/format';
 import { dashboard } from '@/routes';
 import { index as approvalIndex } from '@/routes/approval';
 import type { Approval } from '@/types';
@@ -138,7 +142,7 @@ export default function ApprovalShow() {
                                 <div>
                                     Level {item.level} (
                                     {approvalLevelLabel(item.level)}) &middot;{' '}
-                                    {item.approver?.nama ?? 'Belum ditentukan'}
+                                    {approverDisplayName(item)}
                                     {item.catatan && (
                                         <div className="text-muted-foreground">
                                             Catatan: {item.catatan}
