@@ -8,6 +8,14 @@ const THEMES: { value: ColorTheme; label: string; swatch: string }[] = [
     { value: 'retro', label: 'Retro Modern', swatch: 'oklch(0.58 0.16 40)' },
     { value: 'ocean', label: 'Ocean', swatch: 'oklch(0.52 0.14 235)' },
     { value: 'forest', label: 'Forest', swatch: 'oklch(0.48 0.12 148)' },
+    { value: 'pixel', label: 'Pixel', swatch: 'oklch(0.45 0.09 130)' },
+    {
+        value: 'neubrutalism',
+        label: 'Neubrutalism',
+        swatch: 'oklch(0.8 0.19 95)',
+    },
+    { value: 'terminal', label: 'Terminal', swatch: 'oklch(0.45 0.13 150)' },
+    { value: 'glass', label: 'Glass', swatch: 'oklch(0.55 0.18 280)' },
 ];
 
 export function ThemeColorPicker() {

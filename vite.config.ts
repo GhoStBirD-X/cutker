@@ -15,6 +15,15 @@ export default defineConfig({
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
                 }),
+                bunny('Press Start 2P', {
+                    weights: [400],
+                }),
+                bunny('VT323', {
+                    weights: [400],
+                }),
+                bunny('JetBrains Mono', {
+                    weights: [400, 500, 700],
+                }),
             ],
         }),
         inertia(),

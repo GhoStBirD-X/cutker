@@ -1,6 +1,14 @@
 import { useSyncExternalStore } from 'react';
 
-export type ColorTheme = 'default' | 'retro' | 'ocean' | 'forest';
+export type ColorTheme =
+    | 'default'
+    | 'retro'
+    | 'ocean'
+    | 'forest'
+    | 'pixel'
+    | 'neubrutalism'
+    | 'terminal'
+    | 'glass';
 
 export type UseThemeReturn = {
     readonly theme: ColorTheme;
