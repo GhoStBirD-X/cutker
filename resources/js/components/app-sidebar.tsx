@@ -11,6 +11,7 @@ import {
     ListChecks,
     UserCheck,
     Wallet,
+    Zap,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -27,7 +28,11 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as approvalIndex } from '@/routes/approval';
-import { create as cutiCreate, index as cutiIndex } from '@/routes/cuti';
+import {
+    create as cutiCreate,
+    createMendadak as cutiCreateMendadak,
+    index as cutiIndex,
+} from '@/routes/cuti';
 import { index as kompensasiIndex } from '@/routes/cuti/kompensasi';
 import { index as konfirmasiKontrakIndex } from '@/routes/cuti/konfirmasi-kontrak';
 import { index as cutiMassalIndex } from '@/routes/cuti/massal';
@@ -53,10 +58,26 @@ function buildNavGroups(roles: Role[]): NavGroup[] {
     const isHrdAdmin = roles.includes('hrd') || roles.includes('admin');
     const groups: NavGroup[] = [];
 
-    const menuItems: NavItem[] = [
-        { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+    groups.push({
+        label: 'Menu',
+        items: [
+            { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+            {
+                title: 'Jadwal Shift',
+                href: jadwalShiftIndex(),
+                icon: CalendarDays,
+            },
+        ],
+    });
+
+    const cutiItems: NavItem[] = [
         { title: 'Riwayat Cuti', href: cutiIndex(), icon: ListChecks },
         { title: 'Ajukan Cuti', href: cutiCreate(), icon: FilePlus2 },
+        {
+            title: 'Ajukan Cuti Mendadak',
+            href: cutiCreateMendadak(),
+            icon: Zap,
+        },
     ];
 
     if (
@@ -64,20 +85,14 @@ function buildNavGroups(roles: Role[]): NavGroup[] {
         roles.includes('hrd') ||
         roles.includes('manager')
     ) {
-        menuItems.push({
+        cutiItems.push({
             title: 'Approval',
             href: approvalIndex(),
             icon: ClipboardCheck,
         });
     }
 
-    menuItems.push({
-        title: 'Jadwal Shift',
-        href: jadwalShiftIndex(),
-        icon: CalendarDays,
-    });
-
-    groups.push({ label: 'Menu', items: menuItems });
+    groups.push({ label: 'Cuti', items: cutiItems });
 
     if (isHrdAdmin) {
         const masterDataChildren: NavItem[] = [
