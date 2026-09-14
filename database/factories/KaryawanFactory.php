@@ -22,7 +22,7 @@ class KaryawanFactory extends Factory
             'nama' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'no_hp' => fake()->numerify('08##########'),
-            'jenis_kelamin' => fake()->randomElement(JenisKelamin::cases()),
+            'jenis_kelamin' => JenisKelamin::LakiLaki,
             'departemen_id' => Departemen::factory(),
             'jabatan_id' => Jabatan::factory(),
             'tanggal_masuk' => fake()->dateTimeBetween('-8 years', '-1 month'),
