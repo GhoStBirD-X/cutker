@@ -27,7 +27,8 @@ class UserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user)],
             'password' => [$user ? 'nullable' : 'required', Password::default()],
-            'role' => ['required', Rule::in(['karyawan', 'kepala_bagian', 'koordinator_shift', 'hrd', 'manager', 'admin'])],
+            'roles' => ['required', 'array', 'min:1'],
+            'roles.*' => [Rule::in(['karyawan', 'kepala_bagian', 'koordinator_shift', 'hrd', 'manager', 'admin'])],
             'karyawan_id' => ['nullable', 'integer', 'exists:karyawans,id', Rule::unique('users', 'karyawan_id')->ignore($user)],
         ];
     }

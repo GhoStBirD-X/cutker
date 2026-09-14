@@ -45,7 +45,7 @@ class UserController extends Controller
 
         $user->karyawan_id = $data['karyawan_id'] ?? null;
         $user->save();
-        $user->syncRoles([$data['role']]);
+        $user->syncRoles($data['roles']);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'User berhasil ditambahkan.']);
 
@@ -65,7 +65,7 @@ class UserController extends Controller
 
         $user->karyawan_id = $data['karyawan_id'] ?? null;
         $user->save();
-        $user->syncRoles([$data['role']]);
+        $user->syncRoles($data['roles']);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'User berhasil diperbarui.']);
 

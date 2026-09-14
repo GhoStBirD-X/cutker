@@ -6,6 +6,7 @@ import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
@@ -38,7 +39,7 @@ export default function UsersIndex() {
         name: '',
         email: '',
         password: '',
-        role: 'karyawan' as Role,
+        roles: ['karyawan'] as Role[],
         karyawan_id: '',
     });
 
@@ -48,9 +49,18 @@ export default function UsersIndex() {
             name: user.name,
             email: user.email,
             password: '',
-            role: user.roles[0]?.name ?? 'karyawan',
+            roles: user.roles.map((r) => r.name),
             karyawan_id: user.karyawan_id ? String(user.karyawan_id) : '',
         });
+    };
+
+    const toggleRole = (role: Role) => {
+        setData(
+            'roles',
+            data.roles.includes(role)
+                ? data.roles.filter((r) => r !== role)
+                : [...data.roles, role],
+        );
     };
 
     const cancelEdit = () => {
@@ -132,22 +142,26 @@ export default function UsersIndex() {
                                 <InputError message={errors.password} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="role">Role</Label>
-                                <select
-                                    id="role"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
-                                    value={data.role}
-                                    onChange={(e) =>
-                                        setData('role', e.target.value as Role)
-                                    }
-                                >
+                                <Label>Role (bisa lebih dari satu)</Label>
+                                <div className="flex flex-wrap gap-3 rounded-md border border-input p-2">
                                     {ROLES.map((role) => (
-                                        <option key={role} value={role}>
+                                        <label
+                                            key={role}
+                                            className="flex items-center gap-2 text-sm"
+                                        >
+                                            <Checkbox
+                                                checked={data.roles.includes(
+                                                    role,
+                                                )}
+                                                onCheckedChange={() =>
+                                                    toggleRole(role)
+                                                }
+                                            />
                                             {role}
-                                        </option>
+                                        </label>
                                     ))}
-                                </select>
-                                <InputError message={errors.role} />
+                                </div>
+                                <InputError message={errors.roles} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="karyawan_id">
@@ -206,9 +220,14 @@ export default function UsersIndex() {
                                 <div>
                                     <div className="flex flex-wrap items-center gap-2 font-medium">
                                         {user.name}
-                                        <Badge variant="secondary">
-                                            {user.roles[0]?.name}
-                                        </Badge>
+                                        {user.roles.map((role) => (
+                                            <Badge
+                                                key={role.name}
+                                                variant="secondary"
+                                            >
+                                                {role.name}
+                                            </Badge>
+                                        ))}
                                     </div>
                                     <div className="text-muted-foreground">
                                         {user.email}
