@@ -3,9 +3,13 @@
 namespace Tests\Feature;
 
 use App\Enums\JenisKelamin;
+use App\Enums\StatusApproval;
+use App\Models\Approval;
 use App\Models\JenisCuti;
+use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
 use App\Models\User;
+use App\Services\ApprovalService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -73,5 +77,29 @@ class DashboardTest extends TestCase
 
             $this->assertTrue($jenisCutiIds->contains($cutiHamil->id));
         });
+    }
+
+    public function test_hrd_dashboard_counts_pending_hrd_approvals_from_any_departemen_not_just_own(): void
+    {
+        $hrdLain = $this->karyawanUser('hrd');
+        $hrdYangLihatDashboard = $this->karyawanUser('hrd');
+        $pengajuan = PengajuanCuti::factory()->create();
+
+        // Approval level HRD ini "ditugaskan" ke HRD lain (approver_id-nya
+        // bukan milik $hrdYangLihatDashboard), tapi karena HRD adalah kolam
+        // bersama, tetap harus terhitung di dashboard-nya.
+        Approval::factory()->create([
+            'pengajuan_cuti_id' => $pengajuan->id,
+            'approver_id' => $hrdLain->karyawan->id,
+            'level' => ApprovalService::LEVEL_HRD,
+            'status' => StatusApproval::Pending,
+        ]);
+
+        $response = $this->actingAs($hrdYangLihatDashboard)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->where('approvalPendingCount', 1)
+        );
     }
 }

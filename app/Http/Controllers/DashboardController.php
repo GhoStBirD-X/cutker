@@ -13,6 +13,7 @@ use App\Models\KompensasiCuti;
 use App\Models\KonfirmasiKontrakCuti;
 use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
+use App\Services\ApprovalService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -54,9 +55,23 @@ class DashboardController extends Controller
         }
 
         if ($user->hasAnyRole(['kepala_bagian', 'hrd', 'manager'])) {
+            // Level HRD & Manager adalah kolam bersama: dihitung dari SELURUH
+            // approval pending di level itu, bukan cuma yang approver_id-nya
+            // cocok dengan diri sendiri (lihat ApprovalController::index()
+            // & ApprovalPolicy untuk pola yang sama).
             $data['approvalPendingCount'] = Approval::query()
-                ->where('approver_id', $karyawan?->id)
                 ->where('status', StatusApproval::Pending)
+                ->where(function ($query) use ($user, $karyawan) {
+                    $query->where('approver_id', $karyawan?->id);
+
+                    if ($user->hasRole('hrd')) {
+                        $query->orWhere('level', ApprovalService::LEVEL_HRD);
+                    }
+
+                    if ($user->hasRole('manager')) {
+                        $query->orWhere('level', ApprovalService::LEVEL_MANAGER);
+                    }
+                })
                 ->count();
         }
 
