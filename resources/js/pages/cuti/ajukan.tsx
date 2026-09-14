@@ -173,25 +173,6 @@ export default function CutiAjukan() {
                                             <InputError
                                                 message={errors.tanggal_mulai}
                                             />
-                                            {jenisCutiTerpilih?.minimal_hari_pengajuan && (
-                                                <p className="text-xs text-muted-foreground">
-                                                    {
-                                                        jenisCutiTerpilih.nama_jenis
-                                                    }{' '}
-                                                    harus diajukan minimal H-
-                                                    {
-                                                        jenisCutiTerpilih.minimal_hari_pengajuan
-                                                    }
-                                                    . Butuh cuti mendadak?{' '}
-                                                    <Link
-                                                        href={cutiCreateMendadak()}
-                                                        className="text-primary underline"
-                                                    >
-                                                        Ajukan di sini
-                                                    </Link>
-                                                    .
-                                                </p>
-                                            )}
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="tanggal_selesai">
@@ -209,6 +190,24 @@ export default function CutiAjukan() {
                                             />
                                         </div>
                                     </div>
+
+                                    {jenisCutiTerpilih?.minimal_hari_pengajuan && (
+                                        <p className="-mt-3 text-xs text-muted-foreground">
+                                            {jenisCutiTerpilih.nama_jenis} harus
+                                            diajukan minimal H-
+                                            {
+                                                jenisCutiTerpilih.minimal_hari_pengajuan
+                                            }
+                                            . Butuh cuti mendadak?{' '}
+                                            <Link
+                                                href={cutiCreateMendadak()}
+                                                className="text-primary underline"
+                                            >
+                                                Ajukan di sini
+                                            </Link>
+                                            .
+                                        </p>
+                                    )}
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="alasan">Alasan</Label>
