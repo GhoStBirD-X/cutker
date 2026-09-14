@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import AppearanceTabs from '@/components/appearance-tabs';
 import Heading from '@/components/heading';
+import { ThemeColorPicker } from '@/components/theme-color-picker';
 import { edit as editAppearance } from '@/routes/appearance';
 
 export default function Appearance() {
@@ -17,6 +18,13 @@ export default function Appearance() {
                     description="Update the appearance settings for your account"
                 />
                 <AppearanceTabs />
+
+                <Heading
+                    variant="small"
+                    title="Tema Warna"
+                    description="Pilih palet warna yang kamu suka. Tetap bisa dikombinasikan dengan mode terang/gelap di atas."
+                />
+                <ThemeColorPicker />
             </div>
         </>
     );

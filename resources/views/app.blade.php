@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $theme ?? 'default' }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -27,6 +27,30 @@
 
             html.dark {
                 background-color: oklch(0.17 0.016 295);
+            }
+
+            html[data-theme='retro'] {
+                background-color: oklch(0.97 0.02 75);
+            }
+
+            html[data-theme='retro'].dark {
+                background-color: oklch(0.2 0.025 50);
+            }
+
+            html[data-theme='ocean'] {
+                background-color: oklch(0.98 0.008 220);
+            }
+
+            html[data-theme='ocean'].dark {
+                background-color: oklch(0.16 0.026 235);
+            }
+
+            html[data-theme='forest'] {
+                background-color: oklch(0.98 0.01 130);
+            }
+
+            html[data-theme='forest'].dark {
+                background-color: oklch(0.17 0.02 150);
             }
         </style>
 
