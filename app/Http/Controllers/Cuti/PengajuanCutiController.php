@@ -35,9 +35,22 @@ class PengajuanCutiController extends Controller
 
     public function create(Request $request): Response
     {
+        return Inertia::render('cuti/ajukan', $this->dataUntukForm($request));
+    }
+
+    public function createMendadak(Request $request): Response
+    {
+        return Inertia::render('cuti/ajukan-mendadak', $this->dataUntukForm($request));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function dataUntukForm(Request $request): array
+    {
         $karyawan = $request->user()->karyawan;
 
-        return Inertia::render('cuti/ajukan', [
+        return [
             'jenisCutis' => JenisCuti::all(),
             'alasanCutis' => AlasanCuti::all(),
             'saldoCuti' => SaldoCuti::query()
@@ -45,7 +58,7 @@ class PengajuanCutiController extends Controller
                 ->where('karyawan_id', $karyawan->id)
                 ->where('tahun', now()->year)
                 ->get(),
-        ]);
+        ];
     }
 
     public function store(StorePengajuanCutiRequest $request, PengajuanCutiService $service): RedirectResponse
@@ -61,6 +74,8 @@ class PengajuanCutiController extends Controller
                     'tanggal_mulai' => (string) $data['tanggal_mulai'],
                     'tanggal_selesai' => (string) $data['tanggal_selesai'],
                     'alasan' => (string) $data['alasan'],
+                    'mendadak' => $data['mendadak'] ?? false,
+                    'alasan_mendadak' => $data['alasan_mendadak'] ?? null,
                 ],
                 $request->file('lampiran'),
             );

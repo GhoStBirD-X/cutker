@@ -25,6 +25,8 @@ use Illuminate\Support\Carbon;
  * @property StatusPengajuan $status
  * @property Carbon $tanggal_pengajuan
  * @property string|null $lampiran
+ * @property bool $is_mendadak
+ * @property string|null $alasan_mendadak
  */
 #[Fillable([
     'karyawan_id',
@@ -39,6 +41,8 @@ use Illuminate\Support\Carbon;
     'status',
     'tanggal_pengajuan',
     'lampiran',
+    'is_mendadak',
+    'alasan_mendadak',
 ])]
 class PengajuanCuti extends Model
 {
@@ -55,6 +59,7 @@ class PengajuanCuti extends Model
             'tanggal_selesai' => 'date',
             'tanggal_pengajuan' => 'datetime',
             'status' => StatusPengajuan::class,
+            'is_mendadak' => 'boolean',
         ];
     }
 

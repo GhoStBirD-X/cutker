@@ -29,7 +29,7 @@ class PengajuanCutiService
      * yang bertabrakan dengan rentang tanggal; jumlah_hari_kalender tetap
      * menyimpan rentang kalender aslinya untuk transparansi.
      *
-     * @param  array{jenis_cuti_id: int, alasan_cuti_id?: int|null, tanggal_mulai: string, tanggal_selesai: string, alasan: string}  $data
+     * @param  array{jenis_cuti_id: int, alasan_cuti_id?: int|null, tanggal_mulai: string, tanggal_selesai: string, alasan: string, mendadak?: bool, alasan_mendadak?: string|null}  $data
      */
     public function ajukan(Karyawan $karyawan, array $data, ?UploadedFile $lampiran = null): PengajuanCuti
     {
@@ -59,6 +59,8 @@ class PengajuanCutiService
                 'status' => StatusPengajuan::Pending,
                 'tanggal_pengajuan' => now(),
                 'lampiran' => $lampiran?->store('lampiran-cuti', 'public'),
+                'is_mendadak' => $data['mendadak'] ?? false,
+                'alasan_mendadak' => $data['alasan_mendadak'] ?? null,
             ]);
 
             $kepalaBagian = $this->cariKepalaBagian($karyawan);

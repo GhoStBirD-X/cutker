@@ -389,4 +389,118 @@ class PengajuanCutiTest extends TestCase
         $response->assertSessionHasErrors('tanggal_selesai');
         $this->assertDatabaseCount('pengajuan_cutis', 0);
     }
+
+    public function test_leave_request_is_rejected_when_it_does_not_meet_the_minimum_notice_period(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id]);
+
+        $jenisCuti = JenisCuti::factory()->create(['minimal_hari_pengajuan' => 7]);
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(3)->toDateString(),
+            'tanggal_selesai' => now()->addDays(4)->toDateString(),
+            'alasan' => 'Liburan',
+        ]);
+
+        $response->assertSessionHasErrors('tanggal_mulai');
+        $this->assertDatabaseCount('pengajuan_cutis', 0);
+    }
+
+    public function test_leave_request_is_accepted_when_it_meets_the_minimum_notice_period(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id]);
+
+        $jenisCuti = JenisCuti::factory()->create(['minimal_hari_pengajuan' => 7]);
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(7)->toDateString(),
+            'tanggal_selesai' => now()->addDays(8)->toDateString(),
+            'alasan' => 'Liburan',
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertDatabaseCount('pengajuan_cutis', 1);
+    }
+
+    public function test_mendadak_request_bypasses_minimum_notice_period_when_justified(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id]);
+
+        $jenisCuti = JenisCuti::factory()->create(['minimal_hari_pengajuan' => 7]);
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDay()->toDateString(),
+            'tanggal_selesai' => now()->addDay()->toDateString(),
+            'alasan' => 'Sakit mendadak',
+            'mendadak' => true,
+            'alasan_mendadak' => 'Orang tua masuk rumah sakit tiba-tiba.',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('pengajuan_cutis', [
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'is_mendadak' => true,
+            'alasan_mendadak' => 'Orang tua masuk rumah sakit tiba-tiba.',
+        ]);
+    }
+
+    public function test_mendadak_request_requires_a_justification(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id]);
+
+        $jenisCuti = JenisCuti::factory()->create(['minimal_hari_pengajuan' => 7]);
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDay()->toDateString(),
+            'tanggal_selesai' => now()->addDay()->toDateString(),
+            'alasan' => 'Sakit mendadak',
+            'mendadak' => true,
+        ]);
+
+        $response->assertSessionHasErrors('alasan_mendadak');
+        $this->assertDatabaseCount('pengajuan_cutis', 0);
+    }
 }

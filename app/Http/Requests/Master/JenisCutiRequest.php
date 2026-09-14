@@ -27,6 +27,7 @@ class JenisCutiRequest extends FormRequest
             'nama_jenis' => ['required', 'string', 'max:255', Rule::unique('jenis_cutis', 'nama_jenis')->ignore($jenisCuti)],
             'kuota_default' => ['nullable', 'integer', 'min:0', 'max:365'],
             'masa_kerja_minimal_bulan' => ['nullable', 'integer', 'min:1', 'max:600'],
+            'minimal_hari_pengajuan' => ['nullable', 'integer', 'min:0', 'max:90'],
             'khusus_gender' => ['nullable', Rule::enum(JenisKelamin::class)],
             'keterangan' => ['nullable', 'string', 'max:255'],
         ];

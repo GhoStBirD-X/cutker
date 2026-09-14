@@ -5,6 +5,7 @@ namespace App\Http\Requests\Approval;
 use App\Models\Approval;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ApprovalActionRequest extends FormRequest
 {
@@ -20,12 +21,19 @@ class ApprovalActionRequest extends FormRequest
     }
 
     /**
+     * Catatan wajib diisi untuk pengajuan mendadak, supaya approver
+     * meninggalkan jejak pertimbangan eksplisit alih-alih persetujuan
+     * satu klik tanpa catatan untuk kondisi darurat.
+     *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
+        /** @var Approval $approval */
+        $approval = $this->route('approval');
+
         return [
-            'catatan' => ['nullable', 'string', 'max:255'],
+            'catatan' => [Rule::requiredIf(fn () => $approval->pengajuanCuti->is_mendadak), 'nullable', 'string', 'max:255'],
         ];
     }
 }

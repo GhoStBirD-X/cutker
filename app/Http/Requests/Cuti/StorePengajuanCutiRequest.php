@@ -4,6 +4,7 @@ namespace App\Http\Requests\Cuti;
 
 use App\Models\JenisCuti;
 use App\Models\PengajuanCuti;
+use App\Rules\BatasWaktuPengajuanCuti;
 use App\Rules\MasaKerjaMencukupi;
 use App\Rules\SesuaiDurasiAlasanCuti;
 use App\Rules\SesuaiGenderJenisCuti;
@@ -35,6 +36,7 @@ class StorePengajuanCutiRequest extends FormRequest
         $karyawanId = $karyawan->id;
         $tanggalMulai = (string) $this->input('tanggal_mulai');
         $alasanCutiId = $this->integer('alasan_cuti_id') ?: null;
+        $mendadak = $this->boolean('mendadak');
 
         return [
             'jenis_cuti_id' => [
@@ -50,7 +52,12 @@ class StorePengajuanCutiRequest extends FormRequest
                 'integer',
                 Rule::exists('alasan_cutis', 'id')->where('jenis_cuti_id', $this->input('jenis_cuti_id')),
             ],
-            'tanggal_mulai' => ['required', 'date', 'after_or_equal:today'],
+            'tanggal_mulai' => [
+                'required',
+                'date',
+                'after_or_equal:today',
+                new BatasWaktuPengajuanCuti($this->integer('jenis_cuti_id') ?: null, $mendadak),
+            ],
             'tanggal_selesai' => [
                 'required',
                 'date',
@@ -61,6 +68,8 @@ class StorePengajuanCutiRequest extends FormRequest
             ],
             'alasan' => ['required', 'string', 'max:255'],
             'lampiran' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'mendadak' => ['sometimes', 'boolean'],
+            'alasan_mendadak' => ['required_if:mendadak,true', 'nullable', 'string', 'max:500'],
         ];
     }
 }

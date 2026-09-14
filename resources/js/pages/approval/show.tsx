@@ -1,6 +1,8 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import ApprovalController from '@/actions/App/Http/Controllers/Approval/ApprovalController';
+import InputError from '@/components/input-error';
 import { StatusBadge } from '@/components/status-badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -18,7 +20,9 @@ type PageProps = {
 export default function ApprovalShow() {
     const { approval, canAct } = usePage<PageProps>().props;
     const pengajuan = approval.pengajuan_cuti;
-    const { data, setData, post, processing } = useForm({ catatan: '' });
+    const { data, setData, post, processing, errors } = useForm({
+        catatan: '',
+    });
 
     const submit = (aksi: 'approve' | 'reject') => {
         const action =
@@ -43,7 +47,17 @@ export default function ApprovalShow() {
                             {approvalLevelLabel(approval.level)})
                         </p>
                     </div>
-                    <StatusBadge status={approval.status} />
+                    <div className="flex gap-2">
+                        {pengajuan?.is_mendadak && (
+                            <Badge
+                                variant="outline"
+                                className="border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300"
+                            >
+                                Mendadak
+                            </Badge>
+                        )}
+                        <StatusBadge status={approval.status} />
+                    </div>
                 </div>
 
                 <Card>
@@ -85,6 +99,14 @@ export default function ApprovalShow() {
                             <div className="text-muted-foreground">Alasan</div>
                             <div>{pengajuan?.alasan}</div>
                         </div>
+                        {pengajuan?.is_mendadak && (
+                            <div className="col-span-2">
+                                <div className="text-muted-foreground">
+                                    Alasan Mendadak
+                                </div>
+                                <div>{pengajuan.alasan_mendadak}</div>
+                            </div>
+                        )}
                         {pengajuan?.lampiran && (
                             <div className="col-span-2">
                                 <div className="text-muted-foreground">
@@ -138,7 +160,9 @@ export default function ApprovalShow() {
                             <div className="space-y-3">
                                 <div className="grid gap-2">
                                     <Label htmlFor="catatan">
-                                        Catatan (opsional)
+                                        {pengajuan?.is_mendadak
+                                            ? 'Catatan (wajib untuk pengajuan mendadak)'
+                                            : 'Catatan (opsional)'}
                                     </Label>
                                     <Textarea
                                         id="catatan"
@@ -147,7 +171,9 @@ export default function ApprovalShow() {
                                             setData('catatan', e.target.value)
                                         }
                                         maxLength={255}
+                                        required={pengajuan?.is_mendadak}
                                     />
+                                    <InputError message={errors.catatan} />
                                 </div>
                                 <div className="flex gap-2">
                                     <Button

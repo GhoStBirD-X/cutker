@@ -7,6 +7,7 @@ import { formatDate } from '@/lib/format';
 import { dashboard } from '@/routes';
 import {
     create as cutiCreate,
+    createMendadak as cutiCreateMendadak,
     index as cutiIndex,
     show as cutiShow,
 } from '@/routes/cuti';
@@ -27,9 +28,16 @@ export default function CutiIndex() {
                     <h1 className="text-xl font-semibold">
                         Riwayat Pengajuan Cuti
                     </h1>
-                    <Button asChild>
-                        <Link href={cutiCreate()}>Ajukan Cuti</Link>
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button asChild variant="outline">
+                            <Link href={cutiCreateMendadak()}>
+                                Ajukan Mendadak
+                            </Link>
+                        </Button>
+                        <Button asChild>
+                            <Link href={cutiCreate()}>Ajukan Cuti</Link>
+                        </Button>
+                    </div>
                 </div>
 
                 <Card>

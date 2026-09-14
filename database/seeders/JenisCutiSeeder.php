@@ -15,6 +15,7 @@ class JenisCutiSeeder extends Seeder
                 'nama_jenis' => 'Cuti Tahunan',
                 'kuota_default' => 12,
                 'masa_kerja_minimal_bulan' => 12,
+                'minimal_hari_pengajuan' => 7,
                 'keterangan' => 'Cuti tahunan sesuai Pasal 79 UU No. 13/2003, diberikan setelah masa kerja 12 bulan terus-menerus.',
             ],
             [

@@ -18,6 +18,7 @@ export type JenisCuti = {
     nama_jenis: string;
     kuota_default: number | null;
     masa_kerja_minimal_bulan: number | null;
+    minimal_hari_pengajuan: number | null;
     khusus_gender: JenisKelamin | null;
     keterangan: string | null;
 };
@@ -76,6 +77,8 @@ export type PengajuanCuti = {
     status: StatusPengajuan;
     tanggal_pengajuan: string;
     lampiran: string | null;
+    is_mendadak: boolean;
+    alasan_mendadak: string | null;
     karyawan?: Karyawan;
     jenis_cuti?: JenisCuti;
     alasan_cuti?: AlasanCuti;

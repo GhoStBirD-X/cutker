@@ -1,6 +1,7 @@
 import { Form, Head, usePage } from '@inertiajs/react';
 import PengajuanCutiController from '@/actions/App/Http/Controllers/Cuti/PengajuanCutiController';
 import { StatusBadge } from '@/components/status-badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { approvalLevelLabel, formatDate, formatDateTime } from '@/lib/format';
@@ -33,7 +34,17 @@ export default function CutiShow() {
                             Diajukan oleh {pengajuan.karyawan?.nama}
                         </p>
                     </div>
-                    <StatusBadge status={pengajuan.status} />
+                    <div className="flex gap-2">
+                        {pengajuan.is_mendadak && (
+                            <Badge
+                                variant="outline"
+                                className="border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300"
+                            >
+                                Mendadak
+                            </Badge>
+                        )}
+                        <StatusBadge status={pengajuan.status} />
+                    </div>
                 </div>
 
                 <Card>
@@ -86,6 +97,14 @@ export default function CutiShow() {
                             <div className="text-muted-foreground">Alasan</div>
                             <div>{pengajuan.alasan}</div>
                         </div>
+                        {pengajuan.is_mendadak && (
+                            <div className="col-span-2">
+                                <div className="text-muted-foreground">
+                                    Alasan Mendadak
+                                </div>
+                                <div>{pengajuan.alasan_mendadak}</div>
+                            </div>
+                        )}
                         {pengajuan.lampiran && (
                             <div className="col-span-2">
                                 <div className="text-muted-foreground">

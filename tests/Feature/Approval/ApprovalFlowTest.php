@@ -206,6 +206,41 @@ class ApprovalFlowTest extends TestCase
         ]);
     }
 
+    public function test_approving_a_mendadak_request_requires_a_catatan(): void
+    {
+        ['pengajuan' => $pengajuan, 'approvalLevel1' => $approvalLevel1, 'kepalaBagian' => $kepalaBagian] =
+            $this->buatPengajuanDenganApprovalLevel1();
+        $pengajuan->update(['is_mendadak' => true, 'alasan_mendadak' => 'Kondisi darurat keluarga.']);
+
+        $response = $this->actingAs($kepalaBagian->user)->post(route('approval.approve', $approvalLevel1), [
+            'catatan' => null,
+        ]);
+
+        $response->assertSessionHasErrors('catatan');
+        $this->assertDatabaseHas('approvals', [
+            'id' => $approvalLevel1->id,
+            'status' => 'pending',
+        ]);
+    }
+
+    public function test_approving_a_mendadak_request_succeeds_with_a_catatan(): void
+    {
+        ['pengajuan' => $pengajuan, 'approvalLevel1' => $approvalLevel1, 'kepalaBagian' => $kepalaBagian] =
+            $this->buatPengajuanDenganApprovalLevel1();
+        $pengajuan->update(['is_mendadak' => true, 'alasan_mendadak' => 'Kondisi darurat keluarga.']);
+        $this->karyawanUser('hrd');
+
+        $response = $this->actingAs($kepalaBagian->user)->post(route('approval.approve', $approvalLevel1), [
+            'catatan' => 'Disetujui, kondisi darurat dapat dipahami.',
+        ]);
+
+        $response->assertRedirect(route('approval.index'));
+        $this->assertDatabaseHas('approvals', [
+            'id' => $approvalLevel1->id,
+            'status' => 'disetujui',
+        ]);
+    }
+
     public function test_karyawan_without_approval_role_cannot_approve_a_request(): void
     {
         ['approvalLevel1' => $approvalLevel1] = $this->buatPengajuanDenganApprovalLevel1();

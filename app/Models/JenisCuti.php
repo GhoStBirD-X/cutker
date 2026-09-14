@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['nama_jenis', 'kuota_default', 'masa_kerja_minimal_bulan', 'khusus_gender', 'keterangan'])]
+#[Fillable(['nama_jenis', 'kuota_default', 'masa_kerja_minimal_bulan', 'minimal_hari_pengajuan', 'khusus_gender', 'keterangan'])]
 class JenisCuti extends Model
 {
     /** @use HasFactory<JenisCutiFactory> */

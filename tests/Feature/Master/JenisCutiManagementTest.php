@@ -126,6 +126,26 @@ class JenisCutiManagementTest extends TestCase
         ]);
     }
 
+    public function test_hrd_can_set_minimal_hari_pengajuan(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+
+        $response = $this->actingAs($hrd)->post(route('master.jenis-cuti.store'), [
+            'nama_jenis' => 'Cuti Tahunan',
+            'kuota_default' => 12,
+            'masa_kerja_minimal_bulan' => 12,
+            'minimal_hari_pengajuan' => 7,
+            'keterangan' => null,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertDatabaseHas('jenis_cutis', [
+            'nama_jenis' => 'Cuti Tahunan',
+            'minimal_hari_pengajuan' => 7,
+        ]);
+    }
+
     public function test_karyawan_cannot_access_master_jenis_cuti_page(): void
     {
         $karyawan = $this->karyawanUser('karyawan');

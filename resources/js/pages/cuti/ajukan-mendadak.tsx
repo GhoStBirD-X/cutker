@@ -1,4 +1,4 @@
-import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { Form, Head, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import PengajuanCutiController from '@/actions/App/Http/Controllers/Cuti/PengajuanCutiController';
 import InputError from '@/components/input-error';
@@ -15,11 +15,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes';
-import {
-    create as cutiCreate,
-    createMendadak as cutiCreateMendadak,
-    index as cutiIndex,
-} from '@/routes/cuti';
+import { createMendadak as cutiCreateMendadak, index as cutiIndex } from '@/routes/cuti';
 import type { AlasanCuti, JenisCuti, SaldoCuti } from '@/types';
 
 type PageProps = {
@@ -28,7 +24,7 @@ type PageProps = {
     saldoCuti: SaldoCuti[];
 };
 
-export default function CutiAjukan() {
+export default function CutiAjukanMendadak() {
     const { jenisCutis, alasanCutis, saldoCuti } = usePage<PageProps>().props;
     const today = new Date().toISOString().slice(0, 10);
 
@@ -43,15 +39,21 @@ export default function CutiAjukan() {
         [alasanCutis, jenisCutiId],
     );
 
-    const jenisCutiTerpilih = jenisCutis.find(
-        (jenis) => String(jenis.id) === jenisCutiId,
-    );
-
     return (
         <>
-            <Head title="Ajukan Cuti" />
+            <Head title="Ajukan Cuti Mendadak" />
             <div className="flex flex-1 flex-col gap-4 p-4">
-                <h1 className="text-xl font-semibold">Ajukan Cuti</h1>
+                <div>
+                    <h1 className="text-xl font-semibold">
+                        Ajukan Cuti Mendadak
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        Gunakan form ini hanya untuk kondisi mendesak yang
+                        tidak memenuhi batas waktu pengajuan normal. Pengajuan
+                        tetap harus disetujui atasan, dan alasan mendadak yang
+                        Anda isi akan ditampilkan ke approver.
+                    </p>
+                </div>
 
                 <Card className="max-w-xl">
                     <CardContent>
@@ -62,6 +64,12 @@ export default function CutiAjukan() {
                         >
                             {({ processing, errors }) => (
                                 <>
+                                    <input
+                                        type="hidden"
+                                        name="mendadak"
+                                        value="1"
+                                    />
+
                                     <div className="grid gap-2">
                                         <Label htmlFor="jenis_cuti_id">
                                             Jenis Cuti
@@ -173,25 +181,6 @@ export default function CutiAjukan() {
                                             <InputError
                                                 message={errors.tanggal_mulai}
                                             />
-                                            {jenisCutiTerpilih?.minimal_hari_pengajuan && (
-                                                <p className="text-xs text-muted-foreground">
-                                                    {
-                                                        jenisCutiTerpilih.nama_jenis
-                                                    }{' '}
-                                                    harus diajukan minimal H-
-                                                    {
-                                                        jenisCutiTerpilih.minimal_hari_pengajuan
-                                                    }
-                                                    . Butuh cuti mendadak?{' '}
-                                                    <Link
-                                                        href={cutiCreateMendadak()}
-                                                        className="text-primary underline"
-                                                    >
-                                                        Ajukan di sini
-                                                    </Link>
-                                                    .
-                                                </p>
-                                            )}
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="tanggal_selesai">
@@ -222,6 +211,22 @@ export default function CutiAjukan() {
                                     </div>
 
                                     <div className="grid gap-2">
+                                        <Label htmlFor="alasan_mendadak">
+                                            Alasan Mendadak
+                                        </Label>
+                                        <Textarea
+                                            id="alasan_mendadak"
+                                            name="alasan_mendadak"
+                                            maxLength={500}
+                                            placeholder="Jelaskan kondisi mendesak yang membuat cuti ini tidak bisa diajukan sesuai batas waktu normal."
+                                            required
+                                        />
+                                        <InputError
+                                            message={errors.alasan_mendadak}
+                                        />
+                                    </div>
+
+                                    <div className="grid gap-2">
                                         <Label htmlFor="lampiran">
                                             Lampiran (opsional, surat dokter
                                             dll.)
@@ -236,7 +241,7 @@ export default function CutiAjukan() {
                                     </div>
 
                                     <Button disabled={processing}>
-                                        Ajukan Cuti
+                                        Ajukan Cuti Mendadak
                                     </Button>
                                 </>
                             )}
@@ -248,10 +253,10 @@ export default function CutiAjukan() {
     );
 }
 
-CutiAjukan.layout = {
+CutiAjukanMendadak.layout = {
     breadcrumbs: [
         { title: 'Dashboard', href: dashboard() },
         { title: 'Riwayat Cuti', href: cutiIndex() },
-        { title: 'Ajukan Cuti', href: cutiCreate() },
+        { title: 'Ajukan Cuti Mendadak', href: cutiCreateMendadak() },
     ],
 };
