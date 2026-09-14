@@ -20,15 +20,15 @@ class JadwalShiftManagementTest extends TestCase
         $this->seed(RoleSeeder::class);
     }
 
-    public function test_koordinator_shift_can_bulk_add_jadwal_for_own_departemen(): void
+    public function test_koordinator_shift_can_bulk_add_jadwal_across_all_departments(): void
     {
         $koordinator = $this->karyawanUser('koordinator_shift');
-        $rekanA = $this->karyawanUser('karyawan', ['departemen_id' => $koordinator->karyawan->departemen_id]);
-        $rekanB = $this->karyawanUser('karyawan', ['departemen_id' => $koordinator->karyawan->departemen_id]);
+        $rekanSatuDepartemen = $this->karyawanUser('karyawan', ['departemen_id' => $koordinator->karyawan->departemen_id]);
+        $rekanDepartemenLain = $this->karyawanUser('karyawan');
         $shift = Shift::factory()->create();
 
         $response = $this->actingAs($koordinator)->post(route('jadwal-shift.store'), [
-            'karyawan_ids' => [$rekanA->karyawan->id, $rekanB->karyawan->id],
+            'karyawan_ids' => [$rekanSatuDepartemen->karyawan->id, $rekanDepartemenLain->karyawan->id],
             'shift_id' => $shift->id,
             'tanggal_mulai' => now()->addDay()->toDateString(),
             'tanggal_selesai' => now()->addDay()->toDateString(),
@@ -36,8 +36,8 @@ class JadwalShiftManagementTest extends TestCase
 
         $response->assertRedirect();
         $response->assertSessionDoesntHaveErrors();
-        $this->assertDatabaseHas('jadwal_shifts', ['karyawan_id' => $rekanA->karyawan->id]);
-        $this->assertDatabaseHas('jadwal_shifts', ['karyawan_id' => $rekanB->karyawan->id]);
+        $this->assertDatabaseHas('jadwal_shifts', ['karyawan_id' => $rekanSatuDepartemen->karyawan->id]);
+        $this->assertDatabaseHas('jadwal_shifts', ['karyawan_id' => $rekanDepartemenLain->karyawan->id]);
     }
 
     public function test_bulk_add_creates_one_jadwal_per_karyawan_per_day_in_range(): void
@@ -85,35 +85,16 @@ class JadwalShiftManagementTest extends TestCase
         $this->assertDatabaseHas('jadwal_shifts', ['karyawan_id' => $karyawan->karyawan->id, 'shift_id' => $shiftBaru->id]);
     }
 
-    public function test_koordinator_shift_cannot_bulk_add_when_any_selected_karyawan_is_in_another_departemen(): void
+    public function test_koordinator_shift_can_delete_jadwal_from_any_departemen(): void
     {
-        $koordinatorProduksi = $this->karyawanUser('koordinator_shift');
-        $rekanSatuDepartemen = $this->karyawanUser('karyawan', ['departemen_id' => $koordinatorProduksi->karyawan->departemen_id]);
-        $karyawanGudang = $this->karyawanUser('karyawan');
-        $shift = Shift::factory()->create();
+        $koordinator = $this->karyawanUser('koordinator_shift');
+        $karyawanDepartemenLain = $this->karyawanUser('karyawan');
+        $jadwal = JadwalShift::factory()->create(['karyawan_id' => $karyawanDepartemenLain->karyawan->id]);
 
-        $response = $this->actingAs($koordinatorProduksi)->post(route('jadwal-shift.store'), [
-            'karyawan_ids' => [$rekanSatuDepartemen->karyawan->id, $karyawanGudang->karyawan->id],
-            'shift_id' => $shift->id,
-            'tanggal_mulai' => now()->addDay()->toDateString(),
-            'tanggal_selesai' => now()->addDay()->toDateString(),
-        ]);
+        $response = $this->actingAs($koordinator)->delete(route('jadwal-shift.destroy', $jadwal));
 
-        $response->assertForbidden();
-        $this->assertDatabaseMissing('jadwal_shifts', ['karyawan_id' => $rekanSatuDepartemen->karyawan->id]);
-        $this->assertDatabaseMissing('jadwal_shifts', ['karyawan_id' => $karyawanGudang->karyawan->id]);
-    }
-
-    public function test_koordinator_shift_cannot_delete_jadwal_from_other_departemen(): void
-    {
-        $koordinatorProduksi = $this->karyawanUser('koordinator_shift');
-        $karyawanGudang = $this->karyawanUser('karyawan');
-        $jadwal = JadwalShift::factory()->create(['karyawan_id' => $karyawanGudang->karyawan->id]);
-
-        $response = $this->actingAs($koordinatorProduksi)->delete(route('jadwal-shift.destroy', $jadwal));
-
-        $response->assertForbidden();
-        $this->assertDatabaseHas('jadwal_shifts', ['id' => $jadwal->id]);
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('jadwal_shifts', ['id' => $jadwal->id]);
     }
 
     public function test_date_range_longer_than_31_days_is_rejected(): void
@@ -152,11 +133,11 @@ class JadwalShiftManagementTest extends TestCase
         ]);
     }
 
-    public function test_koordinator_shift_can_set_jam_lembur_for_own_departemen(): void
+    public function test_koordinator_shift_can_set_jam_lembur_for_any_departemen(): void
     {
         $koordinator = $this->karyawanUser('koordinator_shift');
-        $rekan = $this->karyawanUser('karyawan', ['departemen_id' => $koordinator->karyawan->departemen_id]);
-        $jadwal = JadwalShift::factory()->create(['karyawan_id' => $rekan->karyawan->id]);
+        $karyawanDepartemenLain = $this->karyawanUser('karyawan');
+        $jadwal = JadwalShift::factory()->create(['karyawan_id' => $karyawanDepartemenLain->karyawan->id]);
 
         $response = $this->actingAs($koordinator)->patch(route('jadwal-shift.update-lembur', $jadwal), [
             'jam_lembur' => 3,
@@ -167,18 +148,30 @@ class JadwalShiftManagementTest extends TestCase
         $this->assertDatabaseHas('jadwal_shifts', ['id' => $jadwal->id, 'jam_lembur' => 3]);
     }
 
-    public function test_koordinator_shift_cannot_set_jam_lembur_for_other_departemen(): void
+    public function test_koordinator_shift_can_view_jadwal_shift_across_all_departments(): void
     {
-        $koordinatorProduksi = $this->karyawanUser('koordinator_shift');
-        $karyawanGudang = $this->karyawanUser('karyawan');
-        $jadwal = JadwalShift::factory()->create(['karyawan_id' => $karyawanGudang->karyawan->id]);
+        $koordinator = $this->karyawanUser('koordinator_shift');
+        $karyawanDepartemenLain = $this->karyawanUser('karyawan');
+        $shift = Shift::factory()->create();
+        $tanggal = now()->startOfMonth()->addDays(2)->toDateString();
 
-        $response = $this->actingAs($koordinatorProduksi)->patch(route('jadwal-shift.update-lembur', $jadwal), [
-            'jam_lembur' => 2,
+        JadwalShift::factory()->create([
+            'karyawan_id' => $karyawanDepartemenLain->karyawan->id,
+            'shift_id' => $shift->id,
+            'tanggal' => $tanggal,
         ]);
 
-        $response->assertForbidden();
-        $this->assertDatabaseHas('jadwal_shifts', ['id' => $jadwal->id, 'jam_lembur' => null]);
+        $response = $this->actingAs($koordinator)->get(route('jadwal-shift.index', [
+            'bulan' => now()->month,
+            'tahun' => now()->year,
+        ]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->has('jadwals', 1)
+            ->where('jadwals.0.karyawan_id', $karyawanDepartemenLain->karyawan->id)
+            ->where('departemenTerkunci', false)
+        );
     }
 
     public function test_jam_lembur_above_12_hours_is_rejected(): void

@@ -5,6 +5,7 @@ namespace Tests\Feature\Approval;
 use App\Enums\StatusApproval;
 use App\Enums\StatusPengajuan;
 use App\Models\Approval;
+use App\Models\Departemen;
 use App\Models\JenisCuti;
 use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
@@ -238,6 +239,48 @@ class ApprovalFlowTest extends TestCase
         $this->assertDatabaseHas('approvals', [
             'id' => $approvalLevel1->id,
             'status' => 'disetujui',
+        ]);
+    }
+
+    public function test_kepala_bagian_approval_forwards_to_hrd_from_a_different_departemen(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $kepalaBagian = $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id])->karyawan;
+        // HRD sengaja dibuat di departemen lain untuk membuktikan pemilihan
+        // approver HRD tidak dibatasi departemen pengaju.
+        $hrd = $this->karyawanUser('hrd', ['departemen_id' => Departemen::factory()->create()->id]);
+
+        $jenisCuti = JenisCuti::factory()->create();
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $this->assertNotSame($karyawan->departemen_id, $hrd->karyawan->departemen_id);
+
+        $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(7)->toDateString(),
+            'tanggal_selesai' => now()->addDays(8)->toDateString(),
+            'alasan' => 'Acara keluarga',
+        ]);
+
+        $pengajuan = PengajuanCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail();
+        $approvalLevel1 = $pengajuan->approvals()->where('level', ApprovalService::LEVEL_KEPALA_BAGIAN)->firstOrFail();
+
+        $this->actingAs($kepalaBagian->user)->post(route('approval.approve', $approvalLevel1), [
+            'catatan' => 'Disetujui kepala bagian',
+        ]);
+
+        $this->assertDatabaseHas('approvals', [
+            'pengajuan_cuti_id' => $pengajuan->id,
+            'level' => ApprovalService::LEVEL_HRD,
+            'approver_id' => $hrd->karyawan->id,
+            'status' => 'pending',
         ]);
     }
 

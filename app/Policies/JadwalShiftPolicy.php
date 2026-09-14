@@ -9,33 +9,23 @@ use App\Models\User;
 class JadwalShiftPolicy
 {
     /**
-     * HRD/admin mengelola jadwal shift seluruh pabrik; koordinator shift hanya
-     * untuk karyawan di departemennya sendiri.
+     * HRD/admin/koordinator shift mengelola jadwal shift seluruh pabrik lintas
+     * departemen (koordinator shift adalah satu peran tunggal yang
+     * mengoordinasikan seluruh departemen, bukan satu per departemen).
      */
     public function create(User $user, Karyawan $targetKaryawan): bool
     {
-        if ($user->hasRole(['hrd', 'admin'])) {
-            return true;
-        }
-
-        return $user->hasPermissionTo('jadwal-shift.manage')
-            && $user->karyawan?->departemen_id === $targetKaryawan->departemen_id;
+        return $user->hasRole(['hrd', 'admin', 'koordinator_shift']);
     }
 
     public function delete(User $user, JadwalShift $jadwalShift): bool
     {
-        if ($user->hasRole(['hrd', 'admin'])) {
-            return true;
-        }
-
-        return $user->hasPermissionTo('jadwal-shift.manage')
-            && $user->karyawan?->departemen_id === $jadwalShift->karyawan->departemen_id;
+        return $user->hasRole(['hrd', 'admin', 'koordinator_shift']);
     }
 
     /**
      * Mengatur jam lembur pada baris jadwal shift yang sudah ada; aturan
-     * akses sama seperti delete (HRD/admin bebas, koordinator shift terbatas
-     * departemennya sendiri).
+     * akses sama seperti delete.
      */
     public function update(User $user, JadwalShift $jadwalShift): bool
     {
@@ -47,12 +37,6 @@ class JadwalShiftPolicy
      */
     public function viewDepartemen(User $user, ?int $departemenId): bool
     {
-        if ($user->hasRole(['hrd', 'admin'])) {
-            return true;
-        }
-
-        return $user->hasPermissionTo('jadwal-shift.manage')
-            && $departemenId !== null
-            && $user->karyawan?->departemen_id === $departemenId;
+        return $user->hasRole(['hrd', 'admin', 'koordinator_shift']);
     }
 }

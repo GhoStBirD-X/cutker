@@ -60,16 +60,14 @@ class KaryawanSeeder extends Seeder
             $karyawans->push($kepalaBagian);
         }
 
-        // Koordinator shift: satu per departemen, kelola jadwal shift departemennya saja
-        foreach ([$produksi, $gudang, $qc, $cleaning] as $departemen) {
-            $karyawans->push($this->buatAkun(
-                'Koordinator Shift '.$departemen->nama_departemen,
-                'koordinator.'.strtolower($departemen->kode).'@pabrik.test',
-                $departemen->id,
-                $jabatanKoordinatorShift->id,
-                'koordinator_shift',
-            ));
-        }
+        // Koordinator shift: satu akun tunggal, mengoordinasikan jadwal shift seluruh departemen
+        $karyawans->push($this->buatAkun(
+            'Koordinator Shift',
+            'koordinator.shift@pabrik.test',
+            $produksi->id,
+            $jabatanKoordinatorShift->id,
+            'koordinator_shift',
+        ));
 
         // Karyawan biasa: 10 orang tersebar di 3 departemen
         $departemenRotasi = [$produksi, $gudang, $qc, $cleaning];

@@ -27,10 +27,9 @@ class JadwalShiftController extends Controller
         $tahun = (int) ($request->input('tahun') ?? now()->year);
 
         $bisaKelola = $user->hasRole(['hrd', 'admin', 'koordinator_shift']);
-        $bisaLihatSemua = $user->hasRole(['hrd', 'admin', 'kepala_bagian', 'manager']);
+        $bisaLihatSemua = $user->hasRole(['hrd', 'admin', 'kepala_bagian', 'manager', 'koordinator_shift']);
         $bisaLihatDepartemen = ! $bisaLihatSemua && $karyawan && $user->hasPermissionTo('jadwal-shift.manage');
 
-        // Koordinator shift dikunci ke departemennya sendiri, tidak bisa memilih departemen lain.
         $departemenId = match (true) {
             $bisaLihatSemua => $request->integer('departemen_id') ?: null,
             $bisaLihatDepartemen => $karyawan->departemen_id,

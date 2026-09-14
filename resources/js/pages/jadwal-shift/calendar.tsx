@@ -70,7 +70,8 @@ export default function JadwalShiftCalendar() {
         auth.roles.includes('hrd') ||
         auth.roles.includes('admin') ||
         auth.roles.includes('kepala_bagian') ||
-        auth.roles.includes('manager');
+        auth.roles.includes('manager') ||
+        auth.roles.includes('koordinator_shift');
     const bisaPilihDepartemen = bisaLihatSemuaDepartemen && !departemenTerkunci;
 
     const departemenSaatIni = departemens.find(
