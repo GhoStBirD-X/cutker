@@ -3,6 +3,7 @@ paths:
   - app/Services/HariLiburService.php
   - app/Services/CutiMassalService.php
   - app/Services/ApprovalService.php
+  - app/Services/ResetDataService.php
 ---
 
 # Services
@@ -20,3 +21,6 @@ Karyawan kontrak yang masih di periode pertama (belum pernah diperpanjang — `t
 
 ## approvals.approver_id nullable — kolam kosong tidak boleh crash
 `approvals.approver_id` nullable (migrasi `make_approver_id_nullable_ke_approvals_table`). Level HRD & Manager itu kolam bersama per role (lihat `teruskan()`/`ApprovalController::index()`/`ApprovalPolicy`) — kalau role tujuan belum punya siapa pun saat approval dibuat, `approver_id` boleh null dan approval tetap dibuat pending; begitu ada user baru dengan role itu, mereka otomatis melihat & bisa memproses approval itu lewat query berbasis level+role yang sudah ada (tidak perlu backfill approver_id). Level Kepala Bagian BUKAN kolam bersama (terikat satu departemen) — kalau departemen belum punya kepala_bagian, `mulaiAlur()` melewati level itu sepenuhnya dan mulai dari HRD, bukan membuat approval level 1 dengan approver_id null (karena tidak ada mekanisme "kolam" untuk menjemputnya nanti). Jangan kembalikan `approver_id` ke NOT NULL tanpa menghapus juga jalur null di `teruskan()`/`mulaiAlur()`.
+
+## Reset Semua Data Karyawan — khusus admin, hapus permanen
+`ResetDataService::resetSemuaKaryawan()` (dipicu dari tombol "Zona Berbahaya" di Master Karyawan, khusus role admin, route `master.karyawan.reset-data`) menghapus PERMANEN semua Karyawan + User login mereka + seluruh data turunannya (pengajuan_cutis, saldo_cutis, riwayat_saldo_cutis, jadwal_shifts, kompensasi_cutis, konfirmasi_kontrak_cutis, cuti_massals, notifications, model_has_roles/permissions). Master data (Departemen, Jabatan, JenisCuti, AlasanCuti, Shift, HariLibur) TIDAK disentuh. Karyawan+User milik admin yang menjalankan reset dikecualikan otomatis (parameter `$kecuali`) supaya tidak kehilangan akses login sendiri. Wajib ketik ulang frasa `ResetDataKaryawanRequest::FRASA_KONFIRMASI` ("HAPUS SEMUA KARYAWAN") — jangan hilangkan gate ini. `cuti_massals` harus dihapus SEBELUM karyawan (kolom `dibuat_oleh_id` pakai `restrictOnDelete()`, bukan cascade) — kalau nambah tabel baru yang referensi `karyawans` dengan restrictOnDelete, update urutan hapus di service ini juga.

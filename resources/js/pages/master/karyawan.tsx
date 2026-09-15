@@ -1,4 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import KaryawanController from '@/actions/App/Http/Controllers/Master/KaryawanController';
 import InputError from '@/components/input-error';
@@ -7,11 +8,20 @@ import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
 import { index as karyawanIndex } from '@/routes/master/karyawan';
-import type { Departemen, Jabatan, Karyawan, Paginated } from '@/types';
+import type { Auth, Departemen, Jabatan, Karyawan, Paginated } from '@/types';
 
 type KaryawanRow = Karyawan & {
     departemen?: Departemen;
@@ -20,6 +30,7 @@ type KaryawanRow = Karyawan & {
 };
 
 type PageProps = {
+    auth: Auth;
     karyawans: Paginated<KaryawanRow>;
     departemens: Departemen[];
     jabatans: Jabatan[];
@@ -29,6 +40,8 @@ type PageProps = {
     }[];
     filters: { search: string; departemen_id: number | null };
 };
+
+const FRASA_KONFIRMASI_RESET = 'HAPUS SEMUA KARYAWAN';
 
 type ImportFailure = { row: number; errors: string[] };
 
@@ -48,6 +61,7 @@ const emptyForm = {
 
 export default function MasterKaryawan() {
     const {
+        auth,
         karyawans,
         departemens,
         jabatans,
@@ -55,6 +69,8 @@ export default function MasterKaryawan() {
         filters,
     } = usePage<PageProps>().props;
     const [editing, setEditing] = useState<KaryawanRow | null>(null);
+    const [konfirmasiReset, setKonfirmasiReset] = useState('');
+    const [resetProcessing, setResetProcessing] = useState(false);
     const [search, setSearch] = useState(filters.search ?? '');
     const [departemenFilter, setDepartemenFilter] = useState(
         filters.departemen_id ? String(filters.departemen_id) : '',
@@ -69,8 +85,7 @@ export default function MasterKaryawan() {
     useEffect(() => {
         return router.on('flash', (event) => {
             const flash = (event as CustomEvent).detail?.flash as
-                | { importFailures?: ImportFailure[] }
-                | undefined;
+                { importFailures?: ImportFailure[] } | undefined;
 
             if (flash?.importFailures) {
                 setImportFailures(flash.importFailures);
@@ -133,6 +148,19 @@ export default function MasterKaryawan() {
         }
     };
 
+    const submitResetData = (e: React.FormEvent) => {
+        e.preventDefault();
+        setResetProcessing(true);
+        router.post(
+            KaryawanController.resetData.url(),
+            { konfirmasi: konfirmasiReset },
+            {
+                onSuccess: () => setKonfirmasiReset(''),
+                onFinish: () => setResetProcessing(false),
+            },
+        );
+    };
+
     const runFilter = (e?: React.FormEvent) => {
         e?.preventDefault();
         router.get(
@@ -189,10 +217,10 @@ export default function MasterKaryawan() {
                         </h2>
                         <p className="mb-3 text-xs text-muted-foreground">
                             Untuk memasukkan data karyawan pabrik dalam jumlah
-                            besar. Departemen dan jabatan pada file harus
-                            sudah ada di Master Departemen/Jabatan. Karyawan
-                            yang gagal diimpor tidak akan menghentikan baris
-                            lain yang valid.
+                            besar. Departemen dan jabatan pada file harus sudah
+                            ada di Master Departemen/Jabatan. Karyawan yang
+                            gagal diimpor tidak akan menghentikan baris lain
+                            yang valid.
                         </p>
                         <form
                             onSubmit={submitImport}
@@ -230,8 +258,7 @@ export default function MasterKaryawan() {
                         {importFailures.length > 0 && (
                             <div className="mt-4 rounded-md border border-destructive/50 p-3">
                                 <h3 className="mb-2 text-sm font-semibold text-destructive">
-                                    {importFailures.length} baris gagal
-                                    diimpor
+                                    {importFailures.length} baris gagal diimpor
                                 </h3>
                                 <ul className="space-y-1 text-xs text-muted-foreground">
                                     {importFailures.map((failure) => (
@@ -528,6 +555,104 @@ export default function MasterKaryawan() {
                 </Card>
 
                 <Pagination links={karyawans.links} />
+
+                {auth.roles.includes('admin') && (
+                    <Card className="border-red-200 dark:border-red-900">
+                        <CardContent className="space-y-3">
+                            <div className="flex items-start gap-3 text-red-700 dark:text-red-400">
+                                <AlertTriangle className="mt-0.5 size-5 shrink-0" />
+                                <div>
+                                    <p className="font-medium">
+                                        Zona Berbahaya
+                                    </p>
+                                    <p className="text-sm text-red-700/80 dark:text-red-400/80">
+                                        Hapus SEMUA karyawan beserta akun login,
+                                        riwayat cuti, saldo, dan jadwal shift
+                                        mereka secara permanen — biasanya
+                                        dipakai sebelum import data karyawan
+                                        yang asli. Data Master (Departemen,
+                                        Jabatan, Jenis Cuti, dll.) tidak ikut
+                                        terhapus. Akun kamu sendiri tidak akan
+                                        ikut terhapus.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="destructive">
+                                        Reset Semua Data Karyawan
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogTitle>
+                                        Reset semua data karyawan?
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                        Tindakan ini permanen dan tidak bisa
+                                        dibatalkan. Untuk melanjutkan, ketik
+                                        persis frasa berikut:{' '}
+                                        <span className="font-mono font-semibold text-foreground">
+                                            {FRASA_KONFIRMASI_RESET}
+                                        </span>
+                                    </DialogDescription>
+
+                                    <form
+                                        onSubmit={submitResetData}
+                                        className="space-y-4"
+                                    >
+                                        <div className="grid gap-2">
+                                            <Label
+                                                htmlFor="konfirmasi_reset"
+                                                className="sr-only"
+                                            >
+                                                Frasa konfirmasi
+                                            </Label>
+                                            <Input
+                                                id="konfirmasi_reset"
+                                                value={konfirmasiReset}
+                                                onChange={(e) =>
+                                                    setKonfirmasiReset(
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder={
+                                                    FRASA_KONFIRMASI_RESET
+                                                }
+                                                autoComplete="off"
+                                            />
+                                        </div>
+
+                                        <DialogFooter className="gap-2">
+                                            <DialogClose asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="secondary"
+                                                    onClick={() =>
+                                                        setKonfirmasiReset('')
+                                                    }
+                                                >
+                                                    Batal
+                                                </Button>
+                                            </DialogClose>
+                                            <Button
+                                                type="submit"
+                                                variant="destructive"
+                                                disabled={
+                                                    resetProcessing ||
+                                                    konfirmasiReset !==
+                                                        FRASA_KONFIRMASI_RESET
+                                                }
+                                            >
+                                                Hapus Semua Karyawan
+                                            </Button>
+                                        </DialogFooter>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </>
     );

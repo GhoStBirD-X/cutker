@@ -6,11 +6,13 @@ use App\Exports\KaryawanImportTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\KaryawanImportRequest;
 use App\Http\Requests\Master\KaryawanRequest;
+use App\Http\Requests\Master\ResetDataKaryawanRequest;
 use App\Imports\KaryawanImport;
 use App\Models\Departemen;
 use App\Models\Jabatan;
 use App\Models\Karyawan;
 use App\Models\User;
+use App\Services\ResetDataService;
 use App\Services\SaldoCutiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -102,6 +104,25 @@ class KaryawanController extends Controller
         $karyawan->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Karyawan berhasil dihapus.']);
+
+        return back();
+    }
+
+    /**
+     * Hapus SEMUA karyawan + akun login mereka (dan seluruh data
+     * turunannya), untuk memulai ulang dari data kosong sebelum import
+     * data karyawan yang asli. Khusus role admin, dan wajib mengetik ulang
+     * frasa konfirmasi (lihat ResetDataKaryawanRequest). Karyawan milik
+     * admin yang menjalankan ini (kalau ada) sengaja tidak ikut terhapus.
+     */
+    public function resetData(ResetDataKaryawanRequest $request, ResetDataService $service): RedirectResponse
+    {
+        $hasil = $service->resetSemuaKaryawan($request->user()->karyawan);
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => "Data direset: {$hasil['karyawan']} karyawan, {$hasil['user']} akun login, dan {$hasil['cuti_massal']} batch cuti massal berhasil dihapus.",
+        ]);
 
         return back();
     }
