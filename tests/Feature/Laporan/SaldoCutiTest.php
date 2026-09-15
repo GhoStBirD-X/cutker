@@ -4,8 +4,10 @@ namespace Tests\Feature\Laporan;
 
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
+use App\Models\KonfirmasiKontrakCuti;
 use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
+use App\Services\PeriodeCutiService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -125,6 +127,43 @@ class SaldoCutiTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->where('karyawans.data.0.status_kontrak', 'K2')
         );
+    }
+
+    public function test_status_kontrak_becomes_k2_after_contract_renewal_confirmed(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawan = Karyawan::factory()->kontrak()->create();
+        $penyetuju = Karyawan::factory()->create();
+        $cutiTahunan = JenisCuti::factory()->create([
+            'nama_jenis' => 'Cuti Tahunan',
+            'kuota_default' => 12,
+            'masa_kerja_minimal_bulan' => 12,
+        ]);
+
+        $saldoK1 = SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $cutiTahunan->id,
+            'periode_ke' => 1,
+            'periode_mulai' => now()->subYear(),
+            'periode_selesai' => now()->subDay(),
+            'kuota' => 12,
+            'terpakai' => 2,
+            'sisa' => 10,
+        ]);
+
+        $periodeCutiService = app(PeriodeCutiService::class);
+
+        // Sebelum konfirmasi perpanjangan: masih K1.
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti', ['search' => $karyawan->nip]));
+        $response->assertInertia(fn ($page) => $page->where('karyawans.data.0.status_kontrak', 'K1'));
+
+        $periodeCutiService->tutupPeriode($saldoK1->fresh());
+        $konfirmasi = KonfirmasiKontrakCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail();
+        $periodeCutiService->konfirmasiPerpanjangan($konfirmasi, $penyetuju, true, 'Kontrak diperpanjang.');
+
+        // Setelah diperpanjang: periode_ke aktif jadi 2, jadi K2.
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti', ['search' => $karyawan->nip]));
+        $response->assertInertia(fn ($page) => $page->where('karyawans.data.0.status_kontrak', 'K2'));
     }
 
     public function test_riwayat_shows_only_approved_pengajuan_within_saldo_period(): void

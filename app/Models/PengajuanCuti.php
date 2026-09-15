@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $tanggal_selesai
  * @property int $jumlah_hari
  * @property int $jumlah_hari_kalender
+ * @property int $bonus_kuota_kontrak_pertama
  * @property string $alasan
  * @property StatusPengajuan $status
  * @property Carbon $tanggal_pengajuan
@@ -37,6 +38,7 @@ use Illuminate\Support\Carbon;
     'tanggal_selesai',
     'jumlah_hari',
     'jumlah_hari_kalender',
+    'bonus_kuota_kontrak_pertama',
     'alasan',
     'status',
     'tanggal_pengajuan',

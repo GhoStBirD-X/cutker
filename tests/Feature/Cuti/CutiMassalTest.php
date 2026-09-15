@@ -3,6 +3,7 @@
 namespace Tests\Feature\Cuti;
 
 use App\Enums\JenisKelamin;
+use App\Enums\TipeKaryawan;
 use App\Models\CutiMassal;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
@@ -174,6 +175,171 @@ class CutiMassalTest extends TestCase
         $cutiMassal = CutiMassal::query()->firstOrFail();
         $this->assertSame(1, $cutiMassal->jumlah_karyawan);
         $this->assertCount(0, $cutiMassal->dilewati);
+    }
+
+    public function test_kontrak_pertama_karyawan_gets_bonus_kuota_instead_of_going_negative(): void
+    {
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+        $jenisCuti = JenisCuti::factory()->create();
+        $karyawan = Karyawan::factory()->create(['tipe_karyawan' => TipeKaryawan::Kontrak]);
+
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'periode_ke' => 1,
+            'kuota' => 12,
+            'terpakai' => 10,
+            'sisa' => 2,
+        ]);
+
+        // Rentang 3 hari kalender (tanpa hari libur) -> jumlah_hari 3, sisa
+        // hanya 2 -> kekurangan 1 hari harus jadi bonus, bukan minus.
+        $this->actingAs($hrd->user)->post(route('cuti.massal.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(10)->toDateString(),
+            'tanggal_selesai' => now()->addDays(12)->toDateString(),
+            'alasan' => 'Cuti bersama',
+            'karyawan_ids' => [$karyawan->id],
+        ]);
+
+        $this->assertDatabaseHas('saldo_cutis', [
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'kuota' => 13,
+            'terpakai' => 13,
+            'sisa' => 0,
+        ]);
+        $this->assertDatabaseHas('pengajuan_cutis', [
+            'karyawan_id' => $karyawan->id,
+            'bonus_kuota_kontrak_pertama' => 1,
+        ]);
+    }
+
+    public function test_preview_flags_kontrak_pertama_shortfall_as_bonus_not_minus(): void
+    {
+        $jenisCuti = JenisCuti::factory()->create();
+        $karyawan = Karyawan::factory()->create(['tipe_karyawan' => TipeKaryawan::Kontrak]);
+
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'periode_ke' => 1,
+            'kuota' => 12,
+            'terpakai' => 10,
+            'sisa' => 2,
+        ]);
+
+        $preview = app(CutiMassalService::class)->previewKaryawan(
+            $jenisCuti,
+            Carbon::parse(now()->addDays(10)->toDateString()),
+            Carbon::parse(now()->addDays(12)->toDateString()),
+        );
+
+        $baris = $preview->first(fn (array $row) => $row['karyawan']->id === $karyawan->id);
+
+        $this->assertNotNull($baris);
+        $this->assertFalse($baris['akan_minus']);
+        $this->assertTrue($baris['akan_dapat_bonus']);
+    }
+
+    public function test_kontrak_kedua_karyawan_still_goes_negative_from_mass_leave(): void
+    {
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+        $jenisCuti = JenisCuti::factory()->create();
+        $karyawan = Karyawan::factory()->create(['tipe_karyawan' => TipeKaryawan::Kontrak]);
+
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'periode_ke' => 2,
+            'kuota' => 12,
+            'terpakai' => 10,
+            'sisa' => 2,
+        ]);
+
+        $this->actingAs($hrd->user)->post(route('cuti.massal.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(10)->toDateString(),
+            'tanggal_selesai' => now()->addDays(12)->toDateString(),
+            'alasan' => 'Cuti bersama',
+            'karyawan_ids' => [$karyawan->id],
+        ]);
+
+        $this->assertDatabaseHas('saldo_cutis', [
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'kuota' => 12,
+            'terpakai' => 13,
+            'sisa' => -1,
+        ]);
+    }
+
+    public function test_karyawan_tetap_periode_pertama_still_goes_negative_from_mass_leave(): void
+    {
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+        $jenisCuti = JenisCuti::factory()->create();
+        $karyawan = Karyawan::factory()->create(['tipe_karyawan' => TipeKaryawan::Tetap]);
+
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'periode_ke' => 1,
+            'kuota' => 12,
+            'terpakai' => 10,
+            'sisa' => 2,
+        ]);
+
+        $this->actingAs($hrd->user)->post(route('cuti.massal.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(10)->toDateString(),
+            'tanggal_selesai' => now()->addDays(12)->toDateString(),
+            'alasan' => 'Cuti bersama',
+            'karyawan_ids' => [$karyawan->id],
+        ]);
+
+        $this->assertDatabaseHas('saldo_cutis', [
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'kuota' => 12,
+            'terpakai' => 13,
+            'sisa' => -1,
+        ]);
+    }
+
+    public function test_cancelling_batch_reverses_bonus_kuota_for_kontrak_pertama(): void
+    {
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+        $jenisCuti = JenisCuti::factory()->create();
+        $karyawan = Karyawan::factory()->create(['tipe_karyawan' => TipeKaryawan::Kontrak]);
+
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'periode_ke' => 1,
+            'kuota' => 12,
+            'terpakai' => 10,
+            'sisa' => 2,
+        ]);
+
+        $this->actingAs($hrd->user)->post(route('cuti.massal.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(10)->toDateString(),
+            'tanggal_selesai' => now()->addDays(12)->toDateString(),
+            'alasan' => 'Cuti bersama',
+            'karyawan_ids' => [$karyawan->id],
+        ]);
+
+        $cutiMassal = CutiMassal::query()->firstOrFail();
+
+        $this->actingAs($hrd->user)->patch(route('cuti.massal.batalkan', $cutiMassal));
+
+        $this->assertDatabaseHas('saldo_cutis', [
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'kuota' => 12,
+            'terpakai' => 10,
+            'sisa' => 2,
+        ]);
     }
 
     public function test_nonaktif_employees_are_never_included_in_eligible_list(): void

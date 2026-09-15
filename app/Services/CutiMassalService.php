@@ -6,6 +6,7 @@ use App\Enums\StatusApproval;
 use App\Enums\StatusCutiMassal;
 use App\Enums\StatusKaryawan;
 use App\Enums\StatusPengajuan;
+use App\Enums\TipeKaryawan;
 use App\Exceptions\CutiMassalSudahDibatalkanException;
 use App\Models\Approval;
 use App\Models\CutiMassal;
@@ -47,10 +48,11 @@ class CutiMassalService
 
     /**
      * Daftar karyawan eligible dilengkapi info saldo aktif & penanda apakah
-     * saldonya akan minus jika cuti massal ini jadi diajukan, untuk preview
-     * sebelum HRD submit.
+     * saldonya akan minus (atau dapat bonus kuota, untuk karyawan kontrak
+     * pertama — lihat hitungPotongan()) jika cuti massal ini jadi diajukan,
+     * untuk preview sebelum HRD submit.
      *
-     * @return SupportCollection<int, array{karyawan: Karyawan, saldo: ?SaldoCuti, akan_minus: bool}>
+     * @return SupportCollection<int, array{karyawan: Karyawan, saldo: ?SaldoCuti, akan_minus: bool, akan_dapat_bonus: bool}>
      */
     public function previewKaryawan(JenisCuti $jenisCuti, Carbon $mulai, Carbon $selesai): SupportCollection
     {
@@ -60,11 +62,13 @@ class CutiMassalService
 
         foreach ($this->eligibleKaryawan($jenisCuti) as $karyawan) {
             $saldo = $this->saldoCutiService->untukPeriodeAktif($karyawan, $jenisCuti);
+            $potongan = $saldo ? $this->hitungPotongan($saldo, $karyawan, $jumlahHari) : null;
 
             $preview[] = [
                 'karyawan' => $karyawan,
                 'saldo' => $saldo,
-                'akan_minus' => $saldo !== null && $saldo->kuota !== null && ($saldo->sisa - $jumlahHari) < 0,
+                'akan_minus' => $saldo !== null && $saldo->kuota !== null && ($saldo->sisa - $jumlahHari) < 0 && ($potongan['bonus'] ?? 0) === 0,
+                'akan_dapat_bonus' => ($potongan['bonus'] ?? 0) > 0,
             ];
         }
 
@@ -86,15 +90,47 @@ class CutiMassalService
     }
 
     /**
+     * Karyawan kontrak yang masih di periode pertama (belum pernah
+     * diperpanjang) belum benar-benar "punya" cuti tahunan — jadi kalau
+     * cuti massal membuat saldonya minus, bukan dijadikan utang, tapi
+     * kuotanya ditambah (bonus) secukupnya supaya sisa jadi 0. Karyawan
+     * kontrak yang sudah masuk periode ke-2 dst., dan karyawan tetap,
+     * tetap boleh minus seperti biasa (sengaja — lihat buat()).
+     *
+     * @return array{kuota: ?int, terpakai: int, sisa: ?int, bonus: int}
+     */
+    private function hitungPotongan(SaldoCuti $saldo, Karyawan $karyawan, int $jumlahHari): array
+    {
+        $terpakaiBaru = $saldo->terpakai + $jumlahHari;
+
+        if ($saldo->kuota === null) {
+            return ['kuota' => null, 'terpakai' => $terpakaiBaru, 'sisa' => null, 'bonus' => 0];
+        }
+
+        $sisaBaru = $saldo->sisa - $jumlahHari;
+        $kontrakPertama = $karyawan->tipe_karyawan === TipeKaryawan::Kontrak && $saldo->periode_ke === 1;
+
+        if ($sisaBaru < 0 && $kontrakPertama) {
+            $bonus = -$sisaBaru;
+
+            return ['kuota' => $saldo->kuota + $bonus, 'terpakai' => $terpakaiBaru, 'sisa' => 0, 'bonus' => $bonus];
+        }
+
+        return ['kuota' => $saldo->kuota, 'terpakai' => $terpakaiBaru, 'sisa' => $sisaBaru, 'bonus' => 0];
+    }
+
+    /**
      * Buat satu batch cuti massal. Tiap karyawan target mendapat satu
      * PengajuanCuti + 3 Approval yang langsung berstatus Disetujui (bukan
      * lewat alur approval berjenjang biasa), dan saldo cutinya dipotong
      * seketika — sengaja tanpa guard kecukupan saldo seperti
-     * PengajuanCutiService::ajukan(), sehingga karyawan baru yang saldonya
-     * belum cukup tetap diproses dan boleh menjadi minus. Karyawan yang
-     * konflik (gender, overlap pengajuan lain, bentrok jadwal shift, atau
-     * tidak punya baris saldo aktif) dilewati dengan alasan tercatat,
-     * bukan menggagalkan seluruh batch.
+     * PengajuanCutiService::ajukan(), sehingga karyawan yang saldonya belum
+     * cukup tetap diproses dan boleh menjadi minus, KECUALI karyawan
+     * kontrak yang masih di periode pertama (belum pernah diperpanjang) —
+     * lihat hitungPotongan(). Karyawan yang konflik (gender, overlap
+     * pengajuan lain, bentrok jadwal shift, atau tidak punya baris saldo
+     * aktif) dilewati dengan alasan tercatat, bukan menggagalkan seluruh
+     * batch.
      *
      * @param  array{jenis_cuti_id: int, tanggal_mulai: string, tanggal_selesai: string, alasan: string, karyawan_ids: int[]}  $data
      */
@@ -152,6 +188,8 @@ class CutiMassalService
                     continue;
                 }
 
+                $potongan = $this->hitungPotongan($saldo, $karyawan, $jumlahHari);
+
                 $pengajuan = PengajuanCuti::query()->create([
                     'cuti_massal_id' => $cutiMassal->id,
                     'karyawan_id' => $karyawan->id,
@@ -160,6 +198,7 @@ class CutiMassalService
                     'tanggal_selesai' => $selesai,
                     'jumlah_hari' => $jumlahHari,
                     'jumlah_hari_kalender' => $jumlahHariKalender,
+                    'bonus_kuota_kontrak_pertama' => $potongan['bonus'],
                     'alasan' => $data['alasan'],
                     'status' => StatusPengajuan::Disetujui,
                     'tanggal_pengajuan' => now(),
@@ -177,8 +216,9 @@ class CutiMassalService
                 }
 
                 $saldo->update([
-                    'terpakai' => $saldo->terpakai + $jumlahHari,
-                    'sisa' => $saldo->kuota === null ? null : $saldo->sisa - $jumlahHari,
+                    'kuota' => $potongan['kuota'],
+                    'terpakai' => $potongan['terpakai'],
+                    'sisa' => $potongan['sisa'],
                 ]);
 
                 $karyawan->user?->notify(new PengajuanCutiDisetujui($pengajuan));
@@ -257,9 +297,14 @@ class CutiMassalService
                     ->first();
 
                 if ($saldo) {
+                    // sisa dikembalikan dengan jumlah_hari lalu dikurangi
+                    // bonus yang ikut ditarik kembali, supaya kuota,
+                    // terpakai, dan sisa tetap konsisten (kuota - terpakai
+                    // = sisa) setelah pembatalan.
                     $saldo->update([
+                        'kuota' => $saldo->kuota === null ? null : max(0, $saldo->kuota - $pengajuan->bonus_kuota_kontrak_pertama),
                         'terpakai' => max(0, $saldo->terpakai - $pengajuan->jumlah_hari),
-                        'sisa' => $saldo->kuota === null ? null : $saldo->sisa + $pengajuan->jumlah_hari,
+                        'sisa' => $saldo->kuota === null ? null : $saldo->sisa + $pengajuan->jumlah_hari - $pengajuan->bonus_kuota_kontrak_pertama,
                     ]);
                 }
 

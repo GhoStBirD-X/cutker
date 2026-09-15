@@ -119,6 +119,7 @@ export type KaryawanEligiblePreview = {
     karyawan: Karyawan;
     saldo: SaldoCuti | null;
     akan_minus: boolean;
+    akan_dapat_bonus: boolean;
 };
 
 export type HariLibur = {
