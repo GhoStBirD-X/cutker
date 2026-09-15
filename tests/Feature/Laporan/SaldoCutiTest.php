@@ -158,12 +158,27 @@ class SaldoCutiTest extends TestCase
         $response->assertInertia(fn ($page) => $page->where('karyawans.data.0.status_kontrak', 'K1'));
 
         $periodeCutiService->tutupPeriode($saldoK1->fresh());
-        $konfirmasi = KonfirmasiKontrakCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail();
-        $periodeCutiService->konfirmasiPerpanjangan($konfirmasi, $penyetuju, true, 'Kontrak diperpanjang.');
+        $konfirmasiK1 = KonfirmasiKontrakCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail();
+        $periodeCutiService->konfirmasiPerpanjangan($konfirmasiK1, $penyetuju, true, 'Kontrak diperpanjang.');
 
         // Setelah diperpanjang: periode_ke aktif jadi 2, jadi K2.
         $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti', ['search' => $karyawan->nip]));
         $response->assertInertia(fn ($page) => $page->where('karyawans.data.0.status_kontrak', 'K2'));
+
+        // Tidak ada batas keras — perpanjangan kedua harus jalan mulus ke K3.
+        $saldoK2 = SaldoCuti::query()
+            ->where('karyawan_id', $karyawan->id)
+            ->where('jenis_cuti_id', $cutiTahunan->id)
+            ->where('periode_ke', 2)
+            ->firstOrFail();
+        $saldoK2->update(['periode_selesai' => now()->subDay()]);
+
+        $periodeCutiService->tutupPeriode($saldoK2->fresh());
+        $konfirmasiK2 = KonfirmasiKontrakCuti::query()->where('karyawan_id', $karyawan->id)->where('periode_ke', 2)->firstOrFail();
+        $periodeCutiService->konfirmasiPerpanjangan($konfirmasiK2, $penyetuju, true, 'Kontrak diperpanjang lagi.');
+
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti', ['search' => $karyawan->nip]));
+        $response->assertInertia(fn ($page) => $page->where('karyawans.data.0.status_kontrak', 'K3'));
     }
 
     public function test_riwayat_shows_only_approved_pengajuan_within_saldo_period(): void

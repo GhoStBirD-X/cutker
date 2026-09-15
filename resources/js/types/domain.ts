@@ -183,12 +183,12 @@ export type KonfirmasiKontrakCuti = {
 export type Approval = {
     id: number;
     pengajuan_cuti_id: number;
-    approver_id: number;
+    approver_id: number | null;
     level: number;
     status: StatusApproval;
     tanggal_approval: string | null;
     catatan: string | null;
-    approver?: Karyawan;
+    approver?: Karyawan | null;
     pengajuan_cuti?: PengajuanCuti;
 };
 

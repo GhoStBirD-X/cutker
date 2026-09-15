@@ -27,6 +27,61 @@ class ApprovalService
     public const LEVEL_MANAGER = 3;
 
     /**
+     * Mulai alur approval untuk pengajuan baru, disesuaikan dengan wewenang
+     * approval yang sudah dimiliki si pengaju sendiri — supaya orang yang
+     * justru berwenang approve di level tertentu tidak perlu menunggu
+     * approval dari level di bawah wewenangnya sendiri:
+     *
+     * - Manager mengajukan cuti untuk dirinya sendiri: tidak ada level di
+     *   atas Manager dalam alur ini, jadi langsung disetujui otomatis
+     *   (saldo langsung terpotong, tanpa approval manusia).
+     * - HRD mengajukan cuti untuk dirinya sendiri: Kepala Bagian & HRD
+     *   dilewati (dia sendiri sudah setara/di atas keduanya), langsung ke
+     *   Manager sebagai satu-satunya level.
+     * - Selain itu (termasuk Kepala Bagian & karyawan biasa): alur normal
+     *   3 level, mulai dari Kepala Bagian — kecuali departemennya belum
+     *   punya Kepala Bagian sama sekali, di situ level 1 dilewati dan
+     *   langsung mulai dari HRD (level Kepala Bagian bukan kolam bersama —
+     *   diikat ke satu orang spesifik per departemen — jadi tidak ada yang
+     *   bisa "menjemput" approval itu nanti kalau dibiarkan tanpa approver;
+     *   beda dengan HRD/Manager yang levelnya kolam bersama per role, lihat
+     *   teruskan()).
+     */
+    public function mulaiAlur(PengajuanCuti $pengajuan, Karyawan $pengaju, ?Karyawan $kepalaBagian): void
+    {
+        $user = $pengaju->user;
+
+        if ($user?->hasRole('manager')) {
+            $this->setujuiFinal($pengajuan);
+
+            return;
+        }
+
+        if ($user?->hasRole('hrd')) {
+            $this->teruskan($pengajuan, self::LEVEL_MANAGER, 'manager');
+
+            return;
+        }
+
+        if (! $kepalaBagian) {
+            $this->teruskan($pengajuan, self::LEVEL_HRD, 'hrd');
+
+            return;
+        }
+
+        Approval::query()->create([
+            'pengajuan_cuti_id' => $pengajuan->id,
+            'approver_id' => $kepalaBagian->id,
+            'level' => self::LEVEL_KEPALA_BAGIAN,
+            'status' => StatusApproval::Pending,
+        ]);
+
+        if ($kepalaBagian->user) {
+            $kepalaBagian->user->notify(new PengajuanCutiDiajukan($pengajuan));
+        }
+    }
+
+    /**
      * Menyetujui approval pada level saat ini.
      *
      * Level HRD & Manager adalah kolam bersama: siapa pun user dengan role

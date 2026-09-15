@@ -106,6 +106,150 @@ class PengajuanCutiTest extends TestCase
         $this->assertDatabaseCount('pengajuan_cutis', 0);
     }
 
+    public function test_hrd_own_leave_request_skips_kepala_bagian_and_hrd_levels(): void
+    {
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+        $this->karyawanUser('kepala_bagian', ['departemen_id' => $hrd->departemen_id]);
+        $this->karyawanUser('manager');
+
+        $jenisCuti = JenisCuti::factory()->create();
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $hrd->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $response = $this->actingAs($hrd->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(7)->toDateString(),
+            'tanggal_selesai' => now()->addDays(8)->toDateString(),
+            'alasan' => 'Cuti HRD',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+
+        $pengajuan = PengajuanCuti::query()->where('karyawan_id', $hrd->id)->firstOrFail();
+
+        $this->assertSame('pending', $pengajuan->status->value);
+        $this->assertDatabaseCount('approvals', 1);
+        $this->assertDatabaseHas('approvals', [
+            'pengajuan_cuti_id' => $pengajuan->id,
+            'level' => 3,
+            'status' => 'pending',
+        ]);
+    }
+
+    public function test_manager_own_leave_request_is_auto_approved_without_human_approval(): void
+    {
+        $manager = $this->karyawanUser('manager')->karyawan;
+
+        $jenisCuti = JenisCuti::factory()->create();
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $manager->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $response = $this->actingAs($manager->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(7)->toDateString(),
+            'tanggal_selesai' => now()->addDays(8)->toDateString(),
+            'alasan' => 'Cuti Manager',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('pengajuan_cutis', [
+            'karyawan_id' => $manager->id,
+            'status' => 'disetujui',
+        ]);
+        $this->assertDatabaseCount('approvals', 0);
+        $this->assertDatabaseHas('saldo_cutis', [
+            'karyawan_id' => $manager->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'terpakai' => 2,
+            'sisa' => 10,
+        ]);
+    }
+
+    public function test_leave_request_skips_kepala_bagian_level_when_department_has_none(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        // Sengaja tidak membuat kepala_bagian untuk departemen ini.
+
+        $jenisCuti = JenisCuti::factory()->create();
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(7)->toDateString(),
+            'tanggal_selesai' => now()->addDays(8)->toDateString(),
+            'alasan' => 'Departemen belum ada kepala bagian',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+
+        $pengajuan = PengajuanCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail();
+
+        $this->assertDatabaseCount('approvals', 1);
+        $this->assertDatabaseHas('approvals', [
+            'pengajuan_cuti_id' => $pengajuan->id,
+            'level' => 2,
+            'status' => 'pending',
+        ]);
+    }
+
+    public function test_hrd_own_leave_request_does_not_crash_when_no_manager_exists(): void
+    {
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+        // Sengaja tidak membuat Manager sama sekali di sistem.
+
+        $jenisCuti = JenisCuti::factory()->create();
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $hrd->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $response = $this->actingAs($hrd->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(7)->toDateString(),
+            'tanggal_selesai' => now()->addDays(8)->toDateString(),
+            'alasan' => 'HRD tanpa manager di sistem',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+
+        $pengajuan = PengajuanCuti::query()->where('karyawan_id', $hrd->id)->firstOrFail();
+
+        $this->assertDatabaseHas('approvals', [
+            'pengajuan_cuti_id' => $pengajuan->id,
+            'level' => 3,
+            'approver_id' => null,
+            'status' => 'pending',
+        ]);
+    }
+
     public function test_leave_request_is_rejected_when_it_overlaps_an_active_request(): void
     {
         $karyawan = $this->karyawanUser('karyawan')->karyawan;

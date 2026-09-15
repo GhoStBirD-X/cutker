@@ -162,6 +162,39 @@ class ApprovalFlowTest extends TestCase
         $this->assertSame(9, $saldo->sisa);
     }
 
+    public function test_manager_added_later_can_see_and_act_on_orphaned_level_3_approval(): void
+    {
+        // approver_id null: level 3 dibuat saat belum ada satu pun Manager
+        // di sistem (lihat ApprovalService::mulaiAlur/teruskan).
+        ['pengajuan' => $pengajuan, 'saldo' => $saldo] = $this->buatPengajuanDenganApprovalLevel2(jumlahHari: 3, kuota: 12);
+
+        $approvalLevel3 = Approval::factory()->create([
+            'pengajuan_cuti_id' => $pengajuan->id,
+            'approver_id' => null,
+            'level' => ApprovalService::LEVEL_MANAGER,
+            'status' => StatusApproval::Pending,
+        ]);
+
+        // Manager baru ditambahkan belakangan.
+        $manager = $this->karyawanUser('manager');
+
+        $response = $this->actingAs($manager)->get(route('approval.index'));
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page->has('approvals.data', 1));
+
+        $approveResponse = $this->actingAs($manager)->post(route('approval.approve', $approvalLevel3), [
+            'catatan' => null,
+        ]);
+        $approveResponse->assertRedirect(route('approval.index'));
+
+        $this->assertDatabaseHas('approvals', ['id' => $approvalLevel3->id, 'status' => 'disetujui']);
+        $this->assertSame(StatusPengajuan::Disetujui, $pengajuan->fresh()->status);
+
+        $saldo->refresh();
+        $this->assertSame(3, $saldo->terpakai);
+        $this->assertSame(9, $saldo->sisa);
+    }
+
     public function test_manager_final_approval_keeps_sisa_null_when_saldo_is_unlimited(): void
     {
         ['pengajuan' => $pengajuan, 'saldo' => $saldo] = $this->buatPengajuanDenganApprovalLevel2(jumlahHari: 3, kuota: null);

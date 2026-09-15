@@ -5,12 +5,10 @@ namespace App\Services;
 use App\Enums\StatusApproval;
 use App\Enums\StatusPengajuan;
 use App\Exceptions\SaldoCutiTidakCukupException;
-use App\Models\Approval;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Models\User;
-use App\Notifications\PengajuanCutiDiajukan;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -20,11 +18,14 @@ class PengajuanCutiService
     public function __construct(
         protected SaldoCutiService $saldoCutiService,
         protected HariLiburService $hariLiburService,
+        protected ApprovalService $approvalService,
     ) {}
 
     /**
      * Karyawan mengajukan cuti. Sisa saldo cuti dicek sebelum pengajuan dibuat,
-     * lalu record Approval level 1 (atasan langsung) otomatis dibuat.
+     * lalu alur approval dimulai lewat ApprovalService::mulaiAlur() —
+     * disesuaikan dengan wewenang approval yang sudah dimiliki si pengaju
+     * sendiri (lihat docblock method itu untuk aturan HRD/Manager).
      * jumlah_hari yang memotong saldo sudah dikurangi akhir pekan (Sabtu &
      * Minggu) dan hari libur terdaftar yang bertabrakan dengan rentang
      * tanggal; jumlah_hari_kalender tetap menyimpan rentang kalender
@@ -64,18 +65,7 @@ class PengajuanCutiService
                 'alasan_mendadak' => $data['alasan_mendadak'] ?? null,
             ]);
 
-            $kepalaBagian = $this->cariKepalaBagian($karyawan);
-
-            $approval = Approval::query()->create([
-                'pengajuan_cuti_id' => $pengajuan->id,
-                'approver_id' => $kepalaBagian?->id,
-                'level' => 1,
-                'status' => StatusApproval::Pending,
-            ]);
-
-            if ($kepalaBagian?->user) {
-                $kepalaBagian->user->notify(new PengajuanCutiDiajukan($pengajuan));
-            }
+            $this->approvalService->mulaiAlur($pengajuan, $karyawan, $this->cariKepalaBagian($karyawan));
 
             return $pengajuan;
         });
