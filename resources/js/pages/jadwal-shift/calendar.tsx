@@ -494,7 +494,7 @@ export default function JadwalShiftCalendar() {
                     </div>
                 )}
 
-                <div className="grid gap-3">
+                <div className="grid max-h-[65vh] gap-3 overflow-y-auto pr-1">
                     {jadwalPerTanggal.map(([tanggal, items]) => {
                         const isOpen = expandedTanggal.has(tanggal);
 

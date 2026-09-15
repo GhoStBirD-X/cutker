@@ -3,15 +3,15 @@
 namespace App\Notifications;
 
 use App\Models\PengajuanCuti;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class PengajuanCutiDiajukan extends Notification implements ShouldQueue
+/**
+ * Sengaja tidak ShouldQueue — dikirim sinkron supaya tidak diam-diam hilang
+ * kalau queue worker tidak berjalan (lihat .ai/rules untuk detail).
+ */
+class PengajuanCutiDiajukan extends Notification
 {
-    use Queueable;
-
     public function __construct(
         public PengajuanCuti $pengajuanCuti,
     ) {}
