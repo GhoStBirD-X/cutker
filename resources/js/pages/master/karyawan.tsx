@@ -8,6 +8,7 @@ import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogClose,
@@ -44,6 +45,13 @@ type PageProps = {
 const FRASA_KONFIRMASI_RESET = 'HAPUS SEMUA KARYAWAN';
 
 type ImportFailure = { row: number; errors: string[] };
+type ImportKredensial = {
+    nip: string;
+    nama: string;
+    email: string;
+    password: string;
+    role: string;
+};
 
 const emptyForm = {
     nip: '',
@@ -57,7 +65,19 @@ const emptyForm = {
     status: 'aktif',
     tipe_karyawan: 'tetap',
     tanggal_akhir_kontrak: '',
+    buat_akun: false,
+    akun_password: '',
+    akun_role: 'karyawan',
 };
+
+const OPSI_ROLE = [
+    'karyawan',
+    'kepala_bagian',
+    'koordinator_shift',
+    'hrd',
+    'manager',
+    'admin',
+];
 
 export default function MasterKaryawan() {
     const {
@@ -80,18 +100,46 @@ export default function MasterKaryawan() {
         useForm(emptyForm);
 
     const [importFailures, setImportFailures] = useState<ImportFailure[]>([]);
+    const [importKredensial, setImportKredensial] = useState<
+        ImportKredensial[]
+    >([]);
     const importForm = useForm<{ file: File | null }>({ file: null });
 
     useEffect(() => {
         return router.on('flash', (event) => {
             const flash = (event as CustomEvent).detail?.flash as
-                { importFailures?: ImportFailure[] } | undefined;
+                | {
+                      importFailures?: ImportFailure[];
+                      importKredensial?: ImportKredensial[];
+                  }
+                | undefined;
 
             if (flash?.importFailures) {
                 setImportFailures(flash.importFailures);
             }
+
+            if (flash?.importKredensial) {
+                setImportKredensial(flash.importKredensial);
+            }
         });
     }, []);
+
+    const unduhKredensial = () => {
+        const header = 'NIP,Nama,Email,Password,Role';
+        const baris = importKredensial.map((k) =>
+            [k.nip, k.nama, k.email, k.password, k.role]
+                .map((nilai) => `"${nilai.replace(/"/g, '""')}"`)
+                .join(','),
+        );
+        const csv = [header, ...baris].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `kredensial-karyawan-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     const submitImport = (e: React.FormEvent) => {
         e.preventDefault();
@@ -101,6 +149,7 @@ export default function MasterKaryawan() {
         }
 
         setImportFailures([]);
+        setImportKredensial([]);
         importForm.post(KaryawanController.importMethod.url(), {
             forceFormData: true,
             onSuccess: () => importForm.reset(),
@@ -122,6 +171,9 @@ export default function MasterKaryawan() {
             tipe_karyawan: karyawan.tipe_karyawan,
             tanggal_akhir_kontrak:
                 karyawan.tanggal_akhir_kontrak?.slice(0, 10) ?? '',
+            buat_akun: false,
+            akun_password: '',
+            akun_role: 'karyawan',
         });
     };
 
@@ -270,6 +322,74 @@ export default function MasterKaryawan() {
                                         </li>
                                     ))}
                                 </ul>
+                            </div>
+                        )}
+
+                        {importKredensial.length > 0 && (
+                            <div className="mt-4 rounded-md border border-blue-200 p-3 dark:border-blue-900">
+                                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                                    <h3 className="text-sm font-semibold">
+                                        Akun login untuk{' '}
+                                        {importKredensial.length} karyawan baru
+                                    </h3>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={unduhKredensial}
+                                    >
+                                        Unduh sebagai CSV
+                                    </Button>
+                                </div>
+                                <p className="mb-2 text-xs text-muted-foreground">
+                                    Password hanya ditampilkan sekali di sini —
+                                    segera unduh/catat dan bagikan ke
+                                    masing-masing karyawan. Meninggalkan halaman
+                                    ini akan menghilangkan daftar ini secara
+                                    permanen.
+                                </p>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-xs">
+                                        <thead>
+                                            <tr className="border-b text-muted-foreground">
+                                                <th className="py-1 pr-3">
+                                                    NIP
+                                                </th>
+                                                <th className="py-1 pr-3">
+                                                    Nama
+                                                </th>
+                                                <th className="py-1 pr-3">
+                                                    Email
+                                                </th>
+                                                <th className="py-1 pr-3">
+                                                    Password
+                                                </th>
+                                                <th className="py-1">Role</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y">
+                                            {importKredensial.map((k) => (
+                                                <tr key={k.email}>
+                                                    <td className="py-1 pr-3">
+                                                        {k.nip}
+                                                    </td>
+                                                    <td className="py-1 pr-3">
+                                                        {k.nama}
+                                                    </td>
+                                                    <td className="py-1 pr-3">
+                                                        {k.email}
+                                                    </td>
+                                                    <td className="py-1 pr-3 font-mono">
+                                                        {k.password}
+                                                    </td>
+                                                    <td className="py-1">
+                                                        {k.role}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         )}
                     </CardContent>
@@ -452,6 +572,76 @@ export default function MasterKaryawan() {
                                     <InputError
                                         message={errors.tanggal_akhir_kontrak}
                                     />
+                                </div>
+                            )}
+                            {!editing && (
+                                <div className="col-span-2 grid gap-3 rounded-md border p-3 md:col-span-4">
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <Checkbox
+                                            checked={data.buat_akun}
+                                            onCheckedChange={(checked) =>
+                                                setData(
+                                                    'buat_akun',
+                                                    Boolean(checked),
+                                                )
+                                            }
+                                        />
+                                        Buat akun login sekaligus (pakai nama &
+                                        email di atas)
+                                    </label>
+                                    {data.buat_akun && (
+                                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="akun_password">
+                                                    Password
+                                                </Label>
+                                                <Input
+                                                    id="akun_password"
+                                                    type="password"
+                                                    value={data.akun_password}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'akun_password',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        errors.akun_password
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="akun_role">
+                                                    Role
+                                                </Label>
+                                                <select
+                                                    id="akun_role"
+                                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+                                                    value={data.akun_role}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'akun_role',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                >
+                                                    {OPSI_ROLE.map((role) => (
+                                                        <option
+                                                            key={role}
+                                                            value={role}
+                                                        >
+                                                            {role}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <InputError
+                                                    message={errors.akun_role}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                             <div className="col-span-2 flex items-end gap-2 md:col-span-4">

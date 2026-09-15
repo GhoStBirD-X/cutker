@@ -8,10 +8,14 @@ use App\Enums\TipeKaryawan;
 use App\Models\Departemen;
 use App\Models\Jabatan;
 use App\Models\Karyawan;
+use App\Models\User;
 use App\Services\SaldoCutiService;
+use App\Support\PetaRoleJabatan;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -26,6 +30,16 @@ class KaryawanImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
      * @var array<int, array{row: int, errors: array<int, string>}>
      */
     public array $failures = [];
+
+    /**
+     * Kredensial akun login yang dibuat otomatis untuk tiap karyawan yang
+     * berhasil diimpor — password plain text HANYA ada di sini (in-memory,
+     * dikirim ke frontend via flash sekali lalu hilang), tidak pernah
+     * disimpan di mana pun.
+     *
+     * @var array<int, array{nip: string, nama: string, email: string, password: string, role: string}>
+     */
+    public array $kredensial = [];
 
     public function __construct(
         protected SaldoCutiService $saldoCutiService,
@@ -91,6 +105,27 @@ class KaryawanImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
                 ]);
 
                 $this->saldoCutiService->bootstrapUntukKaryawanBaru($karyawan);
+
+                $password = Str::password(12);
+                $role = PetaRoleJabatan::roleUntuk($data['jabatan_nama']);
+
+                $user = User::query()->create([
+                    'name' => $data['nama'],
+                    'email' => $data['email'],
+                    'password' => Hash::make($password),
+                    'email_verified_at' => now(),
+                ]);
+                $user->karyawan_id = $karyawan->id;
+                $user->save();
+                $user->assignRole($role);
+
+                $this->kredensial[] = [
+                    'nip' => $data['nip'],
+                    'nama' => $data['nama'],
+                    'email' => $data['email'],
+                    'password' => $password,
+                    'role' => $role,
+                ];
             });
 
             $this->successCount++;
@@ -127,6 +162,8 @@ class KaryawanImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
             $errors[] = "Email '{$data['email']}' duplikat dengan baris {$seenEmail[$data['email']]} di file ini.";
         } elseif (Karyawan::query()->where('email', $data['email'])->exists()) {
             $errors[] = "Email '{$data['email']}' sudah dipakai karyawan lain.";
+        } elseif (User::query()->where('email', $data['email'])->exists()) {
+            $errors[] = "Email '{$data['email']}' sudah dipakai akun login lain.";
         }
 
         if (! JenisKelamin::tryFrom($data['jenis_kelamin'])) {

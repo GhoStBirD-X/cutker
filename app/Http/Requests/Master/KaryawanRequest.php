@@ -6,9 +6,11 @@ use App\Enums\JenisKelamin;
 use App\Enums\StatusKaryawan;
 use App\Enums\TipeKaryawan;
 use App\Models\Karyawan;
+use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class KaryawanRequest extends FormRequest
 {
@@ -28,7 +30,17 @@ class KaryawanRequest extends FormRequest
         return [
             'nip' => ['required', 'string', 'max:50', Rule::unique('karyawans', 'nip')->ignore($karyawan)],
             'nama' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('karyawans', 'email')->ignore($karyawan)],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('karyawans', 'email')->ignore($karyawan),
+                function ($attribute, $value, $fail) {
+                    if ($this->boolean('buat_akun') && User::query()->where('email', $value)->exists()) {
+                        $fail('Email ini sudah dipakai akun login lain.');
+                    }
+                },
+            ],
             'no_hp' => ['nullable', 'string', 'max:20'],
             'jenis_kelamin' => ['required', Rule::enum(JenisKelamin::class)],
             'departemen_id' => ['required', 'integer', 'exists:departemens,id'],
@@ -41,6 +53,17 @@ class KaryawanRequest extends FormRequest
                 'nullable',
                 'date',
                 'after:tanggal_masuk',
+            ],
+            'buat_akun' => ['nullable', 'boolean'],
+            'akun_password' => [
+                Rule::requiredIf(fn () => $this->boolean('buat_akun')),
+                'nullable',
+                Password::default(),
+            ],
+            'akun_role' => [
+                Rule::requiredIf(fn () => $this->boolean('buat_akun')),
+                'nullable',
+                Rule::in(['karyawan', 'kepala_bagian', 'koordinator_shift', 'hrd', 'manager', 'admin']),
             ],
         ];
     }

@@ -4,8 +4,11 @@ namespace Tests\Feature\Master;
 
 use App\Models\Departemen;
 use App\Models\Jabatan;
+use App\Models\Karyawan;
+use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -45,6 +48,108 @@ class KaryawanManagementTest extends TestCase
             'email' => 'karyawan.baru@pabrik.test',
             'departemen_id' => $departemen->id,
         ]);
+    }
+
+    public function test_hrd_can_create_karyawan_with_login_account_at_the_same_time(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $departemen = Departemen::factory()->create();
+        $jabatan = Jabatan::factory()->create();
+
+        $response = $this->actingAs($hrd)->post(route('master.karyawan.store'), [
+            'nip' => 'EMP-99997',
+            'nama' => 'Karyawan Dengan Akun',
+            'email' => 'karyawan.akun@pabrik.test',
+            'jenis_kelamin' => 'laki_laki',
+            'departemen_id' => $departemen->id,
+            'jabatan_id' => $jabatan->id,
+            'tanggal_masuk' => now()->toDateString(),
+            'status' => 'aktif',
+            'tipe_karyawan' => 'tetap',
+            'buat_akun' => true,
+            'akun_password' => 'password-aman-123',
+            'akun_role' => 'kepala_bagian',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+
+        $karyawan = Karyawan::query()->where('email', 'karyawan.akun@pabrik.test')->firstOrFail();
+        $user = User::query()->where('email', 'karyawan.akun@pabrik.test')->firstOrFail();
+
+        $this->assertSame($karyawan->id, $user->karyawan_id);
+        $this->assertTrue($user->hasRole('kepala_bagian'));
+        $this->assertTrue(Hash::check('password-aman-123', $user->password));
+    }
+
+    public function test_creating_karyawan_without_buat_akun_does_not_create_login_account(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $departemen = Departemen::factory()->create();
+        $jabatan = Jabatan::factory()->create();
+
+        $this->actingAs($hrd)->post(route('master.karyawan.store'), [
+            'nip' => 'EMP-99996',
+            'nama' => 'Karyawan Tanpa Akun',
+            'email' => 'karyawan.tanpaakun@pabrik.test',
+            'jenis_kelamin' => 'laki_laki',
+            'departemen_id' => $departemen->id,
+            'jabatan_id' => $jabatan->id,
+            'tanggal_masuk' => now()->toDateString(),
+            'status' => 'aktif',
+            'tipe_karyawan' => 'tetap',
+        ]);
+
+        $this->assertDatabaseMissing('users', ['email' => 'karyawan.tanpaakun@pabrik.test']);
+    }
+
+    public function test_buat_akun_requires_password_and_role(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $departemen = Departemen::factory()->create();
+        $jabatan = Jabatan::factory()->create();
+
+        $response = $this->actingAs($hrd)->post(route('master.karyawan.store'), [
+            'nip' => 'EMP-99995',
+            'nama' => 'Karyawan Gagal Akun',
+            'email' => 'karyawan.gagalakun@pabrik.test',
+            'jenis_kelamin' => 'laki_laki',
+            'departemen_id' => $departemen->id,
+            'jabatan_id' => $jabatan->id,
+            'tanggal_masuk' => now()->toDateString(),
+            'status' => 'aktif',
+            'tipe_karyawan' => 'tetap',
+            'buat_akun' => true,
+        ]);
+
+        $response->assertSessionHasErrors(['akun_password', 'akun_role']);
+        $this->assertDatabaseMissing('karyawans', ['email' => 'karyawan.gagalakun@pabrik.test']);
+    }
+
+    public function test_buat_akun_rejects_email_already_used_by_existing_user_account(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $departemen = Departemen::factory()->create();
+        $jabatan = Jabatan::factory()->create();
+        User::factory()->create(['email' => 'sudah.dipakai@pabrik.test']);
+
+        $response = $this->actingAs($hrd)->post(route('master.karyawan.store'), [
+            'nip' => 'EMP-99994',
+            'nama' => 'Karyawan Email Bentrok',
+            'email' => 'sudah.dipakai@pabrik.test',
+            'jenis_kelamin' => 'laki_laki',
+            'departemen_id' => $departemen->id,
+            'jabatan_id' => $jabatan->id,
+            'tanggal_masuk' => now()->toDateString(),
+            'status' => 'aktif',
+            'tipe_karyawan' => 'tetap',
+            'buat_akun' => true,
+            'akun_password' => 'password-aman-123',
+            'akun_role' => 'karyawan',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertDatabaseMissing('karyawans', ['nip' => 'EMP-99994']);
     }
 
     public function test_tanggal_akhir_kontrak_is_required_when_tipe_karyawan_is_kontrak(): void

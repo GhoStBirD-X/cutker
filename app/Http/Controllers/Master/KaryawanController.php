@@ -16,6 +16,7 @@ use App\Services\ResetDataService;
 use App\Services\SaldoCutiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
@@ -47,11 +48,34 @@ class KaryawanController extends Controller
 
     public function store(KaryawanRequest $request, SaldoCutiService $saldoCutiService): RedirectResponse
     {
-        $karyawan = Karyawan::query()->create($request->validated());
+        $data = $request->validated();
+        $buatAkun = (bool) ($data['buat_akun'] ?? false);
+        $akunPassword = $data['akun_password'] ?? null;
+        $akunRole = $data['akun_role'] ?? null;
+        unset($data['buat_akun'], $data['akun_password'], $data['akun_role']);
+
+        $karyawan = Karyawan::query()->create($data);
 
         $saldoCutiService->bootstrapUntukKaryawanBaru($karyawan);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Karyawan berhasil ditambahkan.']);
+        if ($buatAkun) {
+            $user = User::query()->create([
+                'name' => $karyawan->nama,
+                'email' => $karyawan->email,
+                'password' => Hash::make($akunPassword),
+                'email_verified_at' => now(),
+            ]);
+            $user->karyawan_id = $karyawan->id;
+            $user->save();
+            $user->assignRole($akunRole);
+        }
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => $buatAkun
+                ? 'Karyawan & akun login berhasil ditambahkan.'
+                : 'Karyawan berhasil ditambahkan.',
+        ]);
 
         return back();
     }
@@ -74,12 +98,16 @@ class KaryawanController extends Controller
         Inertia::flash('toast', [
             'type' => $import->failures === [] ? 'success' : 'error',
             'message' => $import->failures === []
-                ? "{$import->successCount} karyawan berhasil diimpor."
+                ? "{$import->successCount} karyawan berhasil diimpor, sekalian dengan akun login-nya."
                 : "{$import->successCount} karyawan berhasil diimpor, ".count($import->failures).' baris gagal.',
         ]);
 
         if ($import->failures !== []) {
             Inertia::flash('importFailures', $import->failures);
+        }
+
+        if ($import->kredensial !== []) {
+            Inertia::flash('importKredensial', $import->kredensial);
         }
 
         return back();
