@@ -1,4 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
+import { CalendarClock } from 'lucide-react';
 import { useState } from 'react';
 import KonfirmasiKontrakController from '@/actions/App/Http/Controllers/Cuti/KonfirmasiKontrakController';
 import { Pagination } from '@/components/pagination';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { formatDate } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { index as konfirmasiKontrakIndex } from '@/routes/cuti/konfirmasi-kontrak';
 import type { KonfirmasiKontrakCuti, Paginated } from '@/types';
@@ -34,8 +36,17 @@ function KonfirmasiRow({ konfirmasi }: { konfirmasi: KonfirmasiKontrakCuti }) {
         );
     };
 
+    const menunggu = konfirmasi.status === 'menunggu';
+
     return (
-        <div className="flex flex-col gap-3 p-4 text-sm md:flex-row md:items-center md:justify-between">
+        <div
+            className={cn(
+                'flex flex-col gap-3 border-l-4 p-4 text-sm md:flex-row md:items-center md:justify-between',
+                menunggu
+                    ? 'border-l-amber-500 bg-amber-50/40 dark:bg-amber-950/10'
+                    : 'border-l-transparent',
+            )}
+        >
             <div>
                 <div className="font-medium">
                     {konfirmasi.karyawan?.nama} &middot;{' '}
@@ -94,7 +105,8 @@ export default function KonfirmasiKontrakIndex() {
         <>
             <Head title="Konfirmasi Perpanjangan Kontrak" />
             <div className="flex flex-1 flex-col gap-4 p-4">
-                <h1 className="text-xl font-semibold">
+                <h1 className="flex items-center gap-2 text-xl font-semibold">
+                    <CalendarClock className="size-5 text-amber-600 dark:text-amber-400" />
                     Konfirmasi Perpanjangan Kontrak
                 </h1>
                 <p className="text-sm text-muted-foreground">

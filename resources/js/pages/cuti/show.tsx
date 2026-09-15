@@ -1,4 +1,5 @@
 import { Form, Head, usePage } from '@inertiajs/react';
+import { FileText, History, Paperclip } from 'lucide-react';
 import PengajuanCutiController from '@/actions/App/Http/Controllers/Cuti/PengajuanCutiController';
 import { StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
@@ -54,7 +55,10 @@ export default function CutiShow() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Detail Pengajuan</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                            <FileText className="size-4 text-muted-foreground" />
+                            Detail Pengajuan
+                        </CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-2 gap-4 text-sm">
                         <div>
@@ -119,8 +123,9 @@ export default function CutiShow() {
                                     href={`/storage/${pengajuan.lampiran}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-primary underline"
+                                    className="inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline"
                                 >
+                                    <Paperclip className="size-3.5" />
                                     Lihat lampiran
                                 </a>
                             </div>
@@ -130,7 +135,10 @@ export default function CutiShow() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Riwayat Approval</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                            <History className="size-4 text-muted-foreground" />
+                            Riwayat Approval
+                        </CardTitle>
                     </CardHeader>
                     <CardContent className="divide-y p-0">
                         {(pengajuan.approvals ?? []).map((approval) => (
@@ -142,8 +150,7 @@ export default function CutiShow() {
                                     <div className="font-medium">
                                         Level {approval.level} (
                                         {approvalLevelLabel(approval.level)})
-                                        &middot;{' '}
-                                        {approverDisplayName(approval)}
+                                        &middot; {approverDisplayName(approval)}
                                     </div>
                                     {approval.catatan && (
                                         <div className="text-muted-foreground">

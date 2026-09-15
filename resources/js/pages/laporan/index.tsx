@@ -1,4 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
+import { BarChart3, Download } from 'lucide-react';
 import { useState } from 'react';
 import { Pagination } from '@/components/pagination';
 import { StatusBadge } from '@/components/status-badge';
@@ -53,7 +54,10 @@ export default function LaporanIndex() {
         <>
             <Head title="Laporan Cuti" />
             <div className="flex flex-1 flex-col gap-4 p-4">
-                <h1 className="text-xl font-semibold">Laporan Cuti</h1>
+                <h1 className="flex items-center gap-2 text-xl font-semibold">
+                    <BarChart3 className="size-5 text-primary" />
+                    Laporan Cuti
+                </h1>
 
                 <Card>
                     <CardContent>
@@ -115,12 +119,20 @@ export default function LaporanIndex() {
                             <div className="flex flex-wrap gap-2">
                                 <Button type="submit">Filter</Button>
                                 <Button asChild variant="outline">
-                                    <a href={exportExcel.url({ query: form })}>
+                                    <a
+                                        href={exportExcel.url({ query: form })}
+                                        className="gap-1.5"
+                                    >
+                                        <Download className="size-4" />
                                         Excel
                                     </a>
                                 </Button>
                                 <Button asChild variant="outline">
-                                    <a href={exportPdf.url({ query: form })}>
+                                    <a
+                                        href={exportPdf.url({ query: form })}
+                                        className="gap-1.5"
+                                    >
+                                        <Download className="size-4" />
                                         PDF
                                     </a>
                                 </Button>
@@ -166,7 +178,9 @@ export default function LaporanIndex() {
 
                 <Pagination links={pengajuans.links} />
 
-                <h2 className="text-lg font-semibold">Ringkasan Lembur</h2>
+                <h2 className="text-sm font-semibold text-muted-foreground">
+                    Ringkasan Lembur
+                </h2>
 
                 <Card>
                     <CardContent className="divide-y p-0">

@@ -1,4 +1,5 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { CalendarPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import PengajuanCutiController from '@/actions/App/Http/Controllers/Cuti/PengajuanCutiController';
 import InputError from '@/components/input-error';
@@ -14,6 +15,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { saldoSeverity } from '@/lib/saldo-severity';
 import { dashboard } from '@/routes';
 import {
     create as cutiCreate,
@@ -51,7 +53,10 @@ export default function CutiAjukan() {
         <>
             <Head title="Ajukan Cuti" />
             <div className="flex flex-1 flex-col gap-4 p-4">
-                <h1 className="text-xl font-semibold">Ajukan Cuti</h1>
+                <h1 className="flex items-center gap-2 text-xl font-semibold">
+                    <CalendarPlus className="size-5 text-primary" />
+                    Ajukan Cuti
+                </h1>
 
                 <Card className="max-w-xl">
                     <CardContent>
@@ -90,6 +95,13 @@ export default function CutiAjukan() {
                                                                 jenis.id,
                                                         );
 
+                                                    const style = saldo
+                                                        ? saldoSeverity(
+                                                              saldo.sisa,
+                                                              saldo.kuota,
+                                                          )
+                                                        : null;
+
                                                     return (
                                                         <SelectItem
                                                             key={jenis.id}
@@ -98,12 +110,18 @@ export default function CutiAjukan() {
                                                             )}
                                                         >
                                                             {jenis.nama_jenis}{' '}
-                                                            {saldo
-                                                                ? saldo.kuota ===
-                                                                  null
-                                                                    ? '(hari ∞)'
-                                                                    : `(sisa ${saldo.sisa} hari)`
-                                                                : ''}
+                                                            {saldo && style && (
+                                                                <span
+                                                                    className={
+                                                                        style.text
+                                                                    }
+                                                                >
+                                                                    {saldo.kuota ===
+                                                                    null
+                                                                        ? '(hari ∞)'
+                                                                        : `(sisa ${saldo.sisa} hari)`}
+                                                                </span>
+                                                            )}
                                                         </SelectItem>
                                                     );
                                                 })}

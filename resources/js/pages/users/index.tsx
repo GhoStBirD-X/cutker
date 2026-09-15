@@ -1,4 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import UserController from '@/actions/App/Http/Controllers/UserManagement/UserController';
 import InputError from '@/components/input-error';
@@ -95,7 +96,10 @@ export default function UsersIndex() {
         <>
             <Head title="Kelola User" />
             <div className="flex flex-1 flex-col gap-4 p-4">
-                <h1 className="text-xl font-semibold">Kelola User & Role</h1>
+                <h1 className="flex items-center gap-2 text-xl font-semibold">
+                    <ShieldCheck className="size-5 text-primary" />
+                    Kelola User & Role
+                </h1>
 
                 <Card className="max-w-3xl">
                     <CardContent>

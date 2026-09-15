@@ -1,4 +1,5 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
+import { CheckSquare, FileText, History, Paperclip } from 'lucide-react';
 import ApprovalController from '@/actions/App/Http/Controllers/Approval/ApprovalController';
 import InputError from '@/components/input-error';
 import { StatusBadge } from '@/components/status-badge';
@@ -66,7 +67,10 @@ export default function ApprovalShow() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Detail Pengajuan</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                            <FileText className="size-4 text-muted-foreground" />
+                            Detail Pengajuan
+                        </CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-2 gap-4 text-sm">
                         <div>
@@ -120,8 +124,9 @@ export default function ApprovalShow() {
                                     href={`/storage/${pengajuan.lampiran}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-primary underline"
+                                    className="inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline"
                                 >
+                                    <Paperclip className="size-3.5" />
                                     Lihat lampiran
                                 </a>
                             </div>
@@ -131,7 +136,10 @@ export default function ApprovalShow() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Riwayat Approval</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                            <History className="size-4 text-muted-foreground" />
+                            Riwayat Approval
+                        </CardTitle>
                     </CardHeader>
                     <CardContent className="divide-y p-0">
                         {(pengajuan?.approvals ?? []).map((item) => (
@@ -158,7 +166,10 @@ export default function ApprovalShow() {
                 {canAct && (
                     <Card>
                         <CardHeader>
-                            <CardTitle>Tindakan</CardTitle>
+                            <CardTitle className="flex items-center gap-2">
+                                <CheckSquare className="size-4 text-muted-foreground" />
+                                Tindakan
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">

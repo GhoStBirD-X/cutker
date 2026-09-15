@@ -1,5 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { CalendarDays, ChevronDown, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import JadwalShiftController from '@/actions/App/Http/Controllers/JadwalShift/JadwalShiftController';
 import InputError from '@/components/input-error';
@@ -262,7 +262,10 @@ export default function JadwalShiftCalendar() {
             <div className="flex flex-1 flex-col gap-4 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <h1 className="text-xl font-semibold">Jadwal Shift</h1>
+                        <h1 className="flex items-center gap-2 text-xl font-semibold">
+                            <CalendarDays className="size-5 text-primary" />
+                            Jadwal Shift
+                        </h1>
                         {departemenTerkunci && departemenSaatIni && (
                             <p className="text-sm text-muted-foreground">
                                 Departemen {departemenSaatIni.nama_departemen}
@@ -500,7 +503,7 @@ export default function JadwalShiftCalendar() {
                                 <button
                                     type="button"
                                     onClick={() => toggleTanggal(tanggal)}
-                                    className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-muted/50"
+                                    className="flex w-full items-center gap-2 px-4 py-3 text-left transition-colors hover:bg-muted/50"
                                 >
                                     {isOpen ? (
                                         <ChevronDown className="size-4 shrink-0 text-muted-foreground" />

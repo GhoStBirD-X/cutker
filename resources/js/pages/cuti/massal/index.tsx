@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { Users } from 'lucide-react';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,10 @@ export default function CutiMassalIndex() {
             <Head title="Cuti Massal" />
             <div className="flex flex-1 flex-col gap-4 p-4">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-xl font-semibold">Cuti Massal</h1>
+                    <h1 className="flex items-center gap-2 text-xl font-semibold">
+                        <Users className="size-5 text-primary" />
+                        Cuti Massal
+                    </h1>
                     <Button asChild>
                         <Link href={cutiMassalCreate()}>Buat Cuti Massal</Link>
                     </Button>
@@ -41,7 +45,7 @@ export default function CutiMassalIndex() {
                             <Link
                                 key={cutiMassal.id}
                                 href={cutiMassalShow.url(cutiMassal.id)}
-                                className="flex flex-col gap-2 p-4 text-sm hover:bg-accent/50 sm:flex-row sm:items-center sm:justify-between"
+                                className="flex flex-col gap-2 p-4 text-sm transition-colors hover:bg-accent/50 sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <div>
                                     <div className="font-medium">

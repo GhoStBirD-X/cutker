@@ -16,6 +16,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { saldoSeverity } from '@/lib/saldo-severity';
 import { dashboard } from '@/routes';
 import {
     create as cutiMassalCreate,
@@ -259,7 +260,7 @@ export default function CutiMassalCreate() {
                                             {rows.map((row) => (
                                                 <label
                                                     key={row.karyawan.id}
-                                                    className="flex cursor-pointer items-center justify-between gap-3 px-4 py-2 text-sm hover:bg-accent/50"
+                                                    className="flex cursor-pointer items-center justify-between gap-3 px-4 py-2 text-sm transition-colors hover:bg-accent/50"
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <Checkbox
@@ -290,7 +291,20 @@ export default function CutiMassalCreate() {
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-muted-foreground">
+                                                        <span
+                                                            className={
+                                                                row.saldo
+                                                                    ? saldoSeverity(
+                                                                          row
+                                                                              .saldo
+                                                                              .sisa,
+                                                                          row
+                                                                              .saldo
+                                                                              .kuota,
+                                                                      ).text
+                                                                    : 'text-muted-foreground'
+                                                            }
+                                                        >
                                                             {row.saldo
                                                                 ? row.saldo
                                                                       .kuota ===

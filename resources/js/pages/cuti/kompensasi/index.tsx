@@ -1,4 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
+import { FileClock } from 'lucide-react';
 import { useState } from 'react';
 import KompensasiCutiController from '@/actions/App/Http/Controllers/Cuti/KompensasiCutiController';
 import { Pagination } from '@/components/pagination';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { formatDateTime } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { index as kompensasiIndex } from '@/routes/cuti/kompensasi';
 import type { KompensasiCuti, Paginated } from '@/types';
@@ -36,8 +38,17 @@ function KompensasiRow({ kompensasi }: { kompensasi: KompensasiCuti }) {
         );
     };
 
+    const menunggu = kompensasi.status === 'menunggu_diproses';
+
     return (
-        <div className="flex flex-col gap-3 p-4 text-sm md:flex-row md:items-center md:justify-between">
+        <div
+            className={cn(
+                'flex flex-col gap-3 border-l-4 p-4 text-sm md:flex-row md:items-center md:justify-between',
+                menunggu
+                    ? 'border-l-amber-500 bg-amber-50/40 dark:bg-amber-950/10'
+                    : 'border-l-transparent',
+            )}
+        >
             <div>
                 <div className="font-medium">
                     {kompensasi.karyawan?.nama} &middot;{' '}
@@ -84,7 +95,10 @@ export default function KompensasiCutiIndex() {
         <>
             <Head title="Kompensasi Cuti" />
             <div className="flex flex-1 flex-col gap-4 p-4">
-                <h1 className="text-xl font-semibold">Kompensasi Cuti</h1>
+                <h1 className="flex items-center gap-2 text-xl font-semibold">
+                    <FileClock className="size-5 text-amber-600 dark:text-amber-400" />
+                    Kompensasi Cuti
+                </h1>
                 <p className="text-sm text-muted-foreground">
                     Sisa cuti tahunan/besar yang hangus saat periode ditutup
                     tercatat di sini. Masukkan rate per hari untuk menghitung

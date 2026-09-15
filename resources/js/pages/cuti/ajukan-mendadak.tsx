@@ -1,4 +1,5 @@
 import { Form, Head, usePage } from '@inertiajs/react';
+import { Zap } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import PengajuanCutiController from '@/actions/App/Http/Controllers/Cuti/PengajuanCutiController';
 import InputError from '@/components/input-error';
@@ -14,8 +15,12 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { saldoSeverity } from '@/lib/saldo-severity';
 import { dashboard } from '@/routes';
-import { createMendadak as cutiCreateMendadak, index as cutiIndex } from '@/routes/cuti';
+import {
+    createMendadak as cutiCreateMendadak,
+    index as cutiIndex,
+} from '@/routes/cuti';
 import type { AlasanCuti, JenisCuti, SaldoCuti } from '@/types';
 
 type PageProps = {
@@ -43,17 +48,23 @@ export default function CutiAjukanMendadak() {
         <>
             <Head title="Ajukan Cuti Mendadak" />
             <div className="flex flex-1 flex-col gap-4 p-4">
-                <div>
-                    <h1 className="text-xl font-semibold">
-                        Ajukan Cuti Mendadak
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                        Gunakan form ini hanya untuk kondisi mendesak yang
-                        tidak memenuhi batas waktu pengajuan normal. Pengajuan
-                        tetap harus disetujui atasan, dan alasan mendadak yang
-                        Anda isi akan ditampilkan ke approver.
-                    </p>
-                </div>
+                <Card className="max-w-xl border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40">
+                    <CardContent className="flex items-start gap-3 text-sm">
+                        <Zap className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
+                        <div>
+                            <p className="font-medium text-amber-900 dark:text-amber-200">
+                                Ajukan Cuti Mendadak
+                            </p>
+                            <p className="text-amber-800/80 dark:text-amber-300/80">
+                                Gunakan form ini hanya untuk kondisi mendesak
+                                yang tidak memenuhi batas waktu pengajuan
+                                normal. Pengajuan tetap harus disetujui atasan,
+                                dan alasan mendadak yang Anda isi akan
+                                ditampilkan ke approver.
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
 
                 <Card className="max-w-xl">
                     <CardContent>
@@ -98,6 +109,13 @@ export default function CutiAjukanMendadak() {
                                                                 jenis.id,
                                                         );
 
+                                                    const style = saldo
+                                                        ? saldoSeverity(
+                                                              saldo.sisa,
+                                                              saldo.kuota,
+                                                          )
+                                                        : null;
+
                                                     return (
                                                         <SelectItem
                                                             key={jenis.id}
@@ -106,12 +124,18 @@ export default function CutiAjukanMendadak() {
                                                             )}
                                                         >
                                                             {jenis.nama_jenis}{' '}
-                                                            {saldo
-                                                                ? saldo.kuota ===
-                                                                  null
-                                                                    ? '(hari ∞)'
-                                                                    : `(sisa ${saldo.sisa} hari)`
-                                                                : ''}
+                                                            {saldo && style && (
+                                                                <span
+                                                                    className={
+                                                                        style.text
+                                                                    }
+                                                                >
+                                                                    {saldo.kuota ===
+                                                                    null
+                                                                        ? '(hari ∞)'
+                                                                        : `(sisa ${saldo.sisa} hari)`}
+                                                                </span>
+                                                            )}
                                                         </SelectItem>
                                                     );
                                                 })}

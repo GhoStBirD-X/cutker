@@ -1,7 +1,10 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { ArrowRight, ClipboardCheck, Zap } from 'lucide-react';
 import { Pagination } from '@/components/pagination';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { approvalLevelLabel, formatDate } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
     index as approvalIndex,
@@ -20,9 +23,16 @@ export default function ApprovalIndex() {
         <>
             <Head title="Approval Cuti" />
             <div className="flex flex-1 flex-col gap-4 p-4">
-                <h1 className="text-xl font-semibold">
-                    Approval Menunggu Tindakan
-                </h1>
+                <div>
+                    <h1 className="flex items-center gap-2 text-xl font-semibold">
+                        <ClipboardCheck className="size-5 text-amber-600 dark:text-amber-400" />
+                        Approval Menunggu Tindakan
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        Pengajuan mendadak ditandai khusus karena butuh
+                        keputusan lebih cepat.
+                    </p>
+                </div>
 
                 <Card>
                     <CardContent className="divide-y p-0">
@@ -32,44 +42,61 @@ export default function ApprovalIndex() {
                                 Anda.
                             </p>
                         )}
-                        {approvals.data.map((approval) => (
-                            <Link
-                                key={approval.id}
-                                href={approvalShow(approval.id)}
-                                className="flex items-center justify-between p-4 text-sm hover:bg-accent"
-                            >
-                                <div>
-                                    <div className="font-medium">
-                                        {
-                                            approval.pengajuan_cuti?.karyawan
-                                                ?.nama
-                                        }{' '}
-                                        &middot;{' '}
-                                        {
-                                            approval.pengajuan_cuti?.jenis_cuti
-                                                ?.nama_jenis
-                                        }
-                                    </div>
-                                    <div className="text-muted-foreground">
-                                        {approval.pengajuan_cuti
-                                            ?.tanggal_mulai &&
-                                            formatDate(
+                        {approvals.data.map((approval) => {
+                            const mendadak =
+                                approval.pengajuan_cuti?.is_mendadak;
+
+                            return (
+                                <Link
+                                    key={approval.id}
+                                    href={approvalShow(approval.id)}
+                                    className={cn(
+                                        'flex items-center justify-between gap-3 p-4 text-sm transition-colors hover:bg-accent',
+                                        mendadak &&
+                                            'bg-amber-50/50 dark:bg-amber-950/10',
+                                    )}
+                                >
+                                    <div>
+                                        <div className="flex flex-wrap items-center gap-2 font-medium">
+                                            {
                                                 approval.pengajuan_cuti
-                                                    .tanggal_mulai,
-                                            )}{' '}
-                                        s/d{' '}
-                                        {approval.pengajuan_cuti
-                                            ?.tanggal_selesai &&
-                                            formatDate(
+                                                    ?.karyawan?.nama
+                                            }{' '}
+                                            &middot;{' '}
+                                            {
                                                 approval.pengajuan_cuti
-                                                    .tanggal_selesai,
-                                            )}{' '}
-                                        &middot; Level {approval.level} (
-                                        {approvalLevelLabel(approval.level)})
+                                                    ?.jenis_cuti?.nama_jenis
+                                            }
+                                            {mendadak && (
+                                                <Badge className="gap-1 border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
+                                                    <Zap className="size-3" />
+                                                    Mendadak
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <div className="text-muted-foreground">
+                                            {approval.pengajuan_cuti
+                                                ?.tanggal_mulai &&
+                                                formatDate(
+                                                    approval.pengajuan_cuti
+                                                        .tanggal_mulai,
+                                                )}{' '}
+                                            s/d{' '}
+                                            {approval.pengajuan_cuti
+                                                ?.tanggal_selesai &&
+                                                formatDate(
+                                                    approval.pengajuan_cuti
+                                                        .tanggal_selesai,
+                                                )}{' '}
+                                            &middot; Level {approval.level} (
+                                            {approvalLevelLabel(approval.level)}
+                                            )
+                                        </div>
                                     </div>
-                                </div>
-                            </Link>
-                        ))}
+                                    <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+                                </Link>
+                            );
+                        })}
                     </CardContent>
                 </Card>
 

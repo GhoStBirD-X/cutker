@@ -1,4 +1,16 @@
 import { Link, usePage } from '@inertiajs/react';
+import {
+    Briefcase,
+    Building2,
+    CalendarRange,
+    Clock,
+    MessageSquareText,
+    PartyPopper,
+    ShieldCheck,
+    Users,
+    Wallet,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn } from '@/lib/utils';
 import { index as alasanCutiIndex } from '@/routes/master/alasan-cuti';
@@ -16,17 +28,31 @@ export function MasterNav() {
     const { isCurrentUrl } = useCurrentUrl();
     const { auth } = usePage<{ auth: Auth }>().props;
 
-    const items = [
-        { title: 'Karyawan', href: karyawanIndex() },
-        { title: 'Departemen', href: departemenIndex() },
-        { title: 'Jabatan', href: jabatanIndex() },
-        { title: 'Jenis Cuti', href: jenisCutiIndex() },
-        { title: 'Alasan Cuti', href: alasanCutiIndex() },
-        { title: 'Saldo Cuti', href: saldoCutiIndex() },
-        { title: 'Hari Libur', href: hariLiburIndex() },
-        { title: 'Shift', href: shiftIndex() },
+    const items: {
+        title: string;
+        href: ReturnType<typeof karyawanIndex>;
+        icon: LucideIcon;
+    }[] = [
+        { title: 'Karyawan', href: karyawanIndex(), icon: Users },
+        { title: 'Departemen', href: departemenIndex(), icon: Building2 },
+        { title: 'Jabatan', href: jabatanIndex(), icon: Briefcase },
+        { title: 'Jenis Cuti', href: jenisCutiIndex(), icon: CalendarRange },
+        {
+            title: 'Alasan Cuti',
+            href: alasanCutiIndex(),
+            icon: MessageSquareText,
+        },
+        { title: 'Saldo Cuti', href: saldoCutiIndex(), icon: Wallet },
+        { title: 'Hari Libur', href: hariLiburIndex(), icon: PartyPopper },
+        { title: 'Shift', href: shiftIndex(), icon: Clock },
         ...(auth.roles.includes('admin')
-            ? [{ title: 'User & Role', href: usersIndex() }]
+            ? [
+                  {
+                      title: 'User & Role',
+                      href: usersIndex(),
+                      icon: ShieldCheck,
+                  },
+              ]
             : []),
     ];
 
@@ -37,12 +63,13 @@ export function MasterNav() {
                     key={item.title}
                     href={item.href}
                     className={cn(
-                        'shrink-0 border-b-2 px-3 py-2 text-sm font-medium whitespace-nowrap',
+                        'flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors',
                         isCurrentUrl(item.href)
                             ? 'border-primary text-foreground'
                             : 'border-transparent text-muted-foreground hover:text-foreground',
                     )}
                 >
+                    <item.icon className="size-4" />
                     {item.title}
                 </Link>
             ))}
