@@ -2,16 +2,27 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Pagination } from '@/components/pagination';
+import { SaldoCutiInline } from '@/components/saldo-cuti-meter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SEVERITY_RANK, saldoSeverity } from '@/lib/saldo-severity';
+import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
     index as laporanIndex,
     saldoCuti as saldoCutiIndex,
 } from '@/routes/laporan';
 import type { Departemen, Karyawan, Paginated, SaldoCuti } from '@/types';
+
+function worstSeverity(saldoCutis: SaldoCuti[]) {
+    return saldoCutis
+        .map((saldo) => saldoSeverity(saldo.sisa, saldo.kuota))
+        .sort(
+            (a, b) => SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity],
+        )[0];
+}
 
 type KaryawanRow = Karyawan & { saldo_cutis: SaldoCuti[] };
 
@@ -148,13 +159,24 @@ export default function LaporanSaldoCuti() {
                         )}
                         {karyawans.data.map((karyawan) => {
                             const isOpen = expanded.has(karyawan.id);
+                            const worst =
+                                karyawan.saldo_cutis.length > 0
+                                    ? worstSeverity(karyawan.saldo_cutis)
+                                    : null;
+                            const perluPerhatian =
+                                worst?.severity === 'critical' ||
+                                worst?.severity === 'warning';
 
                             return (
                                 <div key={karyawan.id}>
                                     <button
                                         type="button"
                                         onClick={() => toggle(karyawan.id)}
-                                        className="flex w-full items-center gap-2 p-4 text-left text-sm hover:bg-muted/50"
+                                        className={cn(
+                                            'flex w-full items-center gap-2 p-4 text-left text-sm transition-colors hover:bg-muted/50',
+                                            perluPerhatian &&
+                                                'bg-amber-50/40 dark:bg-amber-950/10',
+                                        )}
                                     >
                                         {isOpen ? (
                                             <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
@@ -175,9 +197,36 @@ export default function LaporanSaldoCuti() {
                                                 {karyawan.jabatan?.nama_jabatan}
                                             </div>
                                         </div>
-                                        <div className="text-xs text-muted-foreground">
-                                            {karyawan.saldo_cutis.length} jenis
-                                            cuti
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className="flex items-center gap-1"
+                                                title={worst?.label}
+                                            >
+                                                {karyawan.saldo_cutis.map(
+                                                    (saldo) => {
+                                                        const style =
+                                                            saldoSeverity(
+                                                                saldo.sisa,
+                                                                saldo.kuota,
+                                                            );
+
+                                                        return (
+                                                            <span
+                                                                key={saldo.id}
+                                                                className={cn(
+                                                                    'inline-block size-2 rounded-full',
+                                                                    style.dot,
+                                                                )}
+                                                                aria-hidden
+                                                            />
+                                                        );
+                                                    },
+                                                )}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">
+                                                {karyawan.saldo_cutis.length}{' '}
+                                                jenis cuti
+                                            </div>
                                         </div>
                                     </button>
 
@@ -210,21 +259,18 @@ export default function LaporanSaldoCuti() {
                                                                             : `Tahun ${saldo.tahun}`}
                                                                     </div>
                                                                 </div>
-                                                                <div className="text-muted-foreground">
-                                                                    Kuota{' '}
-                                                                    {saldo.kuota ??
-                                                                        'tanpa batas'}
-                                                                    , terpakai{' '}
-                                                                    {
+                                                                <SaldoCutiInline
+                                                                    nama=""
+                                                                    sisa={
+                                                                        saldo.sisa
+                                                                    }
+                                                                    kuota={
+                                                                        saldo.kuota
+                                                                    }
+                                                                    terpakai={
                                                                         saldo.terpakai
                                                                     }
-                                                                    ,{' '}
-                                                                    <span className="font-medium text-foreground">
-                                                                        sisa{' '}
-                                                                        {saldo.sisa ??
-                                                                            'tanpa batas'}
-                                                                    </span>
-                                                                </div>
+                                                                />
                                                             </div>
                                                         ),
                                                     )}

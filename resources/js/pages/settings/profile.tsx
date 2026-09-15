@@ -1,12 +1,15 @@
 import { Form, Head, usePage } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
+import { Briefcase, Building2, IdCard, Users } from 'lucide-react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useInitials } from '@/hooks/use-initials';
 import { edit } from '@/routes/profile';
 import { send } from '@/routes/verification';
 import type { Auth } from '@/types';
@@ -23,6 +26,7 @@ export default function Profile({
     status?: string;
 }) {
     const { auth } = usePage<PageProps>().props;
+    const getInitials = useInitials();
 
     return (
         <>
@@ -31,54 +35,54 @@ export default function Profile({
             <h1 className="sr-only">Profile settings</h1>
 
             <div className="space-y-6">
-                <Heading
-                    variant="small"
-                    title="Profile"
-                    description="Update your name and email address"
-                />
+                <div className="flex items-center gap-4">
+                    <Avatar className="size-14 overflow-hidden rounded-full">
+                        <AvatarImage
+                            src={auth.user.avatar}
+                            alt={auth.user.name}
+                        />
+                        <AvatarFallback className="rounded-full bg-primary/10 text-lg text-primary">
+                            {getInitials(auth.user.name)}
+                        </AvatarFallback>
+                    </Avatar>
+                    <Heading
+                        variant="small"
+                        title="Profile"
+                        description="Update your name and email address"
+                    />
+                </div>
 
                 {auth.user.karyawan && (
-                    <div className="grid gap-4 rounded-lg border p-4 sm:grid-cols-2">
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground">
-                                NIP
-                            </Label>
-                            <p className="text-sm font-medium">
-                                {auth.user.karyawan.nip}
-                            </p>
-                        </div>
-
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground">
-                                Jenis Kelamin
-                            </Label>
-                            <p className="text-sm font-medium">
-                                {auth.user.karyawan.jenis_kelamin ===
-                                'laki_laki'
+                    <div className="grid gap-4 rounded-lg border bg-muted/20 p-4 sm:grid-cols-2">
+                        <ProfileField
+                            icon={IdCard}
+                            label="NIP"
+                            value={auth.user.karyawan.nip}
+                        />
+                        <ProfileField
+                            icon={Users}
+                            label="Jenis Kelamin"
+                            value={
+                                auth.user.karyawan.jenis_kelamin === 'laki_laki'
                                     ? 'Laki-laki'
-                                    : 'Perempuan'}
-                            </p>
-                        </div>
-
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground">
-                                Departemen
-                            </Label>
-                            <p className="text-sm font-medium">
-                                {auth.user.karyawan.departemen
-                                    ?.nama_departemen ?? '-'}
-                            </p>
-                        </div>
-
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground">
-                                Jabatan
-                            </Label>
-                            <p className="text-sm font-medium">
-                                {auth.user.karyawan.jabatan?.nama_jabatan ??
-                                    '-'}
-                            </p>
-                        </div>
+                                    : 'Perempuan'
+                            }
+                        />
+                        <ProfileField
+                            icon={Building2}
+                            label="Departemen"
+                            value={
+                                auth.user.karyawan.departemen
+                                    ?.nama_departemen ?? '-'
+                            }
+                        />
+                        <ProfileField
+                            icon={Briefcase}
+                            label="Jabatan"
+                            value={
+                                auth.user.karyawan.jabatan?.nama_jabatan ?? '-'
+                            }
+                        />
                     </div>
                 )}
 
@@ -170,6 +174,24 @@ export default function Profile({
 
             <DeleteUser />
         </>
+    );
+}
+
+type ProfileFieldProps = {
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    value: string;
+};
+
+function ProfileField({ icon: Icon, label, value }: ProfileFieldProps) {
+    return (
+        <div className="flex items-start gap-2.5">
+            <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+            <div className="grid gap-0.5">
+                <Label className="text-muted-foreground">{label}</Label>
+                <p className="text-sm font-medium">{value}</p>
+            </div>
+        </div>
     );
 }
 

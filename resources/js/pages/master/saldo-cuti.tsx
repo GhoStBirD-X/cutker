@@ -4,6 +4,7 @@ import SaldoCutiController from '@/actions/App/Http/Controllers/Master/SaldoCuti
 import InputError from '@/components/input-error';
 import { MasterNav } from '@/components/master-nav';
 import { Pagination } from '@/components/pagination';
+import { SaldoCutiInline } from '@/components/saldo-cuti-meter';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -338,15 +339,18 @@ export default function MasterSaldoCuti() {
                                         {saldo.karyawan?.nama} &middot;{' '}
                                         {saldo.jenis_cuti?.nama_jenis}
                                     </div>
-                                    <div className="text-muted-foreground">
+                                    <div className="text-xs text-muted-foreground">
                                         {saldo.periode_ke
                                             ? `Periode ke-${saldo.periode_ke} (${formatDate(saldo.periode_mulai!)} s/d ${formatDate(saldo.periode_selesai!)})`
                                             : `Tahun ${saldo.tahun}`}
-                                        {' · '}
-                                        Kuota {saldo.kuota ?? 'tanpa batas'},
-                                        terpakai {saldo.terpakai}, sisa{' '}
-                                        {saldo.sisa ?? 'tanpa batas'}
                                     </div>
+                                    <SaldoCutiInline
+                                        nama=""
+                                        sisa={saldo.sisa}
+                                        kuota={saldo.kuota}
+                                        terpakai={saldo.terpakai}
+                                        className="mt-1"
+                                    />
                                     {saldo.catatan && (
                                         <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                                             <Badge variant="outline">
