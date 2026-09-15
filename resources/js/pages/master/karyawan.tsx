@@ -1,5 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Download, KeyRound, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import KaryawanController from '@/actions/App/Http/Controllers/Master/KaryawanController';
 import InputError from '@/components/input-error';
@@ -308,17 +308,29 @@ export default function MasterKaryawan() {
                         </form>
 
                         {importFailures.length > 0 && (
-                            <div className="mt-4 rounded-md border border-destructive/50 p-3">
-                                <h3 className="mb-2 text-sm font-semibold text-destructive">
-                                    {importFailures.length} baris gagal diimpor
-                                </h3>
-                                <ul className="space-y-1 text-xs text-muted-foreground">
+                            <div className="mt-4 overflow-hidden rounded-md border border-destructive/50">
+                                <div className="flex items-center gap-2 border-b border-destructive/30 bg-destructive/10 px-3 py-2">
+                                    <XCircle className="size-4 shrink-0 text-destructive" />
+                                    <h3 className="text-sm font-semibold text-destructive">
+                                        {importFailures.length} baris gagal
+                                        diimpor
+                                    </h3>
+                                </div>
+                                <ul className="divide-y text-xs">
                                     {importFailures.map((failure) => (
-                                        <li key={failure.row}>
-                                            <span className="font-medium">
-                                                Baris {failure.row}:
-                                            </span>{' '}
-                                            {failure.errors.join(' ')}
+                                        <li
+                                            key={failure.row}
+                                            className="flex gap-2 px-3 py-2"
+                                        >
+                                            <Badge
+                                                variant="outline"
+                                                className="shrink-0 border-destructive/40 text-destructive"
+                                            >
+                                                Baris {failure.row}
+                                            </Badge>
+                                            <span className="text-muted-foreground">
+                                                {failure.errors.join(' ')}
+                                            </span>
                                         </li>
                                     ))}
                                 </ul>
@@ -326,9 +338,10 @@ export default function MasterKaryawan() {
                         )}
 
                         {importKredensial.length > 0 && (
-                            <div className="mt-4 rounded-md border border-blue-200 p-3 dark:border-blue-900">
-                                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                                    <h3 className="text-sm font-semibold">
+                            <div className="mt-4 overflow-hidden rounded-md border border-blue-200 dark:border-blue-900">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-900 dark:bg-blue-950/40">
+                                    <h3 className="flex items-center gap-2 text-sm font-semibold text-blue-900 dark:text-blue-200">
+                                        <KeyRound className="size-4" />
                                         Akun login untuk{' '}
                                         {importKredensial.length} karyawan baru
                                     </h3>
@@ -336,12 +349,14 @@ export default function MasterKaryawan() {
                                         type="button"
                                         size="sm"
                                         variant="outline"
+                                        className="gap-1.5"
                                         onClick={unduhKredensial}
                                     >
+                                        <Download className="size-4" />
                                         Unduh sebagai CSV
                                     </Button>
                                 </div>
-                                <p className="mb-2 text-xs text-muted-foreground">
+                                <p className="border-b bg-blue-50/50 px-3 py-2 text-xs text-blue-900/80 dark:border-blue-900 dark:bg-blue-950/20 dark:text-blue-300/80">
                                     Password hanya ditampilkan sekali di sini —
                                     segera unduh/catat dan bagikan ke
                                     masing-masing karyawan. Meninggalkan halaman
@@ -351,39 +366,46 @@ export default function MasterKaryawan() {
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left text-xs">
                                         <thead>
-                                            <tr className="border-b text-muted-foreground">
-                                                <th className="py-1 pr-3">
+                                            <tr className="bg-muted/40 text-muted-foreground">
+                                                <th className="px-3 py-2 font-medium">
                                                     NIP
                                                 </th>
-                                                <th className="py-1 pr-3">
+                                                <th className="px-3 py-2 font-medium">
                                                     Nama
                                                 </th>
-                                                <th className="py-1 pr-3">
+                                                <th className="px-3 py-2 font-medium">
                                                     Email
                                                 </th>
-                                                <th className="py-1 pr-3">
+                                                <th className="px-3 py-2 font-medium">
                                                     Password
                                                 </th>
-                                                <th className="py-1">Role</th>
+                                                <th className="px-3 py-2 font-medium">
+                                                    Role
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y">
                                             {importKredensial.map((k) => (
-                                                <tr key={k.email}>
-                                                    <td className="py-1 pr-3">
+                                                <tr
+                                                    key={k.email}
+                                                    className="transition-colors hover:bg-muted/30"
+                                                >
+                                                    <td className="px-3 py-2 text-muted-foreground">
                                                         {k.nip}
                                                     </td>
-                                                    <td className="py-1 pr-3">
+                                                    <td className="px-3 py-2 font-medium">
                                                         {k.nama}
                                                     </td>
-                                                    <td className="py-1 pr-3">
+                                                    <td className="px-3 py-2 text-muted-foreground">
                                                         {k.email}
                                                     </td>
-                                                    <td className="py-1 pr-3 font-mono">
+                                                    <td className="px-3 py-2 font-mono text-foreground">
                                                         {k.password}
                                                     </td>
-                                                    <td className="py-1">
-                                                        {k.role}
+                                                    <td className="px-3 py-2">
+                                                        <Badge variant="secondary">
+                                                            {k.role}
+                                                        </Badge>
                                                     </td>
                                                 </tr>
                                             ))}
