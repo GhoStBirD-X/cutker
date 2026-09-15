@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\Exports\KaryawanImportTemplateExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Master\KaryawanImportRequest;
 use App\Http\Requests\Master\KaryawanRequest;
+use App\Imports\KaryawanImport;
 use App\Models\Departemen;
 use App\Models\Jabatan;
 use App\Models\Karyawan;
@@ -13,6 +16,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class KaryawanController extends Controller
 {
@@ -56,6 +61,31 @@ class KaryawanController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Karyawan berhasil diperbarui.']);
 
         return back();
+    }
+
+    public function import(KaryawanImportRequest $request, SaldoCutiService $saldoCutiService): RedirectResponse
+    {
+        $import = new KaryawanImport($saldoCutiService);
+
+        Excel::import($import, $request->file('file'));
+
+        Inertia::flash('toast', [
+            'type' => $import->failures === [] ? 'success' : 'error',
+            'message' => $import->failures === []
+                ? "{$import->successCount} karyawan berhasil diimpor."
+                : "{$import->successCount} karyawan berhasil diimpor, ".count($import->failures).' baris gagal.',
+        ]);
+
+        if ($import->failures !== []) {
+            Inertia::flash('importFailures', $import->failures);
+        }
+
+        return back();
+    }
+
+    public function importTemplate(): BinaryFileResponse
+    {
+        return Excel::download(new KaryawanImportTemplateExport, 'template-import-karyawan.xlsx');
     }
 
     public function destroy(Karyawan $karyawan): RedirectResponse

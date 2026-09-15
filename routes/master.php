@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'role:hrd|admin'])->prefix('master')->name('master.')->group(function () {
     Route::resource('karyawan', KaryawanController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::post('karyawan/import', [KaryawanController::class, 'import'])->name('karyawan.import');
+    Route::get('karyawan/import/template', [KaryawanController::class, 'importTemplate'])->name('karyawan.import.template');
     Route::resource('departemen', DepartemenController::class)->parameters(['departemen' => 'departemen'])->only(['index', 'store', 'update', 'destroy']);
     Route::resource('jabatan', JabatanController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('jenis-cuti', JenisCutiController::class)->parameters(['jenis-cuti' => 'jenis_cuti'])->only(['index', 'store', 'update', 'destroy']);

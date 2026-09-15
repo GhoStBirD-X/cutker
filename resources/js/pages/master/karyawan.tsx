@@ -1,5 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import KaryawanController from '@/actions/App/Http/Controllers/Master/KaryawanController';
 import InputError from '@/components/input-error';
 import { MasterNav } from '@/components/master-nav';
@@ -29,6 +29,8 @@ type PageProps = {
     }[];
     filters: { search: string; departemen_id: number | null };
 };
+
+type ImportFailure = { row: number; errors: string[] };
 
 const emptyForm = {
     nip: '',
@@ -60,6 +62,35 @@ export default function MasterKaryawan() {
 
     const { data, setData, post, put, processing, errors, reset } =
         useForm(emptyForm);
+
+    const [importFailures, setImportFailures] = useState<ImportFailure[]>([]);
+    const importForm = useForm<{ file: File | null }>({ file: null });
+
+    useEffect(() => {
+        return router.on('flash', (event) => {
+            const flash = (event as CustomEvent).detail?.flash as
+                | { importFailures?: ImportFailure[] }
+                | undefined;
+
+            if (flash?.importFailures) {
+                setImportFailures(flash.importFailures);
+            }
+        });
+    }, []);
+
+    const submitImport = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!importForm.data.file) {
+            return;
+        }
+
+        setImportFailures([]);
+        importForm.post(KaryawanController.importMethod.url(), {
+            forceFormData: true,
+            onSuccess: () => importForm.reset(),
+        });
+    };
 
     const startEdit = (karyawan: KaryawanRow) => {
         setEditing(karyawan);
@@ -148,6 +179,72 @@ export default function MasterKaryawan() {
                                 </Badge>
                             ))}
                         </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent>
+                        <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
+                            Import Data Karyawan (Excel/CSV)
+                        </h2>
+                        <p className="mb-3 text-xs text-muted-foreground">
+                            Untuk memasukkan data karyawan pabrik dalam jumlah
+                            besar. Departemen dan jabatan pada file harus
+                            sudah ada di Master Departemen/Jabatan. Karyawan
+                            yang gagal diimpor tidak akan menghentikan baris
+                            lain yang valid.
+                        </p>
+                        <form
+                            onSubmit={submitImport}
+                            className="flex flex-wrap items-end gap-2"
+                        >
+                            <a
+                                href={KaryawanController.importTemplate.url()}
+                                className="text-sm text-primary underline underline-offset-4"
+                            >
+                                Unduh Template
+                            </a>
+                            <Input
+                                type="file"
+                                accept=".xlsx,.xls,.csv"
+                                onChange={(e) =>
+                                    importForm.setData(
+                                        'file',
+                                        e.target.files?.[0] ?? null,
+                                    )
+                                }
+                                className="max-w-xs"
+                            />
+                            <Button
+                                type="submit"
+                                disabled={
+                                    importForm.processing ||
+                                    !importForm.data.file
+                                }
+                            >
+                                Import
+                            </Button>
+                            <InputError message={importForm.errors.file} />
+                        </form>
+
+                        {importFailures.length > 0 && (
+                            <div className="mt-4 rounded-md border border-destructive/50 p-3">
+                                <h3 className="mb-2 text-sm font-semibold text-destructive">
+                                    {importFailures.length} baris gagal
+                                    diimpor
+                                </h3>
+                                <ul className="space-y-1 text-xs text-muted-foreground">
+                                    {importFailures.map((failure) => (
+                                        <li key={failure.row}>
+                                            <span className="font-medium">
+                                                Baris {failure.row}:
+                                            </span>{' '}
+                                            {failure.errors.join(' ')}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
