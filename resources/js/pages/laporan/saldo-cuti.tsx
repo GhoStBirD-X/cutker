@@ -1,36 +1,61 @@
-import { Head, router, usePage } from '@inertiajs/react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Fragment, useState } from 'react';
 import { Pagination } from '@/components/pagination';
-import { SaldoCutiInline } from '@/components/saldo-cuti-meter';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { SEVERITY_RANK, saldoSeverity } from '@/lib/saldo-severity';
+import { saldoSeverity } from '@/lib/saldo-severity';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
     index as laporanIndex,
     saldoCuti as saldoCutiIndex,
 } from '@/routes/laporan';
-import type { Departemen, Karyawan, Paginated, SaldoCuti } from '@/types';
+import { riwayat as saldoCutiRiwayat } from '@/routes/laporan/saldo-cuti';
+import type {
+    Departemen,
+    JenisCuti,
+    Karyawan,
+    Paginated,
+    SaldoCuti,
+} from '@/types';
 
-function worstSeverity(saldoCutis: SaldoCuti[]) {
-    return saldoCutis
-        .map((saldo) => saldoSeverity(saldo.sisa, saldo.kuota))
-        .sort(
-            (a, b) => SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity],
-        )[0];
-}
+type SaldoCutiRow = SaldoCuti & { jenis_cuti?: JenisCuti };
 
-type KaryawanRow = Karyawan & { saldo_cutis: SaldoCuti[] };
+type KaryawanRow = Karyawan & {
+    status_kontrak: string;
+    saldo_cutis: SaldoCutiRow[];
+};
 
 type PageProps = {
     karyawans: Paginated<KaryawanRow>;
     departemens: Departemen[];
     filters: { search: string; departemen_id: number | null };
 };
+
+const KOLOM_JENIS_CUTI = [
+    'Cuti Tahunan',
+    'Cuti Besar',
+    'Cuti Haid',
+    'Cuti Hamil',
+];
+
+function cariSaldo(
+    karyawan: KaryawanRow,
+    namaJenis: string,
+): SaldoCutiRow | undefined {
+    return karyawan.saldo_cutis.find(
+        (saldo) => saldo.jenis_cuti?.nama_jenis === namaJenis,
+    );
+}
+
+function relevanUntukKaryawan(karyawan: KaryawanRow, saldo?: SaldoCutiRow) {
+    const khusus = saldo?.jenis_cuti?.khusus_gender;
+
+    return !khusus || khusus === karyawan.jenis_kelamin;
+}
 
 export default function LaporanSaldoCuti() {
     const { karyawans, departemens, filters } = usePage<PageProps>().props;
@@ -40,33 +65,10 @@ export default function LaporanSaldoCuti() {
             ? String(filters.departemen_id)
             : '',
     });
-    const [expanded, setExpanded] = useState<Set<number>>(() => new Set());
 
     const applyFilter = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(saldoCutiIndex.url(), form, { preserveState: true });
-    };
-
-    const toggle = (id: number) => {
-        setExpanded((prev) => {
-            const next = new Set(prev);
-
-            if (next.has(id)) {
-                next.delete(id);
-            } else {
-                next.add(id);
-            }
-
-            return next;
-        });
-    };
-
-    const expandAll = () => {
-        setExpanded(new Set(karyawans.data.map((k) => k.id)));
-    };
-
-    const collapseAll = () => {
-        setExpanded(new Set());
     };
 
     return (
@@ -75,8 +77,9 @@ export default function LaporanSaldoCuti() {
             <div className="flex flex-1 flex-col gap-4 p-4">
                 <h1 className="text-xl font-semibold">Saldo Cuti Karyawan</h1>
                 <p className="text-sm text-muted-foreground">
-                    Menampilkan sisa saldo cuti seluruh karyawan yang masih
-                    berjalan, dikelompokkan per karyawan.
+                    Sisa saldo cuti seluruh karyawan yang masih berjalan. Klik
+                    angka &quot;terpakai&quot; untuk melihat riwayat pengajuan
+                    yang memotong saldo tersebut.
                 </p>
 
                 <Card>
@@ -129,158 +132,146 @@ export default function LaporanSaldoCuti() {
                     </CardContent>
                 </Card>
 
-                <div className="flex justify-end gap-2">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={expandAll}
-                        disabled={karyawans.data.length === 0}
-                    >
-                        Buka Semua
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={collapseAll}
-                        disabled={expanded.size === 0}
-                    >
-                        Tutup Semua
-                    </Button>
-                </div>
-
                 <Card>
-                    <CardContent className="divide-y p-0">
-                        {karyawans.data.length === 0 && (
-                            <p className="p-4 text-sm text-muted-foreground">
-                                Tidak ada karyawan pada filter ini.
-                            </p>
-                        )}
-                        {karyawans.data.map((karyawan) => {
-                            const isOpen = expanded.has(karyawan.id);
-                            const worst =
-                                karyawan.saldo_cutis.length > 0
-                                    ? worstSeverity(karyawan.saldo_cutis)
-                                    : null;
-                            const perluPerhatian =
-                                worst?.severity === 'critical' ||
-                                worst?.severity === 'warning';
-
-                            return (
-                                <div key={karyawan.id}>
-                                    <button
-                                        type="button"
-                                        onClick={() => toggle(karyawan.id)}
-                                        className={cn(
-                                            'flex w-full items-center gap-2 p-4 text-left text-sm transition-colors hover:bg-muted/50',
-                                            perluPerhatian &&
-                                                'bg-amber-50/40 dark:bg-amber-950/10',
-                                        )}
+                    <CardContent className="overflow-x-auto p-0">
+                        <table className="w-full min-w-[960px] text-sm">
+                            <thead>
+                                <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
+                                    <th
+                                        rowSpan={2}
+                                        className="w-10 border-r px-3 py-2 text-left align-bottom"
                                     >
-                                        {isOpen ? (
-                                            <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-                                        ) : (
-                                            <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                                        )}
-                                        <div className="flex-1">
-                                            <div className="font-medium">
-                                                {karyawan.nama}
-                                            </div>
-                                            <div className="text-muted-foreground">
-                                                {karyawan.nip} &middot;{' '}
-                                                {
-                                                    karyawan.departemen
-                                                        ?.nama_departemen
-                                                }{' '}
-                                                &middot;{' '}
-                                                {karyawan.jabatan?.nama_jabatan}
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div
-                                                className="flex items-center gap-1"
-                                                title={worst?.label}
-                                            >
-                                                {karyawan.saldo_cutis.map(
-                                                    (saldo) => {
-                                                        const style =
-                                                            saldoSeverity(
-                                                                saldo.sisa,
-                                                                saldo.kuota,
-                                                            );
+                                        No
+                                    </th>
+                                    <th
+                                        rowSpan={2}
+                                        className="border-r px-3 py-2 text-left align-bottom"
+                                    >
+                                        Nama
+                                    </th>
+                                    <th
+                                        rowSpan={2}
+                                        className="border-r px-3 py-2 text-left align-bottom"
+                                    >
+                                        NIP
+                                    </th>
+                                    <th
+                                        rowSpan={2}
+                                        className="border-r px-3 py-2 text-left align-bottom"
+                                    >
+                                        Status
+                                    </th>
+                                    {KOLOM_JENIS_CUTI.map((nama) => (
+                                        <th
+                                            key={nama}
+                                            colSpan={2}
+                                            className="border-r px-3 py-1.5 text-center font-semibold text-foreground"
+                                        >
+                                            {nama}
+                                        </th>
+                                    ))}
+                                </tr>
+                                <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
+                                    {KOLOM_JENIS_CUTI.map((nama) => (
+                                        <Fragment key={nama}>
+                                            <th className="px-3 py-1.5 text-center font-normal">
+                                                Terpakai
+                                            </th>
+                                            <th className="border-r px-3 py-1.5 text-center font-normal">
+                                                Sisa
+                                            </th>
+                                        </Fragment>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                                {karyawans.data.length === 0 && (
+                                    <tr>
+                                        <td
+                                            colSpan={
+                                                4 + KOLOM_JENIS_CUTI.length * 2
+                                            }
+                                            className="p-4 text-center text-muted-foreground"
+                                        >
+                                            Tidak ada karyawan pada filter ini.
+                                        </td>
+                                    </tr>
+                                )}
+                                {karyawans.data.map((karyawan, index) => (
+                                    <tr
+                                        key={karyawan.id}
+                                        className="transition-colors hover:bg-muted/30"
+                                    >
+                                        <td className="border-r px-3 py-2 text-muted-foreground">
+                                            {(karyawans.from ?? 1) + index}
+                                        </td>
+                                        <td className="border-r px-3 py-2 font-medium">
+                                            {karyawan.nama}
+                                        </td>
+                                        <td className="border-r px-3 py-2 text-muted-foreground">
+                                            {karyawan.nip}
+                                        </td>
+                                        <td className="border-r px-3 py-2">
+                                            <Badge variant="outline">
+                                                {karyawan.status_kontrak}
+                                            </Badge>
+                                        </td>
+                                        {KOLOM_JENIS_CUTI.map((nama) => {
+                                            const saldo = cariSaldo(
+                                                karyawan,
+                                                nama,
+                                            );
+                                            const relevan =
+                                                relevanUntukKaryawan(
+                                                    karyawan,
+                                                    saldo,
+                                                );
 
-                                                        return (
-                                                            <span
-                                                                key={saldo.id}
-                                                                className={cn(
-                                                                    'inline-block size-2 rounded-full',
-                                                                    style.dot,
-                                                                )}
-                                                                aria-hidden
-                                                            />
-                                                        );
-                                                    },
-                                                )}
-                                            </div>
-                                            <div className="text-xs text-muted-foreground">
-                                                {karyawan.saldo_cutis.length}{' '}
-                                                jenis cuti
-                                            </div>
-                                        </div>
-                                    </button>
+                                            if (!saldo || !relevan) {
+                                                return (
+                                                    <Fragment key={nama}>
+                                                        <td className="px-3 py-2 text-center text-muted-foreground">
+                                                            &mdash;
+                                                        </td>
+                                                        <td className="border-r px-3 py-2 text-center text-muted-foreground">
+                                                            &mdash;
+                                                        </td>
+                                                    </Fragment>
+                                                );
+                                            }
 
-                                    {isOpen && (
-                                        <div className="bg-muted/20 pl-10">
-                                            {karyawan.saldo_cutis.length ===
-                                            0 ? (
-                                                <p className="p-4 text-sm text-muted-foreground">
-                                                    Belum ada saldo cuti aktif.
-                                                </p>
-                                            ) : (
-                                                <div className="divide-y">
-                                                    {karyawan.saldo_cutis.map(
-                                                        (saldo) => (
-                                                            <div
-                                                                key={saldo.id}
-                                                                className="flex flex-col gap-1 py-3 pr-4 text-sm sm:flex-row sm:items-center sm:justify-between"
-                                                            >
-                                                                <div>
-                                                                    <div className="font-medium">
-                                                                        {
-                                                                            saldo
-                                                                                .jenis_cuti
-                                                                                ?.nama_jenis
-                                                                        }
-                                                                    </div>
-                                                                    <div className="text-muted-foreground">
-                                                                        {saldo.periode_ke
-                                                                            ? `Periode ke-${saldo.periode_ke}`
-                                                                            : `Tahun ${saldo.tahun}`}
-                                                                    </div>
-                                                                </div>
-                                                                <SaldoCutiInline
-                                                                    nama=""
-                                                                    sisa={
-                                                                        saldo.sisa
-                                                                    }
-                                                                    kuota={
-                                                                        saldo.kuota
-                                                                    }
-                                                                    terpakai={
-                                                                        saldo.terpakai
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        ),
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
+                                            const style = saldoSeverity(
+                                                saldo.sisa,
+                                                saldo.kuota,
+                                            );
+
+                                            return (
+                                                <Fragment key={nama}>
+                                                    <td className="px-3 py-2 text-center">
+                                                        <Link
+                                                            href={saldoCutiRiwayat(
+                                                                saldo.id,
+                                                            )}
+                                                            className="text-primary underline-offset-4 hover:underline"
+                                                        >
+                                                            {saldo.terpakai}
+                                                        </Link>
+                                                    </td>
+                                                    <td
+                                                        className={cn(
+                                                            'border-r px-3 py-2 text-center font-semibold',
+                                                            style.text,
+                                                        )}
+                                                    >
+                                                        {saldo.sisa ?? '∞'}
+                                                    </td>
+                                                </Fragment>
+                                            );
+                                        })}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </CardContent>
                 </Card>
 

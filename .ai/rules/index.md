@@ -5,5 +5,6 @@ Before planning or editing, find the row whose globs match the file's path and r
 | Applies to | Rule file |
 | --- | --- |
 | config/database.php | .ai/rules/config.md |
+| vite.config.ts | .ai/rules/general.md |
 | app/Notifications/*.php | .ai/rules/notifications.md |
 | app/Services/HariLiburService.php | .ai/rules/services.md |

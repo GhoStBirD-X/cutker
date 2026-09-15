@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Laporan;
 
+use App\Models\JenisCuti;
 use App\Models\Karyawan;
+use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -88,5 +90,86 @@ class SaldoCutiTest extends TestCase
             ->has('karyawans.data', 1)
             ->where('karyawans.data.0.saldo_cutis', [])
         );
+    }
+
+    public function test_status_kontrak_is_kt_for_permanent_employee(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawan = Karyawan::factory()->create();
+
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti', [
+            'search' => $karyawan->nip,
+        ]));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('karyawans.data.0.status_kontrak', 'KT')
+        );
+    }
+
+    public function test_status_kontrak_reflects_periode_ke_of_cuti_tahunan_for_contract_employee(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawan = Karyawan::factory()->kontrak()->create();
+        $cutiTahunan = JenisCuti::factory()->create(['nama_jenis' => 'Cuti Tahunan']);
+
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $cutiTahunan->id,
+            'periode_ke' => 2,
+        ]);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti', [
+            'search' => $karyawan->nip,
+        ]));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('karyawans.data.0.status_kontrak', 'K2')
+        );
+    }
+
+    public function test_riwayat_shows_only_approved_pengajuan_within_saldo_period(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawan = Karyawan::factory()->create();
+        $jenisCuti = JenisCuti::factory()->create(['nama_jenis' => 'Cuti Tahunan']);
+
+        $saldo = SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'periode_ke' => 1,
+            'periode_mulai' => '2026-01-01',
+            'periode_selesai' => '2026-12-31',
+        ]);
+
+        $dalamPeriode = PengajuanCuti::factory()->disetujui()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => '2026-03-01',
+            'tanggal_selesai' => '2026-03-02',
+        ]);
+
+        $diLuarPeriode = PengajuanCuti::factory()->disetujui()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => '2027-01-10',
+            'tanggal_selesai' => '2027-01-11',
+        ]);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti.riwayat', $saldo));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('laporan/saldo-cuti-riwayat')
+            ->has('pengajuans', 1)
+            ->where('pengajuans.0.id', $dalamPeriode->id)
+        );
+    }
+
+    public function test_karyawan_cannot_access_riwayat_saldo_cuti(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan');
+        $saldo = SaldoCuti::factory()->create();
+
+        $this->actingAs($karyawan)->get(route('laporan.saldo-cuti.riwayat', $saldo))->assertForbidden();
     }
 }

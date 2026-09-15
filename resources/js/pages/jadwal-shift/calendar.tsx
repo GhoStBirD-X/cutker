@@ -1,6 +1,6 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { CalendarDays, ChevronDown, ChevronRight } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import JadwalShiftController from '@/actions/App/Http/Controllers/JadwalShift/JadwalShiftController';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { index as jadwalShiftIndex } from '@/routes/jadwal-shift';
@@ -46,11 +45,38 @@ const weekdayFormatter = new Intl.DateTimeFormat('id-ID', {
     month: 'long',
 });
 
+const weekdayShortFormatter = new Intl.DateTimeFormat('id-ID', {
+    weekday: 'short',
+});
+
 const SHIFT_BADGE_CLASS: Record<string, string> = {
     Pagi: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-900',
     Siang: 'bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-900',
     Malam: 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 dark:border-indigo-900',
 };
+
+/** Parse "YYYY-MM-DD" sebagai tanggal lokal, menghindari geser sehari akibat parsing UTC bawaan `new Date(string)`. */
+function parseTanggalLocal(tanggal: string): Date {
+    const [tahun, bulan, hari] = tanggal.split('-').map(Number);
+
+    return new Date(tahun, bulan - 1, hari);
+}
+
+function tanggalHariIni(): string {
+    const now = new Date();
+
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+function semuaTanggalDiBulan(bulan: number, tahun: number): string[] {
+    const jumlahHari = new Date(tahun, bulan, 0).getDate();
+    const bulanStr = String(bulan).padStart(2, '0');
+
+    return Array.from(
+        { length: jumlahHari },
+        (_, i) => `${tahun}-${bulanStr}-${String(i + 1).padStart(2, '0')}`,
+    );
+}
 
 export default function JadwalShiftCalendar() {
     const {
@@ -168,7 +194,7 @@ export default function JadwalShiftCalendar() {
     const destroy = (jadwal: JadwalShift) => {
         if (
             confirm(
-                `Hapus jadwal shift ${jadwal.karyawan?.nama} pada ${formatDate(jadwal.tanggal)}?`,
+                `Hapus jadwal shift ${jadwal.karyawan?.nama} pada ${weekdayFormatter.format(parseTanggalLocal(jadwal.tanggal))}?`,
             )
         ) {
             router.delete(JadwalShiftController.destroy.url(jadwal.id));
@@ -204,57 +230,93 @@ export default function JadwalShiftCalendar() {
             ? { bulan: 1, tahun: filters.tahun + 1 }
             : { bulan: filters.bulan + 1, tahun: filters.tahun };
 
-    const [expandedTanggal, setExpandedTanggal] = useState<Set<string>>(
-        () => new Set(),
+    const jadwalPerTanggal = useMemo(() => {
+        const map = new Map<string, JadwalShift[]>();
+
+        for (const jadwal of jadwals) {
+            const list = map.get(jadwal.tanggal) ?? [];
+            list.push(jadwal);
+            map.set(jadwal.tanggal, list);
+        }
+
+        for (const items of map.values()) {
+            items.sort((a, b) =>
+                (a.karyawan?.nama ?? '').localeCompare(b.karyawan?.nama ?? ''),
+            );
+        }
+
+        return map;
+    }, [jadwals]);
+
+    const tanggalBulanIni = useMemo(
+        () => semuaTanggalDiBulan(filters.bulan, filters.tahun),
+        [filters.bulan, filters.tahun],
     );
 
-    const toggleTanggal = (tanggal: string) => {
-        setExpandedTanggal((prev) => {
-            const next = new Set(prev);
+    const dalamBulanIni = (tanggal: string) =>
+        tanggal.startsWith(
+            `${filters.tahun}-${String(filters.bulan).padStart(2, '0')}`,
+        );
 
-            if (next.has(tanggal)) {
-                next.delete(tanggal);
-            } else {
-                next.add(tanggal);
-            }
+    const tanggalDefault = () => {
+        const hariIni = tanggalHariIni();
 
-            return next;
+        return dalamBulanIni(hariIni)
+            ? hariIni
+            : `${filters.tahun}-${String(filters.bulan).padStart(2, '0')}-01`;
+    };
+
+    const [selectedDate, setSelectedDate] = useState(tanggalDefault);
+    const [periodeTerpilih, setPeriodeTerpilih] = useState({
+        bulan: filters.bulan,
+        tahun: filters.tahun,
+    });
+    const stripRef = useRef<HTMLDivElement>(null);
+
+    // Reset ke tanggal default begitu bulan/tahun aktif berubah (mis. klik
+    // panah bulan) — disesuaikan saat render, bukan lewat efek, supaya
+    // tidak ada render tambahan yang tidak perlu.
+    if (
+        periodeTerpilih.bulan !== filters.bulan ||
+        periodeTerpilih.tahun !== filters.tahun
+    ) {
+        setPeriodeTerpilih({ bulan: filters.bulan, tahun: filters.tahun });
+        setSelectedDate(
+            dalamBulanIni(selectedDate) ? selectedDate : tanggalDefault(),
+        );
+    }
+
+    useEffect(() => {
+        stripRef.current
+            ?.querySelector<HTMLElement>(`[data-tanggal="${selectedDate}"]`)
+            ?.scrollIntoView({
+                behavior: 'smooth',
+                inline: 'center',
+                block: 'nearest',
+            });
+    }, [selectedDate]);
+
+    const pilihTanggalKalender = (tanggal: string) => {
+        if (!tanggal) {
+            return;
+        }
+
+        const [tahunPilih, bulanPilih] = tanggal.split('-').map(Number);
+        setSelectedDate(tanggal);
+
+        if (bulanPilih !== filters.bulan || tahunPilih !== filters.tahun) {
+            gantiPeriode(bulanPilih, tahunPilih);
+        }
+    };
+
+    const scrollStrip = (arah: 'kiri' | 'kanan') => {
+        stripRef.current?.scrollBy({
+            left: arah === 'kiri' ? -240 : 240,
+            behavior: 'smooth',
         });
     };
 
-    const jadwalPerTanggal = useMemo(() => {
-        const groups = new Map<string, JadwalShift[]>();
-
-        for (const jadwal of jadwals) {
-            const list = groups.get(jadwal.tanggal) ?? [];
-            list.push(jadwal);
-            groups.set(jadwal.tanggal, list);
-        }
-
-        return Array.from(groups.entries())
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(
-                ([tanggal, items]) =>
-                    [
-                        tanggal,
-                        items.sort((a, b) =>
-                            (a.karyawan?.nama ?? '').localeCompare(
-                                b.karyawan?.nama ?? '',
-                            ),
-                        ),
-                    ] as const,
-            );
-    }, [jadwals]);
-
-    const expandAllTanggal = () => {
-        setExpandedTanggal(
-            new Set(jadwalPerTanggal.map(([tanggal]) => tanggal)),
-        );
-    };
-
-    const collapseAllTanggal = () => {
-        setExpandedTanggal(new Set());
-    };
+    const jadwalTanggalTerpilih = jadwalPerTanggal.get(selectedDate) ?? [];
 
     return (
         <>
@@ -272,7 +334,7 @@ export default function JadwalShiftCalendar() {
                             </p>
                         )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <Button
                             variant="outline"
                             size="sm"
@@ -300,6 +362,15 @@ export default function JadwalShiftCalendar() {
                         >
                             &rarr;
                         </Button>
+                        <Input
+                            type="date"
+                            value={selectedDate}
+                            onChange={(e) =>
+                                pilihTanggalKalender(e.target.value)
+                            }
+                            className="h-9 w-auto"
+                            aria-label="Lompat ke tanggal"
+                        />
 
                         {bisaPilihDepartemen && (
                             <select
@@ -461,244 +532,229 @@ export default function JadwalShiftCalendar() {
                     </Card>
                 )}
 
-                {jadwalPerTanggal.length === 0 && (
-                    <Card>
-                        <CardContent className="p-4 text-sm text-muted-foreground">
-                            Tidak ada jadwal shift pada periode ini.
-                        </CardContent>
-                    </Card>
-                )}
+                <div className="flex items-center gap-1">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() => scrollStrip('kiri')}
+                    >
+                        <ChevronLeft className="size-4" />
+                    </Button>
+                    <div
+                        ref={stripRef}
+                        className="flex flex-1 gap-2 overflow-x-auto scroll-smooth pb-1"
+                    >
+                        {tanggalBulanIni.map((tanggal) => {
+                            const items = jadwalPerTanggal.get(tanggal) ?? [];
+                            const isSelected = tanggal === selectedDate;
+                            const isToday = tanggal === tanggalHariIni();
+                            const tgl = parseTanggalLocal(tanggal);
 
-                {jadwalPerTanggal.length > 0 && (
-                    <div className="flex justify-end gap-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={expandAllTanggal}
-                            disabled={
-                                expandedTanggal.size === jadwalPerTanggal.length
-                            }
-                        >
-                            Buka Semua
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={collapseAllTanggal}
-                            disabled={expandedTanggal.size === 0}
-                        >
-                            Tutup Semua
-                        </Button>
-                    </div>
-                )}
-
-                <div className="grid max-h-[65vh] gap-3 overflow-y-auto pr-1">
-                    {jadwalPerTanggal.map(([tanggal, items]) => {
-                        const isOpen = expandedTanggal.has(tanggal);
-
-                        return (
-                            <Card key={tanggal} className="gap-0 py-0">
+                            return (
                                 <button
+                                    key={tanggal}
                                     type="button"
-                                    onClick={() => toggleTanggal(tanggal)}
-                                    className="flex w-full items-center gap-2 px-4 py-3 text-left transition-colors hover:bg-muted/50"
-                                >
-                                    {isOpen ? (
-                                        <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-                                    ) : (
-                                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                                    data-tanggal={tanggal}
+                                    onClick={() => setSelectedDate(tanggal)}
+                                    className={cn(
+                                        'flex shrink-0 flex-col items-center gap-0.5 rounded-lg border px-3 py-2 text-center transition-colors',
+                                        isSelected
+                                            ? 'border-primary bg-primary text-primary-foreground'
+                                            : 'border-border bg-card hover:bg-accent',
+                                        !isSelected &&
+                                            isToday &&
+                                            'border-primary/60',
                                     )}
-                                    <CardTitle className="flex-1 text-sm font-medium capitalize">
-                                        {weekdayFormatter.format(
-                                            new Date(tanggal),
+                                >
+                                    <span className="text-[10px] font-medium uppercase opacity-80">
+                                        {weekdayShortFormatter.format(tgl)}
+                                    </span>
+                                    <span className="text-base font-semibold">
+                                        {tgl.getDate()}
+                                    </span>
+                                    <span
+                                        className={cn(
+                                            'text-[10px]',
+                                            items.length === 0 && 'opacity-0',
+                                            isSelected
+                                                ? 'text-primary-foreground/80'
+                                                : 'text-muted-foreground',
                                         )}
-                                    </CardTitle>
-                                    <span className="text-xs text-muted-foreground">
-                                        {items.length} jadwal
+                                    >
+                                        {items.length || '-'} jadwal
                                     </span>
                                 </button>
-                                {isOpen && (
-                                    <CardContent className="divide-y border-t p-0">
-                                        {items.map((jadwal) => (
-                                            <div
-                                                key={jadwal.id}
-                                                className="px-4 py-2.5"
-                                            >
-                                                <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="font-medium">
-                                                            {
-                                                                jadwal.karyawan
-                                                                    ?.nama
-                                                            }
-                                                        </span>
-                                                        <Badge
-                                                            className={cn(
-                                                                jadwal.shift &&
-                                                                    SHIFT_BADGE_CLASS[
-                                                                        jadwal
-                                                                            .shift
-                                                                            .nama_shift
-                                                                    ],
-                                                            )}
-                                                            variant="outline"
-                                                        >
-                                                            {
-                                                                jadwal.shift
-                                                                    ?.nama_shift
-                                                            }{' '}
-                                                            &middot;{' '}
-                                                            {
-                                                                jadwal.shift
-                                                                    ?.jam_mulai
-                                                            }
-                                                            -
-                                                            {
-                                                                jadwal.shift
-                                                                    ?.jam_selesai
-                                                            }
-                                                        </Badge>
-                                                        {jadwal.jam_lembur && (
-                                                            <Badge
-                                                                variant="outline"
-                                                                className="border-orange-200 bg-orange-100 text-orange-800 dark:border-orange-900 dark:bg-orange-950 dark:text-orange-300"
-                                                            >
-                                                                {
-                                                                    jadwal.jam_lembur
-                                                                }{' '}
-                                                                jam lembur
-                                                                {jadwal.catatan_lembur
-                                                                    ? ` · ${jadwal.catatan_lembur}`
-                                                                    : ''}
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                    {bisaKelola && (
-                                                        <div className="flex gap-1">
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                onClick={() =>
-                                                                    editingLemburId ===
-                                                                    jadwal.id
-                                                                        ? cancelEditLembur()
-                                                                        : startEditLembur(
-                                                                              jadwal,
-                                                                          )
-                                                                }
-                                                            >
-                                                                Lembur
-                                                            </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                className="text-destructive"
-                                                                onClick={() =>
-                                                                    destroy(
-                                                                        jadwal,
-                                                                    )
-                                                                }
-                                                            >
-                                                                Hapus
-                                                            </Button>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {editingLemburId ===
-                                                    jadwal.id && (
-                                                    <div className="mt-2 grid grid-cols-1 gap-2 rounded-md border bg-muted/30 p-3 sm:grid-cols-[100px_1fr_auto_auto]">
-                                                        <div className="grid gap-1">
-                                                            <Label
-                                                                htmlFor={`jam-lembur-${jadwal.id}`}
-                                                                className="text-xs"
-                                                            >
-                                                                Jam Lembur
-                                                            </Label>
-                                                            <Input
-                                                                id={`jam-lembur-${jadwal.id}`}
-                                                                type="number"
-                                                                step="0.5"
-                                                                min={0}
-                                                                max={12}
-                                                                value={
-                                                                    lemburJam
-                                                                }
-                                                                onChange={(e) =>
-                                                                    setLemburJam(
-                                                                        e.target
-                                                                            .value,
-                                                                    )
-                                                                }
-                                                            />
-                                                            <InputError
-                                                                message={
-                                                                    lemburErrors.jam_lembur
-                                                                }
-                                                            />
-                                                        </div>
-                                                        <div className="grid gap-1">
-                                                            <Label
-                                                                htmlFor={`catatan-lembur-${jadwal.id}`}
-                                                                className="text-xs"
-                                                            >
-                                                                Catatan
-                                                                (opsional)
-                                                            </Label>
-                                                            <Input
-                                                                id={`catatan-lembur-${jadwal.id}`}
-                                                                value={
-                                                                    lemburCatatan
-                                                                }
-                                                                onChange={(e) =>
-                                                                    setLemburCatatan(
-                                                                        e.target
-                                                                            .value,
-                                                                    )
-                                                                }
-                                                            />
-                                                            <InputError
-                                                                message={
-                                                                    lemburErrors.catatan_lembur
-                                                                }
-                                                            />
-                                                        </div>
-                                                        <Button
-                                                            size="sm"
-                                                            className="self-end"
-                                                            disabled={
-                                                                lemburProcessing
-                                                            }
-                                                            onClick={() =>
-                                                                submitLembur(
-                                                                    jadwal,
-                                                                )
-                                                            }
-                                                        >
-                                                            Simpan
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="self-end"
-                                                            onClick={
-                                                                cancelEditLembur
-                                                            }
-                                                        >
-                                                            Batal
-                                                        </Button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </CardContent>
-                                )}
-                            </Card>
-                        );
-                    })}
+                            );
+                        })}
+                    </div>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() => scrollStrip('kanan')}
+                    >
+                        <ChevronRight className="size-4" />
+                    </Button>
                 </div>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-sm font-medium capitalize">
+                            {weekdayFormatter.format(
+                                parseTanggalLocal(selectedDate),
+                            )}
+                        </CardTitle>
+                    </CardHeader>
+                    {jadwalTanggalTerpilih.length === 0 && (
+                        <CardContent className="text-sm text-muted-foreground">
+                            Tidak ada jadwal shift pada tanggal ini.
+                        </CardContent>
+                    )}
+                    {jadwalTanggalTerpilih.length > 0 && (
+                        <CardContent className="divide-y border-t p-0">
+                            {jadwalTanggalTerpilih.map((jadwal) => (
+                                <div key={jadwal.id} className="px-4 py-2.5">
+                                    <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span className="font-medium">
+                                                {jadwal.karyawan?.nama}
+                                            </span>
+                                            <Badge
+                                                className={cn(
+                                                    jadwal.shift &&
+                                                        SHIFT_BADGE_CLASS[
+                                                            jadwal.shift
+                                                                .nama_shift
+                                                        ],
+                                                )}
+                                                variant="outline"
+                                            >
+                                                {jadwal.shift?.nama_shift}{' '}
+                                                &middot;{' '}
+                                                {jadwal.shift?.jam_mulai}-
+                                                {jadwal.shift?.jam_selesai}
+                                            </Badge>
+                                            {jadwal.jam_lembur && (
+                                                <Badge
+                                                    variant="outline"
+                                                    className="border-orange-200 bg-orange-100 text-orange-800 dark:border-orange-900 dark:bg-orange-950 dark:text-orange-300"
+                                                >
+                                                    {jadwal.jam_lembur} jam
+                                                    lembur
+                                                    {jadwal.catatan_lembur
+                                                        ? ` · ${jadwal.catatan_lembur}`
+                                                        : ''}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        {bisaKelola && (
+                                            <div className="flex gap-1">
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() =>
+                                                        editingLemburId ===
+                                                        jadwal.id
+                                                            ? cancelEditLembur()
+                                                            : startEditLembur(
+                                                                  jadwal,
+                                                              )
+                                                    }
+                                                >
+                                                    Lembur
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="text-destructive"
+                                                    onClick={() =>
+                                                        destroy(jadwal)
+                                                    }
+                                                >
+                                                    Hapus
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {editingLemburId === jadwal.id && (
+                                        <div className="mt-2 grid grid-cols-1 gap-2 rounded-md border bg-muted/30 p-3 sm:grid-cols-[100px_1fr_auto_auto]">
+                                            <div className="grid gap-1">
+                                                <Label
+                                                    htmlFor={`jam-lembur-${jadwal.id}`}
+                                                    className="text-xs"
+                                                >
+                                                    Jam Lembur
+                                                </Label>
+                                                <Input
+                                                    id={`jam-lembur-${jadwal.id}`}
+                                                    type="number"
+                                                    step="0.5"
+                                                    min={0}
+                                                    max={12}
+                                                    value={lemburJam}
+                                                    onChange={(e) =>
+                                                        setLemburJam(
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        lemburErrors.jam_lembur
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="grid gap-1">
+                                                <Label
+                                                    htmlFor={`catatan-lembur-${jadwal.id}`}
+                                                    className="text-xs"
+                                                >
+                                                    Catatan (opsional)
+                                                </Label>
+                                                <Input
+                                                    id={`catatan-lembur-${jadwal.id}`}
+                                                    value={lemburCatatan}
+                                                    onChange={(e) =>
+                                                        setLemburCatatan(
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        lemburErrors.catatan_lembur
+                                                    }
+                                                />
+                                            </div>
+                                            <Button
+                                                size="sm"
+                                                className="self-end"
+                                                disabled={lemburProcessing}
+                                                onClick={() =>
+                                                    submitLembur(jadwal)
+                                                }
+                                            >
+                                                Simpan
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="self-end"
+                                                onClick={cancelEditLembur}
+                                            >
+                                                Batal
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </CardContent>
+                    )}
+                </Card>
             </div>
         </>
     );
