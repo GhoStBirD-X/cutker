@@ -89,7 +89,7 @@ export default function CutiShow() {
                                         hari kalender, dikurangi{' '}
                                         {pengajuan.jumlah_hari_kalender -
                                             pengajuan.jumlah_hari}{' '}
-                                        hari libur nasional)
+                                        akhir pekan/hari libur)
                                     </span>
                                 )}
                             </div>

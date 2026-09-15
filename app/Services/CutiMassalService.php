@@ -77,7 +77,7 @@ class CutiMassalService
     protected function hitungJumlahHari(Carbon $mulai, Carbon $selesai): array
     {
         $jumlahHariKalender = (int) $mulai->diffInDays($selesai) + 1;
-        $jumlahHariLibur = $this->hariLiburService->countBetween($mulai, $selesai);
+        $jumlahHariLibur = $this->hariLiburService->hitungHariLibur($mulai, $selesai);
 
         return [
             'kalender' => $jumlahHariKalender,

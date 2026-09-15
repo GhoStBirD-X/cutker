@@ -12,6 +12,7 @@ use App\Models\SaldoCuti;
 use App\Models\Shift;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -24,6 +25,11 @@ class PengajuanCutiTest extends TestCase
         parent::setUp();
 
         $this->seed(RoleSeeder::class);
+
+        // Dikunci ke hari Senin supaya semua rentang now()->addDays(...) di
+        // test ini jatuh pada hari kerja yang bisa diprediksi (kecuali test
+        // yang memang sengaja menguji akhir pekan/hari libur).
+        $this->travelTo(Carbon::parse('2026-10-05'));
     }
 
     public function test_guest_is_redirected_to_login_when_submitting_leave_request(): void
@@ -188,7 +194,8 @@ class PengajuanCutiTest extends TestCase
         $this->assertDatabaseHas('pengajuan_cutis', [
             'karyawan_id' => $karyawan->id,
             'jenis_cuti_id' => $jenisCuti->id,
-            'jumlah_hari' => 31,
+            'jumlah_hari' => 23,
+            'jumlah_hari_kalender' => 31,
             'status' => 'pending',
         ]);
     }
@@ -282,6 +289,40 @@ class PengajuanCutiTest extends TestCase
             'jenis_cuti_id' => $jenisCuti->id,
             'jumlah_hari' => 2,
             'jumlah_hari_kalender' => 3,
+        ]);
+    }
+
+    public function test_jumlah_hari_excludes_saturday_and_sunday(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id]);
+
+        $jenisCuti = JenisCuti::factory()->create();
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        // Kamis s/d Minggu: 4 hari kalender, 2 di antaranya akhir pekan.
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(10)->toDateString(),
+            'tanggal_selesai' => now()->addDays(13)->toDateString(),
+            'alasan' => 'Liburan',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('pengajuan_cutis', [
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'jumlah_hari' => 2,
+            'jumlah_hari_kalender' => 4,
         ]);
     }
 

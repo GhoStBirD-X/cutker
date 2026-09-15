@@ -25,9 +25,10 @@ class PengajuanCutiService
     /**
      * Karyawan mengajukan cuti. Sisa saldo cuti dicek sebelum pengajuan dibuat,
      * lalu record Approval level 1 (atasan langsung) otomatis dibuat.
-     * jumlah_hari yang memotong saldo sudah dikurangi hari libur nasional
-     * yang bertabrakan dengan rentang tanggal; jumlah_hari_kalender tetap
-     * menyimpan rentang kalender aslinya untuk transparansi.
+     * jumlah_hari yang memotong saldo sudah dikurangi akhir pekan (Sabtu &
+     * Minggu) dan hari libur terdaftar yang bertabrakan dengan rentang
+     * tanggal; jumlah_hari_kalender tetap menyimpan rentang kalender
+     * aslinya untuk transparansi.
      *
      * @param  array{jenis_cuti_id: int, alasan_cuti_id?: int|null, tanggal_mulai: string, tanggal_selesai: string, alasan: string, mendadak?: bool, alasan_mendadak?: string|null}  $data
      */
@@ -36,7 +37,7 @@ class PengajuanCutiService
         $tanggalMulai = Carbon::parse($data['tanggal_mulai']);
         $tanggalSelesai = Carbon::parse($data['tanggal_selesai']);
         $jumlahHariKalender = (int) $tanggalMulai->diffInDays($tanggalSelesai) + 1;
-        $jumlahHariLibur = $this->hariLiburService->countBetween($tanggalMulai, $tanggalSelesai);
+        $jumlahHariLibur = $this->hariLiburService->hitungHariLibur($tanggalMulai, $tanggalSelesai);
         $jumlahHari = max(0, $jumlahHariKalender - $jumlahHariLibur);
 
         $jenisCuti = JenisCuti::query()->findOrFail($data['jenis_cuti_id']);

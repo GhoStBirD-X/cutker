@@ -11,6 +11,7 @@ use App\Models\SaldoCuti;
 use App\Services\CutiMassalService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -23,6 +24,10 @@ class CutiMassalTest extends TestCase
         parent::setUp();
 
         $this->seed(RoleSeeder::class);
+
+        // Dikunci ke hari Sabtu supaya semua rentang now()->addDays(...) di
+        // test ini jatuh pada hari kerja yang bisa diprediksi.
+        $this->travelTo(Carbon::parse('2026-10-03'));
     }
 
     public function test_hrd_can_create_mass_leave_for_all_eligible_active_employees(): void
@@ -87,6 +92,37 @@ class CutiMassalTest extends TestCase
             'jenis_cuti_id' => $jenisCuti->id,
             'tanggal_mulai' => now()->addDays(10)->toDateString(),
             'tanggal_selesai' => now()->addDays(11)->toDateString(),
+            'alasan' => 'Cuti bersama',
+            'karyawan_ids' => [$karyawan->id],
+        ]);
+
+        $this->assertDatabaseHas('saldo_cutis', [
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'terpakai' => 2,
+            'sisa' => 10,
+        ]);
+    }
+
+    public function test_jumlah_hari_excludes_saturday_and_sunday(): void
+    {
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+        $jenisCuti = JenisCuti::factory()->create();
+        $karyawan = Karyawan::factory()->create();
+
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        // Jumat s/d Senin: 4 hari kalender, 2 di antaranya akhir pekan.
+        $this->actingAs($hrd->user)->post(route('cuti.massal.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(6)->toDateString(),
+            'tanggal_selesai' => now()->addDays(9)->toDateString(),
             'alasan' => 'Cuti bersama',
             'karyawan_ids' => [$karyawan->id],
         ]);

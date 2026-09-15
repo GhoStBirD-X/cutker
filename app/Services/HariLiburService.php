@@ -61,13 +61,28 @@ class HariLiburService
     }
 
     /**
-     * Hitung jumlah hari libur (dari tabel lokal) yang bertabrakan dengan
-     * rentang tanggal cuti, dipakai untuk memotong jumlah_hari pengajuan.
+     * Hitung jumlah hari libur dalam rentang tanggal cuti — akhir pekan
+     * (Sabtu & Minggu) maupun hari libur terdaftar (nasional/perusahaan) —
+     * dipakai untuk memotong jumlah_hari pengajuan. Tanggal yang kebetulan
+     * akhir pekan sekaligus terdaftar sebagai hari libur hanya dihitung
+     * sekali.
      */
-    public function countBetween(Carbon $mulai, Carbon $selesai): int
+    public function hitungHariLibur(Carbon $mulai, Carbon $selesai): int
     {
-        return HariLibur::query()
+        $tanggalLiburTerdaftar = HariLibur::query()
             ->whereBetween('tanggal', [$mulai->toDateString(), $selesai->toDateString()])
-            ->count();
+            ->pluck('tanggal')
+            ->map(fn ($tanggal) => Carbon::parse($tanggal)->toDateString())
+            ->all();
+
+        $jumlah = 0;
+
+        for ($tanggal = $mulai->copy(); $tanggal->lte($selesai); $tanggal->addDay()) {
+            if ($tanggal->isWeekend() || in_array($tanggal->toDateString(), $tanggalLiburTerdaftar, true)) {
+                $jumlah++;
+            }
+        }
+
+        return $jumlah;
     }
 }
