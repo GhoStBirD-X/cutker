@@ -142,8 +142,20 @@ export default function JadwalShiftCalendar() {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+        const tanggalMulaiDiinput = data.tanggal_mulai;
         post(JadwalShiftController.store.url(), {
-            onSuccess: () => reset('karyawan_ids'),
+            onSuccess: () => {
+                reset('karyawan_ids');
+
+                // Pindahkan tanggal yang dipilih di strip kalender ke
+                // tanggal yang baru diinput -- kalau tidak, halaman sudah
+                // berada di bulan yang benar tapi strip tetap menampilkan
+                // hari lain (mis. hari ini) sehingga daftar karyawan yang
+                // baru dijadwalkan terlihat kosong.
+                if (tanggalMulaiDiinput) {
+                    setSelectedDate(tanggalMulaiDiinput);
+                }
+            },
         });
     };
 
