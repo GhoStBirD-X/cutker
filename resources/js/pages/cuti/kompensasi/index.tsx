@@ -2,11 +2,14 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { FileClock } from 'lucide-react';
 import { useState } from 'react';
 import KompensasiCutiController from '@/actions/App/Http/Controllers/Cuti/KompensasiCutiController';
+import InputError from '@/components/input-error';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { formatDateTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -25,19 +28,15 @@ function formatRupiah(value: string): string {
     }).format(Number(value));
 }
 
-function KompensasiRow({ kompensasi }: { kompensasi: KompensasiCuti }) {
-    const [ratePerHari, setRatePerHari] = useState('');
-    const [processing, setProcessing] = useState(false);
-
-    const submit = () => {
-        setProcessing(true);
-        router.post(
-            KompensasiCutiController.proses.url(kompensasi.id),
-            { rate_per_hari: ratePerHari },
-            { onFinish: () => setProcessing(false) },
-        );
-    };
-
+function KompensasiRow({
+    kompensasi,
+    checked,
+    onCheckedChange,
+}: {
+    kompensasi: KompensasiCuti;
+    checked: boolean;
+    onCheckedChange: (checked: boolean) => void;
+}) {
     const menunggu = kompensasi.status === 'menunggu_diproses';
 
     return (
@@ -49,30 +48,26 @@ function KompensasiRow({ kompensasi }: { kompensasi: KompensasiCuti }) {
                     : 'border-l-transparent',
             )}
         >
-            <div>
-                <div className="font-medium">
-                    {kompensasi.karyawan?.nama} &middot;{' '}
-                    {kompensasi.jenis_cuti?.nama_jenis}
-                </div>
-                <div className="text-muted-foreground">
-                    {kompensasi.jumlah_hari} hari sisa cuti hangus
+            <div className="flex items-center gap-3">
+                {menunggu && (
+                    <Checkbox
+                        checked={checked}
+                        onCheckedChange={(value) =>
+                            onCheckedChange(Boolean(value))
+                        }
+                    />
+                )}
+                <div>
+                    <div className="font-medium">
+                        {kompensasi.karyawan?.nama} &middot;{' '}
+                        {kompensasi.jenis_cuti?.nama_jenis}
+                    </div>
+                    <div className="text-muted-foreground">
+                        {kompensasi.jumlah_hari} hari sisa cuti hangus
+                    </div>
                 </div>
             </div>
-            {kompensasi.status === 'menunggu_diproses' ? (
-                <div className="flex items-center gap-2">
-                    <Input
-                        type="number"
-                        min={0}
-                        placeholder="Rate per hari (Rp)"
-                        value={ratePerHari}
-                        onChange={(e) => setRatePerHari(e.target.value)}
-                        className="md:w-48"
-                    />
-                    <Button size="sm" disabled={processing} onClick={submit}>
-                        Proses
-                    </Button>
-                </div>
-            ) : (
+            {!menunggu && (
                 <div className="text-right">
                     <Badge variant="secondary">
                         {formatRupiah(kompensasi.total_rupiah!)}
@@ -91,6 +86,56 @@ function KompensasiRow({ kompensasi }: { kompensasi: KompensasiCuti }) {
 export default function KompensasiCutiIndex() {
     const { kompensasiCutis } = usePage<PageProps>().props;
 
+    const pending = kompensasiCutis.data.filter(
+        (k) => k.status === 'menunggu_diproses',
+    );
+
+    const [selected, setSelected] = useState<Record<number, boolean>>({});
+    const [ratePerHari, setRatePerHari] = useState('');
+    const [catatan, setCatatan] = useState('');
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [processing, setProcessing] = useState(false);
+
+    const jumlahDipilih = pending.filter((k) => selected[k.id]).length;
+    const semuaTerpilih = pending.length > 0 && jumlahDipilih === pending.length;
+
+    const toggleSemua = (checked: boolean) => {
+        setSelected((prev) => {
+            const next = { ...prev };
+            pending.forEach((k) => {
+                next[k.id] = checked;
+            });
+
+            return next;
+        });
+    };
+
+    const submit = () => {
+        const ids = pending
+            .filter((k) => selected[k.id])
+            .map((k) => k.id);
+
+        setProcessing(true);
+        router.post(
+            KompensasiCutiController.prosesMassal.url(),
+            {
+                kompensasi_cuti_ids: ids,
+                rate_per_hari: ratePerHari,
+                catatan: catatan || undefined,
+            },
+            {
+                onError: (err) => setErrors(err),
+                onSuccess: () => {
+                    setSelected({});
+                    setRatePerHari('');
+                    setCatatan('');
+                    setErrors({});
+                },
+                onFinish: () => setProcessing(false),
+            },
+        );
+    };
+
     return (
         <>
             <Head title="Kompensasi Cuti" />
@@ -101,9 +146,79 @@ export default function KompensasiCutiIndex() {
                 </h1>
                 <p className="text-sm text-muted-foreground">
                     Sisa cuti tahunan/besar yang hangus saat periode ditutup
-                    tercatat di sini. Masukkan rate per hari untuk menghitung
-                    nilai yang harus dibayarkan ke karyawan.
+                    tercatat di sini. Pilih karyawan yang ratenya sama, isi
+                    satu rate per hari, lalu proses sekaligus.
                 </p>
+
+                {pending.length > 0 && (
+                    <Card>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Checkbox
+                                    checked={semuaTerpilih}
+                                    onCheckedChange={(checked) =>
+                                        toggleSemua(Boolean(checked))
+                                    }
+                                />
+                                <span className="text-sm font-medium">
+                                    Pilih semua yang menunggu di halaman ini (
+                                    {pending.length})
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="rate_per_hari">
+                                        Rate per Hari (Rp)
+                                    </Label>
+                                    <Input
+                                        id="rate_per_hari"
+                                        type="number"
+                                        min={0}
+                                        placeholder="mis. 150000"
+                                        value={ratePerHari}
+                                        onChange={(e) =>
+                                            setRatePerHari(e.target.value)
+                                        }
+                                    />
+                                    <InputError
+                                        message={errors.rate_per_hari}
+                                    />
+                                </div>
+                                <div className="grid gap-2 sm:col-span-2">
+                                    <Label htmlFor="catatan">
+                                        Catatan (opsional)
+                                    </Label>
+                                    <Input
+                                        id="catatan"
+                                        placeholder="mis. Dibayarkan bersama gaji September"
+                                        value={catatan}
+                                        onChange={(e) =>
+                                            setCatatan(e.target.value)
+                                        }
+                                    />
+                                    <InputError message={errors.catatan} />
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <Button
+                                    disabled={
+                                        processing ||
+                                        jumlahDipilih === 0 ||
+                                        !ratePerHari
+                                    }
+                                    onClick={submit}
+                                >
+                                    Proses {jumlahDipilih} Terpilih
+                                </Button>
+                                <InputError
+                                    message={errors.kompensasi_cuti_ids}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card>
                     <CardContent className="divide-y p-0">
@@ -116,6 +231,13 @@ export default function KompensasiCutiIndex() {
                             <KompensasiRow
                                 key={kompensasi.id}
                                 kompensasi={kompensasi}
+                                checked={!!selected[kompensasi.id]}
+                                onCheckedChange={(checked) =>
+                                    setSelected((prev) => ({
+                                        ...prev,
+                                        [kompensasi.id]: checked,
+                                    }))
+                                }
                             />
                         ))}
                     </CardContent>
