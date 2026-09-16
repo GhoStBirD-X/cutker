@@ -144,4 +144,25 @@ class JadwalShiftController extends Controller
 
         return back();
     }
+
+    public function destroyMassal(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'jadwal_shift_ids' => ['required', 'array', 'min:1'],
+            'jadwal_shift_ids.*' => ['integer', 'exists:jadwal_shifts,id'],
+        ]);
+
+        $jadwals = JadwalShift::query()->whereIn('id', $data['jadwal_shift_ids'])->get();
+
+        foreach ($jadwals as $jadwal) {
+            $this->authorize('delete', $jadwal);
+        }
+
+        $jumlah = $jadwals->count();
+        JadwalShift::query()->whereIn('id', $jadwals->pluck('id'))->delete();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => "{$jumlah} jadwal shift berhasil dihapus."]);
+
+        return back();
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cuti;
 
 use App\Exceptions\CutiMassalSudahDibatalkanException;
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cuti\StoreCutiMassalRequest;
 use App\Models\CutiMassal;
@@ -16,12 +17,14 @@ use Inertia\Response;
 
 class CutiMassalController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $cutiMassals = CutiMassal::query()
             ->with(['jenisCuti', 'dibuatOleh'])
             ->latest('id')
-            ->paginate(15)
+            ->paginate($this->resolvePerPage($request, 15))
             ->withQueryString();
 
         return Inertia::render('cuti/massal/index', [

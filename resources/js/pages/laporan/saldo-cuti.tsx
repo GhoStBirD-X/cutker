@@ -275,7 +275,10 @@ export default function LaporanSaldoCuti() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={karyawans.links} />
+                <Pagination
+                    links={karyawans.links}
+                    perPage={karyawans.per_page}
+                />
             </div>
         </>
     );

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\JabatanRequest;
 use App\Models\Jabatan;
@@ -12,6 +13,8 @@ use Inertia\Response;
 
 class JabatanController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $search = (string) $request->string('search');
@@ -20,7 +23,7 @@ class JabatanController extends Controller
             ->withCount('karyawans')
             ->when($search, fn ($query) => $query->where('nama_jabatan', 'like', "%{$search}%"))
             ->orderBy('nama_jabatan')
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         return Inertia::render('master/jabatan', [

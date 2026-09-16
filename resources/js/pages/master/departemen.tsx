@@ -170,7 +170,10 @@ export default function MasterDepartemen() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={departemens.links} />
+                <Pagination
+                    links={departemens.links}
+                    perPage={departemens.per_page}
+                />
             </div>
         </>
     );

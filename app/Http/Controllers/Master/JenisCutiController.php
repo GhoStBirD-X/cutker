@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\JenisCutiRequest;
 use App\Models\JenisCuti;
@@ -13,6 +14,8 @@ use Inertia\Response;
 
 class JenisCutiController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $search = (string) $request->string('search');
@@ -20,7 +23,7 @@ class JenisCutiController extends Controller
         $jenisCutis = JenisCuti::query()
             ->when($search, fn ($query) => $query->where('nama_jenis', 'like', "%{$search}%"))
             ->orderBy('nama_jenis')
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         return Inertia::render('master/jenis-cuti', [

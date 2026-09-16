@@ -374,7 +374,10 @@ export default function MasterSaldoCuti() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={saldoCutis.links} />
+                <Pagination
+                    links={saldoCutis.links}
+                    perPage={saldoCutis.per_page}
+                />
             </div>
         </>
     );

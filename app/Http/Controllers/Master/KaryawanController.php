@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Master;
 
 use App\Exports\KaryawanImportTemplateExport;
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\KaryawanImportRequest;
 use App\Http\Requests\Master\KaryawanRequest;
@@ -24,6 +25,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class KaryawanController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $search = (string) $request->string('search');
@@ -34,7 +37,7 @@ class KaryawanController extends Controller
             ->when($search, fn ($query) => $query->where('nama', 'like', "%{$search}%")->orWhere('nip', 'like', "%{$search}%"))
             ->when($departemenId, fn ($query) => $query->where('departemen_id', $departemenId))
             ->orderBy('nama')
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         return Inertia::render('master/karyawan', [

@@ -240,7 +240,10 @@ export default function MasterAlasanCuti() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={alasanCutis.links} />
+                <Pagination
+                    links={alasanCutis.links}
+                    perPage={alasanCutis.per_page}
+                />
             </div>
         </>
     );

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\UserManagement;
 
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UserManagement\UserRequest;
 use App\Models\Karyawan;
@@ -14,6 +15,8 @@ use Inertia\Response;
 
 class UserController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $search = (string) $request->string('search');
@@ -22,7 +25,7 @@ class UserController extends Controller
             ->with('roles', 'karyawan')
             ->when($search, fn ($query) => $query->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"))
             ->orderBy('name')
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         return Inertia::render('users/index', [

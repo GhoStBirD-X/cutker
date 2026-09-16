@@ -176,7 +176,7 @@ export default function MasterShift() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={shifts.links} />
+                <Pagination links={shifts.links} perPage={shifts.per_page} />
             </div>
         </>
     );

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Laporan;
 
 use App\Exports\PengajuanCutiExport;
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Models\Departemen;
 use App\Models\JadwalShift;
@@ -19,9 +20,11 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class LaporanCutiController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
-        $pengajuans = $this->filteredQuery($request)->latest('tanggal_pengajuan')->paginate(15)->withQueryString();
+        $pengajuans = $this->filteredQuery($request)->latest('tanggal_pengajuan')->paginate($this->resolvePerPage($request, 15))->withQueryString();
 
         return Inertia::render('laporan/index', [
             'pengajuans' => $pengajuans,

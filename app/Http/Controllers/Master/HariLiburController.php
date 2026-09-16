@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Master;
 
 use App\Enums\SumberHariLibur;
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\HariLiburRequest;
 use App\Models\HariLibur;
@@ -13,6 +14,8 @@ use Inertia\Response;
 
 class HariLiburController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $search = (string) $request->string('search');
@@ -20,7 +23,7 @@ class HariLiburController extends Controller
         $hariLiburs = HariLibur::query()
             ->when($search, fn ($query) => $query->where('keterangan', 'like', "%{$search}%"))
             ->orderByDesc('tanggal')
-            ->paginate(15)
+            ->paginate($this->resolvePerPage($request, 15))
             ->withQueryString();
 
         return Inertia::render('master/hari-libur', [

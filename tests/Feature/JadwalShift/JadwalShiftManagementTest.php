@@ -119,6 +119,38 @@ class JadwalShiftManagementTest extends TestCase
         );
     }
 
+    public function test_hrd_can_bulk_delete_jadwal_shift(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawanA = $this->karyawanUser('karyawan');
+        $karyawanB = $this->karyawanUser('karyawan');
+        $jadwalA = JadwalShift::factory()->create(['karyawan_id' => $karyawanA->karyawan->id]);
+        $jadwalB = JadwalShift::factory()->create(['karyawan_id' => $karyawanB->karyawan->id]);
+        $jadwalLain = JadwalShift::factory()->create();
+
+        $response = $this->actingAs($hrd)->post(route('jadwal-shift.hapus-massal'), [
+            'jadwal_shift_ids' => [$jadwalA->id, $jadwalB->id],
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('jadwal_shifts', ['id' => $jadwalA->id]);
+        $this->assertDatabaseMissing('jadwal_shifts', ['id' => $jadwalB->id]);
+        $this->assertDatabaseHas('jadwal_shifts', ['id' => $jadwalLain->id]);
+    }
+
+    public function test_karyawan_cannot_bulk_delete_jadwal_shift(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan');
+        $jadwal = JadwalShift::factory()->create(['karyawan_id' => $karyawan->karyawan->id]);
+
+        $response = $this->actingAs($karyawan)->post(route('jadwal-shift.hapus-massal'), [
+            'jadwal_shift_ids' => [$jadwal->id],
+        ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseHas('jadwal_shifts', ['id' => $jadwal->id]);
+    }
+
     public function test_koordinator_shift_can_delete_jadwal_from_any_departemen(): void
     {
         $koordinator = $this->karyawanUser('koordinator_shift');

@@ -100,7 +100,7 @@ export default function ApprovalIndex() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={approvals.links} />
+                <Pagination links={approvals.links} perPage={approvals.per_page} />
             </div>
         </>
     );

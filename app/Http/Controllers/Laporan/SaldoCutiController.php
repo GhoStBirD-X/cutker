@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Laporan;
 
 use App\Enums\StatusPengajuan;
 use App\Enums\TipeKaryawan;
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Models\Departemen;
 use App\Models\Karyawan;
@@ -16,6 +17,8 @@ use Inertia\Response;
 
 class SaldoCutiController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $search = (string) $request->string('search');
@@ -27,7 +30,7 @@ class SaldoCutiController extends Controller
             ->when($search, fn ($query) => $query->where(fn ($q) => $q->where('nama', 'like', "%{$search}%")->orWhere('nip', 'like', "%{$search}%")))
             ->when($departemenId, fn ($query) => $query->where('departemen_id', $departemenId))
             ->orderBy('nama')
-            ->paginate(20)
+            ->paginate($this->resolvePerPage($request, 20))
             ->withQueryString();
 
         $karyawans->through(fn (Karyawan $karyawan) => [

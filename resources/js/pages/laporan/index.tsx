@@ -176,7 +176,10 @@ export default function LaporanIndex() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={pengajuans.links} />
+                <Pagination
+                    links={pengajuans.links}
+                    perPage={pengajuans.per_page}
+                />
 
                 <h2 className="text-sm font-semibold text-muted-foreground">
                     Ringkasan Lembur

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Approval;
 
 use App\Enums\StatusApproval;
 use App\Exceptions\ApprovalSudahDiprosesException;
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Approval\ApprovalActionRequest;
 use App\Models\Approval;
@@ -15,6 +16,8 @@ use Inertia\Response;
 
 class ApprovalController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Approval::class);
@@ -37,7 +40,7 @@ class ApprovalController extends Controller
                 }
             })
             ->latest()
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         return Inertia::render('approval/index', [

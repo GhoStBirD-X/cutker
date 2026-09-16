@@ -330,6 +330,64 @@ export default function JadwalShiftCalendar() {
 
     const jadwalTanggalTerpilih = jadwalPerTanggal.get(selectedDate) ?? [];
 
+    const [jadwalTerpilih, setJadwalTerpilih] = useState<
+        Record<number, boolean>
+    >({});
+    const [hapusMassalProcessing, setHapusMassalProcessing] = useState(false);
+    const [tanggalTerpilihUntukSeleksi, setTanggalTerpilihUntukSeleksi] =
+        useState(selectedDate);
+
+    // Reset seleksi setiap kali pindah tanggal, supaya centang di satu hari
+    // tidak ikut menempel ke daftar jadwal hari lain.
+    if (tanggalTerpilihUntukSeleksi !== selectedDate) {
+        setTanggalTerpilihUntukSeleksi(selectedDate);
+        setJadwalTerpilih({});
+    }
+
+    const jumlahJadwalTerpilih = jadwalTanggalTerpilih.filter(
+        (j) => jadwalTerpilih[j.id],
+    ).length;
+    const semuaJadwalTerpilih =
+        jadwalTanggalTerpilih.length > 0 &&
+        jumlahJadwalTerpilih === jadwalTanggalTerpilih.length;
+
+    const toggleSemuaJadwal = (checked: boolean) => {
+        const next: Record<number, boolean> = {};
+        jadwalTanggalTerpilih.forEach((j) => {
+            next[j.id] = checked;
+        });
+        setJadwalTerpilih(next);
+    };
+
+    const hapusJadwalTerpilih = () => {
+        const ids = jadwalTanggalTerpilih
+            .filter((j) => jadwalTerpilih[j.id])
+            .map((j) => j.id);
+
+        if (ids.length === 0) {
+            return;
+        }
+
+        if (
+            !confirm(
+                `Hapus ${ids.length} jadwal shift terpilih pada tanggal ini? Tindakan ini tidak bisa dibatalkan.`,
+            )
+        ) {
+            return;
+        }
+
+        setHapusMassalProcessing(true);
+        router.post(
+            JadwalShiftController.destroyMassal.url(),
+            { jadwal_shift_ids: ids },
+            {
+                preserveScroll: true,
+                onSuccess: () => setJadwalTerpilih({}),
+                onFinish: () => setHapusMassalProcessing(false),
+            },
+        );
+    };
+
     return (
         <>
             <Head title="Jadwal Shift" />
@@ -613,12 +671,33 @@ export default function JadwalShiftCalendar() {
                 </div>
 
                 <Card>
-                    <CardHeader>
-                        <CardTitle className="text-sm font-medium capitalize">
-                            {weekdayFormatter.format(
-                                parseTanggalLocal(selectedDate),
+                    <CardHeader className="flex-row items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                            {bisaKelola && jadwalTanggalTerpilih.length > 0 && (
+                                <Checkbox
+                                    checked={semuaJadwalTerpilih}
+                                    onCheckedChange={(checked) =>
+                                        toggleSemuaJadwal(Boolean(checked))
+                                    }
+                                    aria-label="Pilih semua jadwal pada tanggal ini"
+                                />
                             )}
-                        </CardTitle>
+                            <CardTitle className="text-sm font-medium capitalize">
+                                {weekdayFormatter.format(
+                                    parseTanggalLocal(selectedDate),
+                                )}
+                            </CardTitle>
+                        </div>
+                        {jumlahJadwalTerpilih > 0 && (
+                            <Button
+                                size="sm"
+                                variant="destructive"
+                                disabled={hapusMassalProcessing}
+                                onClick={hapusJadwalTerpilih}
+                            >
+                                Hapus {jumlahJadwalTerpilih} Terpilih
+                            </Button>
+                        )}
                     </CardHeader>
                     {jadwalTanggalTerpilih.length === 0 && (
                         <CardContent className="text-sm text-muted-foreground">
@@ -631,6 +710,29 @@ export default function JadwalShiftCalendar() {
                                 <div key={jadwal.id} className="px-4 py-2.5">
                                     <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
                                         <div className="flex flex-wrap items-center gap-2">
+                                            {bisaKelola && (
+                                                <Checkbox
+                                                    checked={
+                                                        !!jadwalTerpilih[
+                                                            jadwal.id
+                                                        ]
+                                                    }
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) =>
+                                                        setJadwalTerpilih(
+                                                            (prev) => ({
+                                                                ...prev,
+                                                                [jadwal.id]:
+                                                                    Boolean(
+                                                                        checked,
+                                                                    ),
+                                                            }),
+                                                        )
+                                                    }
+                                                    aria-label={`Pilih jadwal ${jadwal.karyawan?.nama}`}
+                                                />
+                                            )}
                                             <span className="font-medium">
                                                 {jadwal.karyawan?.nama}
                                             </span>

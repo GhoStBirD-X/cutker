@@ -23,6 +23,35 @@ class KaryawanManagementTest extends TestCase
         $this->seed(RoleSeeder::class);
     }
 
+    public function test_index_respects_per_page_query_param_within_allowed_options(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $departemen = Departemen::factory()->create();
+        $jabatan = Jabatan::factory()->create();
+        Karyawan::factory()->count(25)->create(['departemen_id' => $departemen->id, 'jabatan_id' => $jabatan->id]);
+
+        $response = $this->actingAs($hrd)->get(route('master.karyawan.index', ['per_page' => 20]));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('karyawans.per_page', 20)
+            ->has('karyawans.data', 20)
+        );
+    }
+
+    public function test_index_ignores_a_per_page_value_outside_allowed_options(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $departemen = Departemen::factory()->create();
+        $jabatan = Jabatan::factory()->create();
+        Karyawan::factory()->count(15)->create(['departemen_id' => $departemen->id, 'jabatan_id' => $jabatan->id]);
+
+        $response = $this->actingAs($hrd)->get(route('master.karyawan.index', ['per_page' => 999999]));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('karyawans.per_page', 10)
+        );
+    }
+
     public function test_hrd_can_create_karyawan_assigned_to_a_departemen(): void
     {
         $hrd = $this->karyawanUser('hrd');

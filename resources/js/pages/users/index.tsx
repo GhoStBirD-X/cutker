@@ -261,7 +261,7 @@ export default function UsersIndex() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={users.links} />
+                <Pagination links={users.links} perPage={users.per_page} />
             </div>
         </>
     );

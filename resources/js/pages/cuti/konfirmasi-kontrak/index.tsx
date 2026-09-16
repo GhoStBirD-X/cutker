@@ -180,7 +180,10 @@ export default function KonfirmasiKontrakIndex() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={konfirmasiKontraks.links} />
+                <Pagination
+                    links={konfirmasiKontraks.links}
+                    perPage={konfirmasiKontraks.per_page}
+                />
             </div>
         </>
     );

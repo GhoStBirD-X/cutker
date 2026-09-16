@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\ShiftRequest;
 use App\Models\Shift;
@@ -12,6 +13,8 @@ use Inertia\Response;
 
 class ShiftController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $search = (string) $request->string('search');
@@ -19,7 +22,7 @@ class ShiftController extends Controller
         $shifts = Shift::query()
             ->when($search, fn ($query) => $query->where('nama_shift', 'like', "%{$search}%"))
             ->orderBy('nama_shift')
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         return Inertia::render('master/shift', [

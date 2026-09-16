@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\DepartemenRequest;
 use App\Models\Departemen;
@@ -12,6 +13,8 @@ use Inertia\Response;
 
 class DepartemenController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $search = (string) $request->string('search');
@@ -20,7 +23,7 @@ class DepartemenController extends Controller
             ->withCount('karyawans')
             ->when($search, fn ($query) => $query->where('nama_departemen', 'like', "%{$search}%")->orWhere('kode', 'like', "%{$search}%"))
             ->orderBy('nama_departemen')
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         return Inertia::render('master/departemen', [

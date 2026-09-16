@@ -148,7 +148,7 @@ export default function MasterJabatan() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={jabatans.links} />
+                <Pagination links={jabatans.links} perPage={jabatans.per_page} />
             </div>
         </>
     );

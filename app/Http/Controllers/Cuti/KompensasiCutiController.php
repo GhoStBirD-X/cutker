@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cuti;
 
 use App\Enums\StatusKompensasiCuti;
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Models\KompensasiCuti;
 use Illuminate\Http\RedirectResponse;
@@ -13,12 +14,14 @@ use Inertia\Response;
 
 class KompensasiCutiController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $kompensasiCutis = KompensasiCuti::query()
             ->with(['karyawan', 'jenisCuti', 'diprosesOleh'])
             ->latest('id')
-            ->paginate(30)
+            ->paginate($this->resolvePerPage($request, 30))
             ->withQueryString();
 
         return Inertia::render('cuti/kompensasi/index', [

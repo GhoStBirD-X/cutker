@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\SaldoCutiRequest;
 use App\Models\JenisCuti;
@@ -15,6 +16,8 @@ use Inertia\Response;
 
 class SaldoCutiController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $search = (string) $request->string('search');
@@ -24,7 +27,7 @@ class SaldoCutiController extends Controller
             ->aktif()
             ->when($search, fn ($query) => $query->whereHas('karyawan', fn ($q) => $q->where('nama', 'like', "%{$search}%")->orWhere('nip', 'like', "%{$search}%")))
             ->orderBy('karyawan_id')
-            ->paginate(15)
+            ->paginate($this->resolvePerPage($request, 15))
             ->withQueryString();
 
         return Inertia::render('master/saldo-cuti', [

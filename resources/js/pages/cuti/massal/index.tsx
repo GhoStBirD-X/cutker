@@ -76,7 +76,10 @@ export default function CutiMassalIndex() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={cutiMassals.links} />
+                <Pagination
+                    links={cutiMassals.links}
+                    perPage={cutiMassals.per_page}
+                />
             </div>
         </>
     );

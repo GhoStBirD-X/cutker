@@ -293,7 +293,10 @@ export default function MasterJenisCuti() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={jenisCutis.links} />
+                <Pagination
+                    links={jenisCutis.links}
+                    perPage={jenisCutis.per_page}
+                />
             </div>
         </>
     );

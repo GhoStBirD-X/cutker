@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\AlasanCutiRequest;
 use App\Models\AlasanCuti;
@@ -13,6 +14,8 @@ use Inertia\Response;
 
 class AlasanCutiController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $search = (string) $request->string('search');
@@ -21,7 +24,7 @@ class AlasanCutiController extends Controller
             ->with('jenisCuti')
             ->when($search, fn ($query) => $query->where('nama_alasan', 'like', "%{$search}%"))
             ->orderBy('nama_alasan')
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         return Inertia::render('master/alasan-cuti', [

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cuti;
 
 use App\Enums\StatusKonfirmasiKontrak;
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Models\KonfirmasiKontrakCuti;
 use App\Services\PeriodeCutiService;
@@ -13,12 +14,14 @@ use Inertia\Response;
 
 class KonfirmasiKontrakController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $konfirmasiKontraks = KonfirmasiKontrakCuti::query()
             ->with(['karyawan', 'saldoCuti.jenisCuti'])
             ->latest('id')
-            ->paginate(15)
+            ->paginate($this->resolvePerPage($request, 15))
             ->withQueryString();
 
         return Inertia::render('cuti/konfirmasi-kontrak/index', [

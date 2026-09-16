@@ -70,7 +70,10 @@ export default function CutiIndex() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={pengajuans.links} />
+                <Pagination
+                    links={pengajuans.links}
+                    perPage={pengajuans.per_page}
+                />
             </div>
         </>
     );

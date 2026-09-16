@@ -243,7 +243,10 @@ export default function KompensasiCutiIndex() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={kompensasiCutis.links} />
+                <Pagination
+                    links={kompensasiCutis.links}
+                    perPage={kompensasiCutis.per_page}
+                />
             </div>
         </>
     );

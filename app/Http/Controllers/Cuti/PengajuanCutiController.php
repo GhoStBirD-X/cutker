@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cuti;
 
 use App\Exceptions\SaldoCutiTidakCukupException;
+use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cuti\StorePengajuanCutiRequest;
 use App\Models\AlasanCuti;
@@ -17,6 +18,8 @@ use Inertia\Response;
 
 class PengajuanCutiController extends Controller
 {
+    use HasPerPage;
+
     public function index(Request $request): Response
     {
         $karyawan = $request->user()->karyawan;
@@ -25,7 +28,7 @@ class PengajuanCutiController extends Controller
             ->with('jenisCuti')
             ->where('karyawan_id', $karyawan->id)
             ->latest('tanggal_pengajuan')
-            ->paginate(10)
+            ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
         return Inertia::render('cuti/index', [

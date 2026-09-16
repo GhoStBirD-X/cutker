@@ -766,7 +766,10 @@ export default function MasterKaryawan() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={karyawans.links} />
+                <Pagination
+                    links={karyawans.links}
+                    perPage={karyawans.per_page}
+                />
 
                 {auth.roles.includes('admin') && (
                     <Card className="border-red-200 dark:border-red-900">

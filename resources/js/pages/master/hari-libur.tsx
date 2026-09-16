@@ -190,7 +190,10 @@ export default function MasterHariLibur() {
                     </CardContent>
                 </Card>
 
-                <Pagination links={hariLiburs.links} />
+                <Pagination
+                    links={hariLiburs.links}
+                    perPage={hariLiburs.per_page}
+                />
             </div>
         </>
     );
