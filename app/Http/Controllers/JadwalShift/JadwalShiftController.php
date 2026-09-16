@@ -112,7 +112,15 @@ class JadwalShiftController extends Controller
             'message' => "Jadwal shift berhasil disimpan untuk {$karyawans->count()} karyawan selama {$jumlahHari} hari.",
         ]);
 
-        return back();
+        // Arahkan ke bulan tempat jadwal baru dibuat dan lepas filter
+        // departemen: form ini bisa memilih karyawan lintas departemen,
+        // jadi kalau tetap pakai filter bulan/departemen lama, karyawan
+        // yang baru diinput bisa jatuh di luar filter dan terlihat seolah
+        // tidak tersimpan padahal datanya sudah masuk ke database.
+        return redirect()->route('jadwal-shift.index', [
+            'bulan' => $awal->month,
+            'tahun' => $awal->year,
+        ]);
     }
 
     public function updateLembur(UpdateLemburRequest $request, JadwalShift $jadwalShift): RedirectResponse

@@ -34,16 +34,20 @@ class KonfirmasiKontrakController extends Controller
             return back();
         }
 
+        $diperpanjang = $request->boolean('diperpanjang');
+
         $data = $request->validate([
             'diperpanjang' => ['required', 'boolean'],
             'catatan' => ['nullable', 'string', 'max:500'],
+            'tanggal_akhir_kontrak_baru' => [$diperpanjang ? 'required' : 'nullable', 'date', 'after:today'],
         ]);
 
         $periodeCutiService->konfirmasiPerpanjangan(
             $konfirmasi_kontrak,
             $request->user()->karyawan,
-            (bool) $data['diperpanjang'],
+            $diperpanjang,
             $data['catatan'] ?? null,
+            $data['tanggal_akhir_kontrak_baru'] ?? null,
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Konfirmasi perpanjangan kontrak berhasil disimpan.']);

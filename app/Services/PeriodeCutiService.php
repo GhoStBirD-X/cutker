@@ -82,9 +82,9 @@ class PeriodeCutiService
      * HRD mengonfirmasi status perpanjangan kontrak karyawan yang
      * periodenya sedang tertahan menunggu.
      */
-    public function konfirmasiPerpanjangan(KonfirmasiKontrakCuti $konfirmasi, Karyawan $olehSiapa, bool $diperpanjang, ?string $catatan): void
+    public function konfirmasiPerpanjangan(KonfirmasiKontrakCuti $konfirmasi, Karyawan $olehSiapa, bool $diperpanjang, ?string $catatan, ?string $tanggalAkhirKontrakBaru = null): void
     {
-        DB::transaction(function () use ($konfirmasi, $olehSiapa, $diperpanjang, $catatan) {
+        DB::transaction(function () use ($konfirmasi, $olehSiapa, $diperpanjang, $catatan, $tanggalAkhirKontrakBaru) {
             $konfirmasi->update([
                 'status' => $diperpanjang ? StatusKonfirmasiKontrak::Diperpanjang : StatusKonfirmasiKontrak::TidakDiperpanjang,
                 'dikonfirmasi_oleh_id' => $olehSiapa->id,
@@ -102,6 +102,10 @@ class PeriodeCutiService
                     ->first();
 
                 $this->lanjutkanPeriode($saldo, $riwayat);
+
+                if ($tanggalAkhirKontrakBaru !== null) {
+                    $konfirmasi->karyawan->update(['tanggal_akhir_kontrak' => $tanggalAkhirKontrakBaru]);
+                }
 
                 return;
             }

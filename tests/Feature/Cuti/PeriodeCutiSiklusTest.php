@@ -115,13 +115,15 @@ class PeriodeCutiSiklusTest extends TestCase
         $periodeCutiService->tutupPeriode($saldoLama->fresh());
         $konfirmasi = KonfirmasiKontrakCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail();
 
-        $periodeCutiService->konfirmasiPerpanjangan($konfirmasi, $hrd, true, 'Kontrak diperpanjang 1 tahun.');
+        $tanggalAkhirKontrakBaru = now()->addYear()->toDateString();
+        $periodeCutiService->konfirmasiPerpanjangan($konfirmasi, $hrd, true, 'Kontrak diperpanjang 1 tahun.', $tanggalAkhirKontrakBaru);
 
         $this->assertDatabaseHas('konfirmasi_kontrak_cutis', [
             'id' => $konfirmasi->id,
             'status' => StatusKonfirmasiKontrak::Diperpanjang->value,
             'dikonfirmasi_oleh_id' => $hrd->id,
         ]);
+        $this->assertSame($tanggalAkhirKontrakBaru, $karyawan->fresh()->tanggal_akhir_kontrak->toDateString());
         $this->assertDatabaseHas('saldo_cutis', [
             'karyawan_id' => $karyawan->id,
             'periode_ke' => 2,
@@ -132,6 +134,36 @@ class PeriodeCutiSiklusTest extends TestCase
             'jumlah_hari' => 10,
         ]);
         $this->assertSame(StatusKaryawan::Aktif, $karyawan->fresh()->status);
+    }
+
+    public function test_konfirmasi_diperpanjang_tanpa_tanggal_akhir_kontrak_baru_tidak_mengosongkan_kontrak_lama(): void
+    {
+        $karyawan = Karyawan::factory()->create([
+            'tipe_karyawan' => TipeKaryawan::Kontrak,
+            'tanggal_akhir_kontrak' => now()->addMonths(2),
+        ]);
+        $hrd = Karyawan::factory()->create();
+        $jenisCuti = JenisCuti::factory()->create(['kuota_default' => 12, 'masa_kerja_minimal_bulan' => 12]);
+
+        $saldoLama = SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'periode_ke' => 1,
+            'periode_mulai' => now()->subYear(),
+            'periode_selesai' => now()->subDay(),
+            'kuota' => 12,
+            'terpakai' => 2,
+            'sisa' => 10,
+        ]);
+
+        $tanggalAkhirKontrakLama = $karyawan->tanggal_akhir_kontrak;
+        $periodeCutiService = app(PeriodeCutiService::class);
+        $periodeCutiService->tutupPeriode($saldoLama->fresh());
+        $konfirmasi = KonfirmasiKontrakCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail();
+
+        $periodeCutiService->konfirmasiPerpanjangan($konfirmasi, $hrd, true, null);
+
+        $this->assertTrue($tanggalAkhirKontrakLama->equalTo($karyawan->fresh()->tanggal_akhir_kontrak));
     }
 
     public function test_konfirmasi_tidak_diperpanjang_membuat_kompensasi_akhir_dan_menonaktifkan_karyawan(): void

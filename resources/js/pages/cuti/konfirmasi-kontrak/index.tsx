@@ -2,11 +2,13 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { CalendarClock } from 'lucide-react';
 import { useState } from 'react';
 import KonfirmasiKontrakController from '@/actions/App/Http/Controllers/Cuti/KonfirmasiKontrakController';
+import InputError from '@/components/input-error';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -25,14 +27,25 @@ const STATUS_LABEL: Record<KonfirmasiKontrakCuti['status'], string> = {
 
 function KonfirmasiRow({ konfirmasi }: { konfirmasi: KonfirmasiKontrakCuti }) {
     const [catatan, setCatatan] = useState('');
+    const [tanggalAkhirKontrakBaru, setTanggalAkhirKontrakBaru] = useState('');
     const [processing, setProcessing] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const submit = (diperpanjang: boolean) => {
         setProcessing(true);
         router.post(
             KonfirmasiKontrakController.konfirmasi.url(konfirmasi.id),
-            { diperpanjang, catatan },
-            { onFinish: () => setProcessing(false) },
+            {
+                diperpanjang,
+                catatan,
+                tanggal_akhir_kontrak_baru: diperpanjang
+                    ? tanggalAkhirKontrakBaru
+                    : undefined,
+            },
+            {
+                onError: (err) => setErrors(err),
+                onFinish: () => setProcessing(false),
+            },
         );
     };
 
@@ -56,19 +69,55 @@ function KonfirmasiRow({ konfirmasi }: { konfirmasi: KonfirmasiKontrakCuti }) {
                     Periode ke-{konfirmasi.periode_ke} berakhir{' '}
                     {formatDate(konfirmasi.tanggal_batas)}
                 </div>
+                {konfirmasi.karyawan?.tanggal_akhir_kontrak && (
+                    <div className="text-xs text-muted-foreground">
+                        Kontrak saat ini berakhir{' '}
+                        {formatDate(konfirmasi.karyawan.tanggal_akhir_kontrak)}
+                    </div>
+                )}
             </div>
             {konfirmasi.status === 'menunggu' ? (
-                <div className="flex flex-col gap-2 md:flex-row md:items-center">
-                    <Input
-                        placeholder="Catatan (opsional)"
-                        value={catatan}
-                        onChange={(e) => setCatatan(e.target.value)}
-                        className="md:w-64"
-                    />
+                <div className="flex flex-col gap-2 md:items-end">
+                    <div className="flex flex-col gap-2 md:flex-row md:items-start">
+                        <div className="grid gap-1">
+                            <Label
+                                htmlFor={`tanggal-akhir-${konfirmasi.id}`}
+                                className="text-xs text-muted-foreground"
+                            >
+                                Kontrak baru berlaku hingga
+                            </Label>
+                            <Input
+                                id={`tanggal-akhir-${konfirmasi.id}`}
+                                type="date"
+                                value={tanggalAkhirKontrakBaru}
+                                onChange={(e) =>
+                                    setTanggalAkhirKontrakBaru(e.target.value)
+                                }
+                                className="md:w-44"
+                            />
+                            <InputError
+                                message={errors.tanggal_akhir_kontrak_baru}
+                            />
+                        </div>
+                        <div className="grid gap-1">
+                            <Label
+                                htmlFor={`catatan-${konfirmasi.id}`}
+                                className="text-xs text-muted-foreground"
+                            >
+                                Catatan (opsional)
+                            </Label>
+                            <Input
+                                id={`catatan-${konfirmasi.id}`}
+                                value={catatan}
+                                onChange={(e) => setCatatan(e.target.value)}
+                                className="md:w-64"
+                            />
+                        </div>
+                    </div>
                     <div className="flex gap-2">
                         <Button
                             size="sm"
-                            disabled={processing}
+                            disabled={processing || !tanggalAkhirKontrakBaru}
                             onClick={() => submit(true)}
                         >
                             Perpanjang

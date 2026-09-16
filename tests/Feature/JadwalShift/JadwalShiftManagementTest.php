@@ -85,6 +85,40 @@ class JadwalShiftManagementTest extends TestCase
         $this->assertDatabaseHas('jadwal_shifts', ['karyawan_id' => $karyawan->karyawan->id, 'shift_id' => $shiftBaru->id]);
     }
 
+    public function test_store_redirects_to_the_month_of_tanggal_mulai_so_the_new_jadwal_is_visible(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawan = $this->karyawanUser('karyawan');
+        $shift = Shift::factory()->create();
+        $tanggalMulai = now()->addMonths(2)->startOfMonth()->addDays(2);
+
+        // HRD sedang melihat bulan/departemen yang berbeda dari jadwal yang
+        // mau diinput -- ini skenario yang sebelumnya bikin karyawan yang
+        // baru diinput "hilang" karena redirect balik ke filter lama.
+        $response = $this->actingAs($hrd)->post(route('jadwal-shift.store', [
+            'bulan' => now()->month,
+            'tahun' => now()->year,
+            'departemen_id' => $hrd->karyawan->departemen_id,
+        ]), [
+            'karyawan_ids' => [$karyawan->karyawan->id],
+            'shift_id' => $shift->id,
+            'tanggal_mulai' => $tanggalMulai->toDateString(),
+            'tanggal_selesai' => $tanggalMulai->toDateString(),
+        ]);
+
+        $response->assertRedirect(route('jadwal-shift.index', [
+            'bulan' => $tanggalMulai->month,
+            'tahun' => $tanggalMulai->year,
+        ]));
+
+        $indexResponse = $this->actingAs($hrd)->get($response->headers->get('Location'));
+
+        $indexResponse->assertInertia(fn ($page) => $page
+            ->component('jadwal-shift/calendar')
+            ->has('jadwals', 1)
+        );
+    }
+
     public function test_koordinator_shift_can_delete_jadwal_from_any_departemen(): void
     {
         $koordinator = $this->karyawanUser('koordinator_shift');
