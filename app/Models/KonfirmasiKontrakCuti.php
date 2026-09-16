@@ -31,7 +31,10 @@ class KonfirmasiKontrakCuti extends Model
     {
         return [
             'status' => StatusKonfirmasiKontrak::class,
-            'tanggal_batas' => 'date',
+            // Format eksplisit "Y-m-d" (bukan default ISO datetime) supaya
+            // nilai yang dikirim ke frontend bisa langsung dipakai sebagai
+            // atribut "min" pada input tanggal HTML.
+            'tanggal_batas' => 'date:Y-m-d',
             'dikonfirmasi_pada' => 'datetime',
         ];
     }

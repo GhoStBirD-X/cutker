@@ -42,7 +42,16 @@ class KonfirmasiKontrakController extends Controller
         $data = $request->validate([
             'diperpanjang' => ['required', 'boolean'],
             'catatan' => ['nullable', 'string', 'max:500'],
-            'tanggal_akhir_kontrak_baru' => [$diperpanjang ? 'required' : 'nullable', 'date', 'after:today'],
+            // "after:tanggal_batas" (bukan "after:today") supaya konfirmasi
+            // yang telat diproses (mis. karyawan yang periodenya sudah
+            // menunggak beberapa siklus) tetap bisa diisi dengan tanggal
+            // kontrak baru yang secara historis benar, walau tanggal itu
+            // sendiri sudah lewat dari hari ini.
+            'tanggal_akhir_kontrak_baru' => [
+                $diperpanjang ? 'required' : 'nullable',
+                'date',
+                'after:'.$konfirmasi_kontrak->tanggal_batas->toDateString(),
+            ],
         ]);
 
         $periodeCutiService->konfirmasiPerpanjangan(

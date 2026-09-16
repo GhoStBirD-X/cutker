@@ -25,6 +25,14 @@ const STATUS_LABEL: Record<KonfirmasiKontrakCuti['status'], string> = {
     tidak_diperpanjang: 'Tidak Diperpanjang',
 };
 
+/** Tanggal setelah "YYYY-MM-DD" yang diberikan, sesuai batas minimal validasi backend ("after:tanggal_batas"). */
+function tanggalSetelah(tanggal: string): string {
+    const [tahun, bulan, hari] = tanggal.split('-').map(Number);
+    const tanggalBerikutnya = new Date(tahun, bulan - 1, hari + 1);
+
+    return `${tanggalBerikutnya.getFullYear()}-${String(tanggalBerikutnya.getMonth() + 1).padStart(2, '0')}-${String(tanggalBerikutnya.getDate()).padStart(2, '0')}`;
+}
+
 function KonfirmasiRow({ konfirmasi }: { konfirmasi: KonfirmasiKontrakCuti }) {
     const [catatan, setCatatan] = useState('');
     const [tanggalAkhirKontrakBaru, setTanggalAkhirKontrakBaru] = useState('');
@@ -89,6 +97,7 @@ function KonfirmasiRow({ konfirmasi }: { konfirmasi: KonfirmasiKontrakCuti }) {
                             <Input
                                 id={`tanggal-akhir-${konfirmasi.id}`}
                                 type="date"
+                                min={tanggalSetelah(konfirmasi.tanggal_batas)}
                                 value={tanggalAkhirKontrakBaru}
                                 onChange={(e) =>
                                     setTanggalAkhirKontrakBaru(e.target.value)
