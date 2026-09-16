@@ -1,17 +1,18 @@
 # Cuti Kerja Pabrik
 
-Aplikasi manajemen cuti karyawan pabrik berbasis web: pengajuan cuti, approval berjenjang 3 level, saldo cuti otomatis, jadwal shift, konfirmasi perpanjangan kontrak, kompensasi cuti (uang pengganti), hari libur nasional, dan laporan.
+Aplikasi manajemen cuti karyawan pabrik berbasis web: pengajuan cuti, approval berjenjang 3 level, saldo cuti otomatis, cuti massal, jadwal shift, konfirmasi perpanjangan kontrak, kompensasi cuti (uang pengganti), hari libur nasional, dan laporan.
 
 ## Fungsi Utama
 
 - **Pengajuan Cuti** — karyawan mengajukan cuti (pilih jenis cuti, alasan, tanggal mulai/selesai), sistem otomatis menghitung jumlah hari dan memvalidasi sisa saldo. Pengajuan bisa dibatalkan selama masih pending.
 - **Approval Berjenjang** — setiap pengajuan melewati 3 level persetujuan berurutan: **Kepala Bagian** (per departemen) → **HRD** → **Manager** (final). Approval final memotong saldo cuti secara atomik. Penolakan di level manapun langsung menutup pengajuan.
-- **Saldo Cuti** — tiap karyawan punya saldo cuti per jenis cuti (kuota, terpakai, sisa) yang direset otomatis tiap awal tahun sesuai kuota default jenis cuti.
-- **Konfirmasi Perpanjangan Kontrak** — untuk karyawan kontrak yang periode cutinya akan berakhir, HRD/Admin memproses konfirmasi apakah kontrak diperpanjang atau tidak, yang menentukan kelanjutan siklus cuti berikutnya.
-- **Kompensasi Cuti** — pengajuan uang pengganti cuti yang tidak terpakai; HRD/Admin memproses dengan menetapkan rate per hari sehingga total rupiah kompensasi terhitung otomatis.
-- **Jadwal Shift** — kalender shift kerja karyawan per departemen, termasuk pencatatan lembur; dikelola oleh HRD, Admin, atau Koordinator Shift di departemennya masing-masing.
+- **Saldo Cuti** — tiap karyawan punya saldo cuti per jenis cuti (kuota, terpakai, sisa). Jenis cuti bertipe kalender direset otomatis tiap awal tahun sesuai kuota default. Jenis cuti bertipe periode (mis. Cuti Tahunan, Cuti Besar) mengikuti tanggal masuk kerja masing-masing karyawan — periode ke-1 adalah masa kerja minimal yang wajib dipenuhi dulu (sesuai UU Ketenagakerjaan), jadi kuota/sisanya 0 sampai periode itu selesai; kuota penuh baru diberikan mulai periode ke-2.
+- **Cuti Massal** — HRD/Admin membuat cuti bersama (mis. cuti Lebaran) untuk banyak karyawan sekaligus, langsung disetujui tanpa lewat approval berjenjang. Karyawan yang baru masuk kerja setelah sebuah batch dibuat bisa "disusulkan" ke batch yang sama (jenis cuti, tanggal, dan alasan yang identik) dari halaman detail batch, tanpa mengulang form dari awal. Batch bisa dibatalkan, yang otomatis mengembalikan saldo cuti seluruh karyawan terdampak.
+- **Konfirmasi Perpanjangan Kontrak** — untuk karyawan kontrak yang periode cutinya akan berakhir, HRD/Admin memproses konfirmasi apakah kontrak diperpanjang atau tidak. Kalau diperpanjang, HRD wajib mengisi tanggal akhir kontrak baru (harus setelah tanggal periode yang ditutup — mendukung konfirmasi yang telat diproses/menunggak) yang otomatis memperbarui data kontrak karyawan, sekaligus melanjutkan siklus cuti berikutnya.
+- **Kompensasi Cuti** — pengajuan uang pengganti cuti yang tidak terpakai (dibuat otomatis saat periode cuti ditutup dengan sisa > 0); HRD/Admin bisa memproses satu per satu atau memilih banyak sekaligus (bulk) dengan satu rate per hari yang sama, sehingga total rupiah kompensasi terhitung otomatis untuk semua yang dipilih.
+- **Jadwal Shift** — kalender shift kerja karyawan per departemen, termasuk pencatatan lembur; dikelola oleh HRD, Admin, atau Koordinator Shift di departemennya masing-masing. Mendukung hapus massal (pilih beberapa jadwal pada satu tanggal sekaligus lalu hapus) selain hapus satu per satu.
 - **Hari Libur** — daftar hari libur (nasional & internal pabrik) yang disinkronkan otomatis dari kalender nasional Indonesia setiap tahun, dipakai sebagai acuan penghitungan hari kerja/cuti.
-- **Master Data** — HRD/Admin mengelola data karyawan, departemen, jabatan, jenis cuti, alasan cuti, shift, hari libur, dan saldo cuti.
+- **Master Data** — HRD/Admin mengelola data karyawan, departemen, jabatan, jenis cuti, alasan cuti, shift, hari libur, dan saldo cuti. Semua daftar berpaginasi punya selektor jumlah baris per halaman (10/20/30/50).
 - **Laporan** — rekap data cuti yang bisa diekspor ke Excel dan PDF.
 - **Manajemen User & Role** — Admin mengelola akun pengguna dan hak akses (role) lewat spatie/laravel-permission.
 - **Notifikasi** — notifikasi in-app (lonceng di navbar) dan email untuk pengajuan baru, disetujui, dan ditolak.
@@ -39,7 +40,8 @@ Aplikasi manajemen cuti karyawan pabrik berbasis web: pengajuan cuti, approval b
 
 ## Arsitektur Singkat
 
-- **Service classes** (`app/Services`) menampung seluruh logika bisnis inti — pengajuan cuti (`PengajuanCutiService`), approval berjenjang & potong saldo (`ApprovalService`), reset saldo tahunan & bootstrap saldo karyawan baru (`SaldoCutiService`), siklus periode cuti/konfirmasi kontrak (`PeriodeCutiService`), sinkronisasi hari libur nasional (`HariLiburService`). Controller tetap tipis dan hanya memvalidasi (Form Request) lalu memanggil service.
+- **Service classes** (`app/Services`) menampung seluruh logika bisnis inti — pengajuan cuti (`PengajuanCutiService`), approval berjenjang & potong saldo (`ApprovalService`), reset saldo tahunan & bootstrap saldo karyawan baru (`SaldoCutiService`), siklus periode cuti/konfirmasi kontrak (`PeriodeCutiService`), cuti massal (`CutiMassalService`), sinkronisasi hari libur nasional (`HariLiburService`). Controller tetap tipis dan hanya memvalidasi (Form Request) lalu memanggil service.
+- **Selektor jumlah baris per halaman**: trait `HasPerPage` (`app/Http/Controllers/Concerns`) dipakai di semua controller `index()` yang berpaginasi, membatasi query string `per_page` ke pilihan yang tersedia (10/20/30/50) agar tidak disalahgunakan.
 - **Enum PHP native** (`app/Enums`) untuk status: `StatusPengajuan`, `StatusApproval`, `StatusKaryawan`, `StatusKonfirmasiKontrak`, `StatusKompensasiCuti`, dll.
 - **Alur approval**: karyawan mengajukan → dicek sisa saldo cuti → dibuat `Approval` level 1 untuk Kepala Bagian di departemen yang sama → disetujui → level 2 untuk HRD → disetujui → level 3 untuk Manager (final) → dalam satu `DB::transaction`, saldo cuti dipotong dan status pengajuan berubah jadi `disetujui` secara atomik. Penolakan di level manapun langsung mengubah status pengajuan jadi `ditolak`. Pemilihan approver HRD/Manager otomatis memilih yang beban approval pending-nya paling sedikit, agar merata.
 - **Otorisasi**: Policy (`PengajuanCutiPolicy`, `ApprovalPolicy`) untuk aksi per-record; middleware `role:` di route untuk halaman master data, laporan, jadwal shift, dan kelola user; middleware `karyawan.linked` memastikan user sudah terhubung ke data karyawan sebelum mengakses fitur cuti.
