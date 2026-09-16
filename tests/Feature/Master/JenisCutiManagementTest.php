@@ -93,6 +93,35 @@ class JenisCutiManagementTest extends TestCase
         ]);
     }
 
+    public function test_creating_jenis_cuti_bertipe_periode_generates_saldo_zero_for_masa_kerja_minimal_yet_to_be_completed(): void
+    {
+        // Periode ke-1 adalah masa kerja minimal yang wajib dipenuhi dulu
+        // (sesuai UU Ketenagakerjaan) sebelum karyawan berhak atas kuota
+        // cuti -- jadi kuota/sisa-nya 0, bukan langsung kuota_default.
+        $hrd = $this->karyawanUser('hrd');
+        $karyawanAktif = Karyawan::factory()->create(['status' => StatusKaryawan::Aktif]);
+
+        $response = $this->actingAs($hrd)->post(route('master.jenis-cuti.store'), [
+            'nama_jenis' => 'Cuti Besar',
+            'kuota_default' => 21,
+            'masa_kerja_minimal_bulan' => 72,
+            'keterangan' => null,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+
+        $jenisCuti = JenisCuti::query()->where('nama_jenis', 'Cuti Besar')->firstOrFail();
+
+        $this->assertDatabaseHas('saldo_cutis', [
+            'karyawan_id' => $karyawanAktif->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'periode_ke' => 1,
+            'kuota' => 0,
+            'sisa' => 0,
+        ]);
+    }
+
     public function test_creating_jenis_cuti_twice_does_not_duplicate_saldo_for_the_same_year(): void
     {
         Karyawan::factory()->create(['status' => StatusKaryawan::Aktif]);

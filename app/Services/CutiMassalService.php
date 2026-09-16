@@ -76,6 +76,31 @@ class CutiMassalService
     }
 
     /**
+     * Karyawan yang eligible untuk jenis cuti & tanggal batch ini tapi
+     * belum disertakan (mis. baru masuk kerja setelah batch dibuat) —
+     * dipakai halaman detail Cuti Massal untuk menyusulkan karyawan baru
+     * ke batch yang sudah berjalan tanpa mengulang isi jenis cuti/
+     * tanggal/alasan dari awal.
+     *
+     * @return SupportCollection<int, array{karyawan: Karyawan, saldo: ?SaldoCuti, akan_minus: bool, akan_dapat_bonus: bool}>
+     */
+    public function previewKaryawanBaruUntukBatch(CutiMassal $cutiMassal): SupportCollection
+    {
+        $sudahIkutIds = $cutiMassal->pengajuanCutis()->pluck('karyawan_id');
+
+        // previewKaryawan() mensyaratkan Illuminate\Support\Carbon (mutable),
+        // sedangkan atribut tanggal model ini CarbonImmutable (konfigurasi
+        // global Date::use()) — konversi eksplisit lewat Carbon::parse().
+        return $this->previewKaryawan(
+            $cutiMassal->jenisCuti,
+            Carbon::parse($cutiMassal->tanggal_mulai),
+            Carbon::parse($cutiMassal->tanggal_selesai),
+        )
+            ->reject(fn (array $baris) => $sudahIkutIds->contains($baris['karyawan']->id))
+            ->values();
+    }
+
+    /**
      * @return array{kalender: int, hari: int}
      */
     protected function hitungJumlahHari(Carbon $mulai, Carbon $selesai): array

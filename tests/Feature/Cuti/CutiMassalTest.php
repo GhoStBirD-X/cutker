@@ -632,6 +632,137 @@ class CutiMassalTest extends TestCase
         ]);
     }
 
+    public function test_karyawan_baru_setelah_batch_dibuat_muncul_di_daftar_belum_disertakan(): void
+    {
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+        $jenisCuti = JenisCuti::factory()->create();
+        $karyawanLama = Karyawan::factory()->create();
+
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawanLama->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $this->actingAs($hrd->user)->post(route('cuti.massal.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(10)->toDateString(),
+            'tanggal_selesai' => now()->addDays(11)->toDateString(),
+            'alasan' => 'Cuti bersama',
+            'karyawan_ids' => [$karyawanLama->id],
+        ]);
+
+        $cutiMassal = CutiMassal::query()->firstOrFail();
+
+        // Karyawan baru masuk kerja SETELAH batch ini dibuat, belum
+        // pernah dimasukkan ke pilihan karyawan_ids sama sekali.
+        $karyawanBaru = Karyawan::factory()->create();
+
+        $preview = app(CutiMassalService::class)->previewKaryawanBaruUntukBatch($cutiMassal->fresh());
+
+        $this->assertTrue($preview->contains(fn (array $row) => $row['karyawan']->id === $karyawanBaru->id));
+        $this->assertFalse($preview->contains(fn (array $row) => $row['karyawan']->id === $karyawanLama->id));
+    }
+
+    public function test_hrd_can_susulkan_karyawan_baru_ke_batch_yang_sudah_ada(): void
+    {
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+        $jenisCuti = JenisCuti::factory()->create();
+        $karyawanLama = Karyawan::factory()->create();
+
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawanLama->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $this->actingAs($hrd->user)->post(route('cuti.massal.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(10)->toDateString(),
+            'tanggal_selesai' => now()->addDays(11)->toDateString(),
+            'alasan' => 'Cuti bersama Lebaran',
+            'karyawan_ids' => [$karyawanLama->id],
+        ]);
+
+        $cutiMassalAsli = CutiMassal::query()->firstOrFail();
+
+        $karyawanBaru = Karyawan::factory()->create();
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawanBaru->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $response = $this->actingAs($hrd->user)->post(route('cuti.massal.tambah-karyawan-baru', $cutiMassalAsli), [
+            'karyawan_ids' => [$karyawanBaru->id],
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+
+        // Batch baru (susulan) dibuat dengan jenis cuti/tanggal/alasan yang
+        // sama persis dengan batch asli, khusus untuk karyawan baru itu.
+        $this->assertDatabaseHas('cuti_massals', [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'alasan' => 'Cuti bersama Lebaran',
+            'jumlah_karyawan' => 1,
+        ]);
+        $batchSusulan = CutiMassal::query()->where('id', '!=', $cutiMassalAsli->id)->firstOrFail();
+        $this->assertTrue($batchSusulan->tanggal_mulai->isSameDay($cutiMassalAsli->tanggal_mulai));
+        $this->assertTrue($batchSusulan->tanggal_selesai->isSameDay($cutiMassalAsli->tanggal_selesai));
+        $this->assertDatabaseHas('pengajuan_cutis', [
+            'karyawan_id' => $karyawanBaru->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'status' => 'disetujui',
+        ]);
+        // Batch asli tidak ikut berubah.
+        $this->assertDatabaseHas('cuti_massals', [
+            'id' => $cutiMassalAsli->id,
+            'jumlah_karyawan' => 1,
+        ]);
+    }
+
+    public function test_susulkan_karyawan_baru_ditolak_untuk_batch_yang_sudah_dibatalkan(): void
+    {
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+        $jenisCuti = JenisCuti::factory()->create();
+        $karyawanLama = Karyawan::factory()->create();
+
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawanLama->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $this->actingAs($hrd->user)->post(route('cuti.massal.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(10)->toDateString(),
+            'tanggal_selesai' => now()->addDays(11)->toDateString(),
+            'alasan' => 'Cuti bersama',
+            'karyawan_ids' => [$karyawanLama->id],
+        ]);
+
+        $cutiMassal = CutiMassal::query()->firstOrFail();
+        $this->actingAs($hrd->user)->patch(route('cuti.massal.batalkan', $cutiMassal));
+
+        $karyawanBaru = Karyawan::factory()->create();
+
+        $response = $this->actingAs($hrd->user)->post(route('cuti.massal.tambah-karyawan-baru', $cutiMassal), [
+            'karyawan_ids' => [$karyawanBaru->id],
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('pengajuan_cutis', ['karyawan_id' => $karyawanBaru->id]);
+    }
+
     public function test_mass_leave_shows_up_in_employee_own_cuti_history_and_show_page(): void
     {
         $hrd = $this->karyawanUser('hrd')->karyawan;

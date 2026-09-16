@@ -4,6 +4,7 @@ namespace Tests\Feature\Master;
 
 use App\Models\Departemen;
 use App\Models\Jabatan;
+use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
@@ -50,6 +51,43 @@ class KaryawanManagementTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->where('karyawans.per_page', 10)
         );
+    }
+
+    public function test_new_karyawan_starts_with_zero_saldo_for_jenis_cuti_bertipe_periode(): void
+    {
+        // Periode ke-1 (masa kerja minimal, mis. 12 bulan pertama) belum
+        // memberi hak cuti apa pun -- kuota/sisa harus 0 sampai periode ini
+        // ditutup dan lanjut ke periode ke-2 dengan kuota penuh.
+        $hrd = $this->karyawanUser('hrd');
+        $departemen = Departemen::factory()->create();
+        $jabatan = Jabatan::factory()->create();
+        $jenisCuti = JenisCuti::factory()->create(['kuota_default' => 12, 'masa_kerja_minimal_bulan' => 12]);
+
+        $response = $this->actingAs($hrd)->post(route('master.karyawan.store'), [
+            'nip' => 'EMP-88888',
+            'nama' => 'Karyawan Baru Periode',
+            'email' => 'karyawan.periode@pabrik.test',
+            'no_hp' => '081234567891',
+            'jenis_kelamin' => 'laki_laki',
+            'departemen_id' => $departemen->id,
+            'jabatan_id' => $jabatan->id,
+            'tanggal_masuk' => now()->toDateString(),
+            'status' => 'aktif',
+            'tipe_karyawan' => 'tetap',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+
+        $karyawan = Karyawan::query()->where('email', 'karyawan.periode@pabrik.test')->firstOrFail();
+
+        $this->assertDatabaseHas('saldo_cutis', [
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'periode_ke' => 1,
+            'kuota' => 0,
+            'sisa' => 0,
+        ]);
     }
 
     public function test_hrd_can_create_karyawan_assigned_to_a_departemen(): void

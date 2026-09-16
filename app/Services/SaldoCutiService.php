@@ -82,6 +82,12 @@ class SaldoCutiService
      * satu jenis cuti bertipe periode ke semua karyawan aktif yang belum
      * punya baris aktif untuk jenis cuti tsb. Dipakai saat jenis cuti
      * bertipe periode baru dibuat lewat Master Data di tengah jalan.
+     *
+     * Periode ke-1 adalah masa kerja minimal yang harus dipenuhi dulu
+     * (mis. 12 bulan pertama) sebelum karyawan berhak atas kuota cuti —
+     * sesuai UU Ketenagakerjaan — jadi kuota/sisa-nya 0, bukan
+     * kuota_default. Kuota penuh baru diberikan mulai periode ke-2 lewat
+     * PeriodeCutiService::lanjutkanPeriode() saat periode ke-1 ditutup.
      */
     public function generatePeriodeAwalUntukJenisCuti(JenisCuti $jenisCuti): int
     {
@@ -100,9 +106,9 @@ class SaldoCutiService
                             'tahun' => $mulai->year,
                             'periode_mulai' => $mulai,
                             'periode_selesai' => $selesai,
-                            'kuota' => $jenisCuti->kuota_default,
+                            'kuota' => 0,
                             'terpakai' => 0,
-                            'sisa' => $jenisCuti->kuota_default,
+                            'sisa' => 0,
                         ],
                     );
 
@@ -120,6 +126,11 @@ class SaldoCutiService
      * bertipe periode (masa_kerja_minimal_bulan terisi) langsung mendapat
      * periode ke-1 mengikuti tanggal_masuk; jenis cuti bertipe kalender
      * mendapat baris tahun berjalan seperti karyawan lama.
+     *
+     * Periode ke-1 adalah masa kerja minimal yang harus dipenuhi dulu
+     * sebelum karyawan berhak cuti (sesuai UU Ketenagakerjaan), jadi
+     * kuota/sisa-nya 0 sampai periode ini ditutup dan lanjut ke periode
+     * ke-2 (lihat PeriodeCutiService::lanjutkanPeriode()).
      */
     public function bootstrapUntukKaryawanBaru(Karyawan $karyawan): void
     {
@@ -134,9 +145,9 @@ class SaldoCutiService
                         'tahun' => $mulai->year,
                         'periode_mulai' => $mulai,
                         'periode_selesai' => $selesai,
-                        'kuota' => $jenisCuti->kuota_default,
+                        'kuota' => 0,
                         'terpakai' => 0,
-                        'sisa' => $jenisCuti->kuota_default,
+                        'sisa' => 0,
                     ],
                 );
 
