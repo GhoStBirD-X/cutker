@@ -40,7 +40,18 @@ class SaldoCutiController extends Controller
 
     public function store(SaldoCutiRequest $request, SaldoCutiService $saldoCutiService): RedirectResponse
     {
-        $saldoCutiService->buatManual($request->validated(), $request->user()->karyawan);
+        $saldoCutiService->buatManual([
+            'karyawan_id' => $request->integer('karyawan_id'),
+            'jenis_cuti_id' => $request->integer('jenis_cuti_id'),
+            'tahun' => $request->filled('tahun') ? $request->integer('tahun') : null,
+            'periode_ke' => $request->filled('periode_ke') ? $request->integer('periode_ke') : null,
+            'periode_mulai' => $request->filled('periode_mulai') ? $request->string('periode_mulai')->toString() : null,
+            'periode_selesai' => $request->filled('periode_selesai') ? $request->string('periode_selesai')->toString() : null,
+            'kuota' => $request->filled('kuota') ? $request->integer('kuota') : null,
+            'terpakai' => $request->integer('terpakai'),
+            'sisa' => $request->filled('sisa') ? $request->integer('sisa') : null,
+            'catatan' => $request->string('catatan')->toString(),
+        ], $request->user()->karyawan);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Saldo cuti berhasil ditambahkan.']);
 
@@ -49,7 +60,14 @@ class SaldoCutiController extends Controller
 
     public function update(SaldoCutiRequest $request, SaldoCuti $saldo_cuti, SaldoCutiService $saldoCutiService): RedirectResponse
     {
-        $saldoCutiService->sesuaikanManual($saldo_cuti, $request->validated(), $request->user()->karyawan);
+        $saldoCutiService->sesuaikanManual($saldo_cuti, [
+            'kuota' => $request->filled('kuota') ? $request->integer('kuota') : null,
+            'terpakai' => $request->integer('terpakai'),
+            'sisa' => $request->filled('sisa') ? $request->integer('sisa') : null,
+            'periode_mulai' => $request->filled('periode_mulai') ? $request->string('periode_mulai')->toString() : null,
+            'periode_selesai' => $request->filled('periode_selesai') ? $request->string('periode_selesai')->toString() : null,
+            'catatan' => $request->string('catatan')->toString(),
+        ], $request->user()->karyawan);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Saldo cuti berhasil disesuaikan.']);
 

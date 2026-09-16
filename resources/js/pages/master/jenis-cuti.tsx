@@ -141,8 +141,7 @@ export default function MasterJenisCuti() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="minimal_hari_pengajuan">
-                                    Min. Pengajuan (H-, kosongkan = tanpa
-                                    batas)
+                                    Min. Pengajuan (H-, kosongkan = tanpa batas)
                                 </Label>
                                 <Input
                                     id="minimal_hari_pengajuan"

@@ -97,7 +97,8 @@ export default function KompensasiCutiIndex() {
     const [processing, setProcessing] = useState(false);
 
     const jumlahDipilih = pending.filter((k) => selected[k.id]).length;
-    const semuaTerpilih = pending.length > 0 && jumlahDipilih === pending.length;
+    const semuaTerpilih =
+        pending.length > 0 && jumlahDipilih === pending.length;
 
     const toggleSemua = (checked: boolean) => {
         setSelected((prev) => {
@@ -111,9 +112,7 @@ export default function KompensasiCutiIndex() {
     };
 
     const submit = () => {
-        const ids = pending
-            .filter((k) => selected[k.id])
-            .map((k) => k.id);
+        const ids = pending.filter((k) => selected[k.id]).map((k) => k.id);
 
         setProcessing(true);
         router.post(
@@ -146,8 +145,8 @@ export default function KompensasiCutiIndex() {
                 </h1>
                 <p className="text-sm text-muted-foreground">
                     Sisa cuti tahunan/besar yang hangus saat periode ditutup
-                    tercatat di sini. Pilih karyawan yang ratenya sama, isi
-                    satu rate per hari, lalu proses sekaligus.
+                    tercatat di sini. Pilih karyawan yang ratenya sama, isi satu
+                    rate per hari, lalu proses sekaligus.
                 </p>
 
                 {pending.length > 0 && (

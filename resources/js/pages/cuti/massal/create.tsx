@@ -137,10 +137,10 @@ export default function CutiMassalCreate() {
                 <h1 className="text-xl font-semibold">Buat Cuti Massal</h1>
                 <p className="text-sm text-muted-foreground">
                     Tetapkan cuti untuk banyak karyawan sekaligus (mis. cuti
-                    bersama). Karyawan yang saldonya belum cukup tetap
-                    diproses: karyawan kontrak yang masih di periode pertama
-                    (K1) mendapat bonus kuota secukupnya (tidak minus),
-                    sedangkan karyawan lain saldonya boleh menjadi minus.
+                    bersama). Karyawan yang saldonya belum cukup tetap diproses:
+                    karyawan kontrak yang masih di periode pertama (K1) mendapat
+                    bonus kuota secukupnya (tidak minus), sedangkan karyawan
+                    lain saldonya boleh menjadi minus.
                 </p>
 
                 <Card className="max-w-3xl">

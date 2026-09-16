@@ -182,7 +182,7 @@ class SaldoCutiService
      * jenis cuti yang belum punya baris aktif — dipakai saat migrasi data
      * karyawan lama ke sistem ini, atau kasus lain di luar alur otomatis.
      *
-     * @param  array{karyawan_id: int, jenis_cuti_id: int, tahun?: int|null, periode_ke?: int|null, periode_mulai?: string|null, periode_selesai?: string|null, kuota: int, terpakai: int, sisa: int, catatan: string}  $data
+     * @param  array{karyawan_id: int, jenis_cuti_id: int, tahun: int|null, periode_ke: int|null, periode_mulai: string|null, periode_selesai: string|null, kuota: int|null, terpakai: int, sisa: int|null, catatan: string}  $data
      */
     public function buatManual(array $data, Karyawan $olehSiapa): SaldoCuti
     {
@@ -190,9 +190,9 @@ class SaldoCutiService
             'karyawan_id' => $data['karyawan_id'],
             'jenis_cuti_id' => $data['jenis_cuti_id'],
             'tahun' => $data['tahun'] ?? Carbon::parse($data['periode_mulai'])->year,
-            'periode_ke' => $data['periode_ke'] ?? null,
-            'periode_mulai' => $data['periode_mulai'] ?? null,
-            'periode_selesai' => $data['periode_selesai'] ?? null,
+            'periode_ke' => $data['periode_ke'],
+            'periode_mulai' => $data['periode_mulai'],
+            'periode_selesai' => $data['periode_selesai'],
             'kuota' => $data['kuota'],
             'terpakai' => $data['terpakai'],
             'sisa' => $data['sisa'],
@@ -207,7 +207,7 @@ class SaldoCutiService
      * saldo yang sudah ada. Alasan koreksi wajib diisi setiap kali sebagai
      * jejak audit minimal.
      *
-     * @param  array{kuota?: int, terpakai?: int, sisa?: int, periode_mulai?: string|null, periode_selesai?: string|null, catatan: string}  $data
+     * @param  array{kuota: int|null, terpakai: int, sisa: int|null, periode_mulai: string|null, periode_selesai: string|null, catatan: string}  $data
      */
     public function sesuaikanManual(SaldoCuti $saldo, array $data, Karyawan $olehSiapa): SaldoCuti
     {

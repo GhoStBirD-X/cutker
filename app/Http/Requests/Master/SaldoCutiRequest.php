@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Master;
 
 use App\Models\JenisCuti;
+use App\Models\SaldoCuti;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -20,7 +21,10 @@ class SaldoCutiRequest extends FormRequest
     public function rules(): array
     {
         $isUpdate = $this->isMethod('put') || $this->isMethod('patch');
-        $jenisCutiId = $isUpdate ? $this->route('saldo_cuti')?->jenis_cuti_id : $this->integer('jenis_cuti_id');
+        $saldoCuti = $this->route('saldo_cuti');
+        $jenisCutiId = $isUpdate && $saldoCuti instanceof SaldoCuti
+            ? $saldoCuti->jenis_cuti_id
+            : $this->integer('jenis_cuti_id');
         $bertipePeriode = fn () => JenisCuti::query()->find($jenisCutiId)?->masa_kerja_minimal_bulan !== null;
 
         return [

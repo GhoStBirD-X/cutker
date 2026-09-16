@@ -8,7 +8,21 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $karyawan_id
+ * @property int $jenis_cuti_id
+ * @property int|null $riwayat_saldo_cuti_id
+ * @property int $jumlah_hari
+ * @property string|null $rate_per_hari
+ * @property string|null $total_rupiah
+ * @property StatusKompensasiCuti $status
+ * @property int|null $diproses_oleh_id
+ * @property Carbon|null $diproses_pada
+ * @property string|null $catatan
+ */
 #[Fillable([
     'karyawan_id',
     'jenis_cuti_id',

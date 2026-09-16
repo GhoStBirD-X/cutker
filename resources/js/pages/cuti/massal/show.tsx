@@ -170,10 +170,10 @@ export default function CutiMassalShow() {
                                         {karyawanBaru.length})
                                     </h2>
                                     <p className="text-xs text-muted-foreground">
-                                        Karyawan yang masuk kerja setelah
-                                        batch ini dibuat. Pilih untuk
-                                        disertakan dengan jenis cuti, tanggal,
-                                        dan alasan yang sama.
+                                        Karyawan yang masuk kerja setelah batch
+                                        ini dibuat. Pilih untuk disertakan
+                                        dengan jenis cuti, tanggal, dan alasan
+                                        yang sama.
                                     </p>
                                 </div>
                             </div>
@@ -184,12 +184,10 @@ export default function CutiMassalShow() {
                                         onCheckedChange={(checked) =>
                                             setTerpilih(
                                                 Object.fromEntries(
-                                                    karyawanBaru.map(
-                                                        (row) => [
-                                                            row.karyawan.id,
-                                                            Boolean(checked),
-                                                        ],
-                                                    ),
+                                                    karyawanBaru.map((row) => [
+                                                        row.karyawan.id,
+                                                        Boolean(checked),
+                                                    ]),
                                                 ),
                                             )
                                         }
@@ -206,9 +204,7 @@ export default function CutiMassalShow() {
                                         <div className="flex items-center gap-3">
                                             <Checkbox
                                                 checked={
-                                                    !!terpilih[
-                                                        row.karyawan.id
-                                                    ]
+                                                    !!terpilih[row.karyawan.id]
                                                 }
                                                 onCheckedChange={(checked) =>
                                                     setTerpilih((prev) => ({
@@ -255,13 +251,11 @@ export default function CutiMassalShow() {
                                 <Button
                                     size="sm"
                                     disabled={
-                                        susulProcessing ||
-                                        jumlahTerpilih === 0
+                                        susulProcessing || jumlahTerpilih === 0
                                     }
                                     onClick={susulkanKaryawanBaru}
                                 >
-                                    Sertakan {jumlahTerpilih} Karyawan
-                                    Terpilih
+                                    Sertakan {jumlahTerpilih} Karyawan Terpilih
                                 </Button>
                             </div>
                         </CardContent>
