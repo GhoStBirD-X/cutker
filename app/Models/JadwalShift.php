@@ -39,7 +39,12 @@ class JadwalShift extends Model
     protected function casts(): array
     {
         return [
-            'tanggal' => 'date',
+            // Format eksplisit di cast (bukan cuma $dateFormat) supaya
+            // serialisasi ke array/JSON untuk frontend juga "Y-m-d" polos,
+            // bukan default ISO datetime bawaan Eloquent (mis.
+            // "2026-09-16T00:00:00.000000Z") yang tidak akan pernah cocok
+            // dengan string tanggal "YYYY-MM-DD" yang dipakai di kalender.
+            'tanggal' => 'date:Y-m-d',
             'jam_lembur' => 'decimal:1',
         ];
     }

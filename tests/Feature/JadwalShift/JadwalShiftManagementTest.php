@@ -208,6 +208,35 @@ class JadwalShiftManagementTest extends TestCase
         );
     }
 
+    public function test_jadwal_tanggal_is_serialized_as_plain_date_not_iso_datetime(): void
+    {
+        // Kalender di frontend mencocokkan `jadwal.tanggal` dengan string
+        // "YYYY-MM-DD" polos (mis. dari input tanggal). Kalau Eloquent
+        // menyerialisasikannya sebagai ISO datetime penuh (format default
+        // untuk cast "date"), pencocokan itu tidak akan pernah berhasil dan
+        // karyawan yang sudah dijadwalkan akan terlihat "hilang" di kalender
+        // walaupun datanya tersimpan benar di database.
+        $hrd = $this->karyawanUser('hrd');
+        $karyawan = $this->karyawanUser('karyawan');
+        $shift = Shift::factory()->create();
+        $tanggal = now()->startOfMonth()->addDays(2)->toDateString();
+
+        JadwalShift::factory()->create([
+            'karyawan_id' => $karyawan->karyawan->id,
+            'shift_id' => $shift->id,
+            'tanggal' => $tanggal,
+        ]);
+
+        $response = $this->actingAs($hrd)->get(route('jadwal-shift.index', [
+            'bulan' => now()->month,
+            'tahun' => now()->year,
+        ]));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('jadwals.0.tanggal', $tanggal)
+        );
+    }
+
     public function test_jam_lembur_above_12_hours_is_rejected(): void
     {
         $hrd = $this->karyawanUser('hrd');
