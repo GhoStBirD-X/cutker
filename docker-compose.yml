@@ -39,6 +39,17 @@ services:
         depends_on:
             - app
 
+    waha:
+        image: devlikeapro/waha:latest
+        restart: unless-stopped
+        ports:
+            - "3000:3000"
+        environment:
+            WHATSAPP_API_KEY: ${WAHA_API_KEY}
+        volumes:
+            - waha_sessions:/app/.sessions
+
 volumes:
     storage:
     database:
+    waha_sessions:
