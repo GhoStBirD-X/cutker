@@ -4,16 +4,20 @@ namespace App\Http\Controllers\Laporan;
 
 use App\Enums\StatusPengajuan;
 use App\Enums\TipeKaryawan;
+use App\Exports\SaldoCutiExport;
 use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Models\Departemen;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class SaldoCutiController extends Controller
 {
@@ -21,14 +25,9 @@ class SaldoCutiController extends Controller
 
     public function index(Request $request): Response
     {
-        $search = (string) $request->string('search');
-        $departemenId = $request->integer('departemen_id') ?: null;
-
-        $karyawans = Karyawan::query()
+        $karyawans = $this->filteredKaryawanQuery($request)
             ->with(['departemen', 'jabatan'])
             ->with(['saldoCutis' => fn ($query) => $query->aktif()->with('jenisCuti')->orderBy('jenis_cuti_id')])
-            ->when($search, fn ($query) => $query->where(fn ($q) => $q->where('nama', 'like', "%{$search}%")->orWhere('nip', 'like', "%{$search}%")))
-            ->when($departemenId, fn ($query) => $query->where('departemen_id', $departemenId))
             ->orderBy('nama')
             ->paginate($this->resolvePerPage($request, 20))
             ->withQueryString();
@@ -41,11 +40,47 @@ class SaldoCutiController extends Controller
         return Inertia::render('laporan/saldo-cuti', [
             'karyawans' => $karyawans,
             'departemens' => Departemen::query()->orderBy('nama_departemen')->get(['id', 'nama_departemen']),
-            'filters' => [
-                'search' => $search,
-                'departemen_id' => $departemenId,
-            ],
+            'filters' => $this->filters($request),
         ]);
+    }
+
+    public function exportExcel(Request $request): BinaryFileResponse
+    {
+        $karyawanIds = $this->filteredKaryawanQuery($request)->pluck('id');
+
+        $query = SaldoCuti::query()
+            ->with(['karyawan.departemen', 'karyawan.jabatan', 'jenisCuti'])
+            ->whereIn('karyawan_id', $karyawanIds)
+            ->aktif()
+            ->orderBy('karyawan_id')
+            ->orderBy('jenis_cuti_id');
+
+        $nama = 'saldo-cuti-'.now()->format('Y-m-d').'.xlsx';
+
+        return Excel::download(new SaldoCutiExport($query), $nama);
+    }
+
+    /**
+     * @return Builder<Karyawan>
+     */
+    protected function filteredKaryawanQuery(Request $request): Builder
+    {
+        $filters = $this->filters($request);
+
+        return Karyawan::query()
+            ->when($filters['search'], fn ($query) => $query->where(fn ($q) => $q->where('nama', 'like', "%{$filters['search']}%")->orWhere('nip', 'like', "%{$filters['search']}%")))
+            ->when($filters['departemen_id'], fn ($query) => $query->where('departemen_id', $filters['departemen_id']));
+    }
+
+    /**
+     * @return array{search: string, departemen_id: int|null}
+     */
+    protected function filters(Request $request): array
+    {
+        return [
+            'search' => (string) $request->string('search'),
+            'departemen_id' => $request->integer('departemen_id') ?: null,
+        ];
     }
 
     /**

@@ -14,7 +14,13 @@ import {
     excel as exportExcel,
     pdf as exportPdf,
 } from '@/routes/laporan/export';
-import type { Departemen, Paginated, PengajuanCuti } from '@/types';
+import type {
+    Departemen,
+    JenisCuti,
+    Karyawan,
+    Paginated,
+    PengajuanCuti,
+} from '@/types';
 
 type LemburSummary = {
     karyawan_id: number;
@@ -27,19 +33,33 @@ type PageProps = {
     pengajuans: Paginated<PengajuanCuti>;
     lemburSummary: LemburSummary[];
     departemens: Departemen[];
+    karyawans: Pick<Karyawan, 'id' | 'nama'>[];
+    jenisCutis: Pick<JenisCuti, 'id' | 'nama_jenis'>[];
     filters: {
         departemen_id: number | null;
+        karyawan_id: number | null;
+        jenis_cuti_id: number | null;
         dari: string | null;
         sampai: string | null;
     };
 };
 
 export default function LaporanIndex() {
-    const { pengajuans, lemburSummary, departemens, filters } =
-        usePage<PageProps>().props;
+    const {
+        pengajuans,
+        lemburSummary,
+        departemens,
+        karyawans,
+        jenisCutis,
+        filters,
+    } = usePage<PageProps>().props;
     const [form, setForm] = useState({
         departemen_id: filters.departemen_id
             ? String(filters.departemen_id)
+            : '',
+        karyawan_id: filters.karyawan_id ? String(filters.karyawan_id) : '',
+        jenis_cuti_id: filters.jenis_cuti_id
+            ? String(filters.jenis_cuti_id)
             : '',
         dari: filters.dari ?? '',
         sampai: filters.sampai ?? '',
@@ -63,7 +83,7 @@ export default function LaporanIndex() {
                     <CardContent>
                         <form
                             onSubmit={applyFilter}
-                            className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto_auto]"
+                            className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:grid-cols-3"
                         >
                             <div className="grid gap-2">
                                 <Label htmlFor="departemen_id">
@@ -84,6 +104,50 @@ export default function LaporanIndex() {
                                     {departemens.map((d) => (
                                         <option key={d.id} value={d.id}>
                                             {d.nama_departemen}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="karyawan_id">Karyawan</Label>
+                                <select
+                                    id="karyawan_id"
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+                                    value={form.karyawan_id}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            karyawan_id: e.target.value,
+                                        })
+                                    }
+                                >
+                                    <option value="">Semua Karyawan</option>
+                                    {karyawans.map((k) => (
+                                        <option key={k.id} value={k.id}>
+                                            {k.nama}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="jenis_cuti_id">
+                                    Jenis Cuti
+                                </Label>
+                                <select
+                                    id="jenis_cuti_id"
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+                                    value={form.jenis_cuti_id}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            jenis_cuti_id: e.target.value,
+                                        })
+                                    }
+                                >
+                                    <option value="">Semua Jenis Cuti</option>
+                                    {jenisCutis.map((j) => (
+                                        <option key={j.id} value={j.id}>
+                                            {j.nama_jenis}
                                         </option>
                                     ))}
                                 </select>

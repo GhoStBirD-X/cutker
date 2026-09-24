@@ -10,6 +10,7 @@ use App\Models\SaldoCuti;
 use App\Services\PeriodeCutiService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Maatwebsite\Excel\Facades\Excel;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
@@ -225,5 +226,32 @@ class SaldoCutiTest extends TestCase
         $saldo = SaldoCuti::factory()->create();
 
         $this->actingAs($karyawan)->get(route('laporan.saldo-cuti.riwayat', $saldo))->assertForbidden();
+    }
+
+    public function test_export_excel_downloads_only_saldo_matching_the_active_filters(): void
+    {
+        Excel::fake();
+
+        $hrd = $this->karyawanUser('hrd');
+        $cocok = Karyawan::factory()->create(['nama' => 'Budi Santoso']);
+        SaldoCuti::factory()->create(['karyawan_id' => $cocok->id]);
+        $tidakCocok = Karyawan::factory()->create(['nama' => 'Siti Aminah']);
+        SaldoCuti::factory()->create(['karyawan_id' => $tidakCocok->id]);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti.export.excel', ['search' => 'Budi']));
+
+        $response->assertOk();
+        Excel::assertDownloaded('saldo-cuti-'.now()->format('Y-m-d').'.xlsx', function ($export) use ($cocok, $tidakCocok) {
+            $karyawanIds = $export->query()->pluck('karyawan_id');
+
+            return $karyawanIds->contains($cocok->id) && ! $karyawanIds->contains($tidakCocok->id);
+        });
+    }
+
+    public function test_karyawan_cannot_export_saldo_cuti_excel(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan');
+
+        $this->actingAs($karyawan)->get(route('laporan.saldo-cuti.export.excel'))->assertForbidden();
     }
 }

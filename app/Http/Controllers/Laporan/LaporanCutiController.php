@@ -7,6 +7,8 @@ use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Models\Departemen;
 use App\Models\JadwalShift;
+use App\Models\JenisCuti;
+use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,6 +32,8 @@ class LaporanCutiController extends Controller
             'pengajuans' => $pengajuans,
             'lemburSummary' => $this->lemburSummary($request),
             'departemens' => Departemen::all(),
+            'karyawans' => Karyawan::query()->orderBy('nama')->get(['id', 'nama']),
+            'jenisCutis' => JenisCuti::query()->orderBy('nama_jenis')->get(['id', 'nama_jenis']),
             'filters' => $this->filters($request),
         ]);
     }
@@ -63,6 +67,8 @@ class LaporanCutiController extends Controller
         return PengajuanCuti::query()
             ->with(['karyawan.departemen', 'jenisCuti'])
             ->when($filters['departemen_id'], fn ($query) => $query->whereHas('karyawan', fn ($q) => $q->where('departemen_id', $filters['departemen_id'])))
+            ->when($filters['karyawan_id'], fn ($query) => $query->where('karyawan_id', $filters['karyawan_id']))
+            ->when($filters['jenis_cuti_id'], fn ($query) => $query->where('jenis_cuti_id', $filters['jenis_cuti_id']))
             ->when($filters['dari'], fn ($query) => $query->whereDate('tanggal_mulai', '>=', $filters['dari']))
             ->when($filters['sampai'], fn ($query) => $query->whereDate('tanggal_selesai', '<=', $filters['sampai']));
     }
@@ -81,6 +87,7 @@ class LaporanCutiController extends Controller
             ->with('karyawan.departemen')
             ->whereNotNull('jam_lembur')
             ->when($filters['departemen_id'], fn ($query) => $query->whereHas('karyawan', fn ($q) => $q->where('departemen_id', $filters['departemen_id'])))
+            ->when($filters['karyawan_id'], fn ($query) => $query->where('karyawan_id', $filters['karyawan_id']))
             ->when($filters['dari'], fn ($query) => $query->whereDate('tanggal', '>=', $filters['dari']))
             ->when($filters['sampai'], fn ($query) => $query->whereDate('tanggal', '<=', $filters['sampai']))
             ->get()
@@ -107,12 +114,14 @@ class LaporanCutiController extends Controller
     }
 
     /**
-     * @return array{departemen_id: int|null, dari: string|null, sampai: string|null}
+     * @return array{departemen_id: int|null, karyawan_id: int|null, jenis_cuti_id: int|null, dari: string|null, sampai: string|null}
      */
     protected function filters(Request $request): array
     {
         return [
             'departemen_id' => $request->integer('departemen_id') ?: null,
+            'karyawan_id' => $request->integer('karyawan_id') ?: null,
+            'jenis_cuti_id' => $request->integer('jenis_cuti_id') ?: null,
             'dari' => $request->string('dari')->toString() ?: null,
             'sampai' => $request->string('sampai')->toString() ?: null,
         ];

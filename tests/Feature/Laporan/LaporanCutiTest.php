@@ -3,6 +3,8 @@
 namespace Tests\Feature\Laporan;
 
 use App\Models\JadwalShift;
+use App\Models\JenisCuti;
+use App\Models\PengajuanCuti;
 use App\Models\Shift;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -63,6 +65,46 @@ class LaporanCutiTest extends TestCase
             ->where('lemburSummary.0.karyawan_id', $karyawan->karyawan->id)
             ->where('lemburSummary.0.total_jam_lembur', 3.5)
             ->has('lemburSummary', 1)
+        );
+    }
+
+    public function test_karyawan_id_filters_pengajuan_to_a_single_employee(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawanA = $this->karyawanUser('karyawan')->karyawan;
+        $karyawanB = $this->karyawanUser('karyawan')->karyawan;
+
+        $pengajuanA = PengajuanCuti::factory()->create(['karyawan_id' => $karyawanA->id]);
+        PengajuanCuti::factory()->create(['karyawan_id' => $karyawanB->id]);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.index', [
+            'karyawan_id' => $karyawanA->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->has('pengajuans.data', 1)
+            ->where('pengajuans.data.0.id', $pengajuanA->id)
+        );
+    }
+
+    public function test_jenis_cuti_id_filters_pengajuan_by_leave_type(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $cutiTahunan = JenisCuti::factory()->create();
+        $cutiBesar = JenisCuti::factory()->create();
+
+        $pengajuanTahunan = PengajuanCuti::factory()->create(['jenis_cuti_id' => $cutiTahunan->id]);
+        PengajuanCuti::factory()->create(['jenis_cuti_id' => $cutiBesar->id]);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.index', [
+            'jenis_cuti_id' => $cutiTahunan->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->has('pengajuans.data', 1)
+            ->where('pengajuans.data.0.id', $pengajuanTahunan->id)
         );
     }
 
