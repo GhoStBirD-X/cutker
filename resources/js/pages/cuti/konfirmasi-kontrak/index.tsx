@@ -33,6 +33,13 @@ function tanggalSetelah(tanggal: string): string {
     return `${tanggalBerikutnya.getFullYear()}-${String(tanggalBerikutnya.getMonth() + 1).padStart(2, '0')}-${String(tanggalBerikutnya.getDate()).padStart(2, '0')}`;
 }
 
+/** Tanggal "YYYY-MM-DD" yang diberikan ditambah tepat 1 tahun, untuk isi cepat tombol "1 Tahun". */
+function tambahSatuTahun(tanggal: string): string {
+    const [tahun, bulan, hari] = tanggal.split('-').map(Number);
+
+    return `${tahun + 1}-${String(bulan).padStart(2, '0')}-${String(hari).padStart(2, '0')}`;
+}
+
 function KonfirmasiRow({ konfirmasi }: { konfirmasi: KonfirmasiKontrakCuti }) {
     const [catatan, setCatatan] = useState('');
     const [tanggalAkhirKontrakBaru, setTanggalAkhirKontrakBaru] = useState('');
@@ -94,16 +101,36 @@ function KonfirmasiRow({ konfirmasi }: { konfirmasi: KonfirmasiKontrakCuti }) {
                             >
                                 Kontrak baru berlaku hingga
                             </Label>
-                            <Input
-                                id={`tanggal-akhir-${konfirmasi.id}`}
-                                type="date"
-                                min={tanggalSetelah(konfirmasi.tanggal_batas)}
-                                value={tanggalAkhirKontrakBaru}
-                                onChange={(e) =>
-                                    setTanggalAkhirKontrakBaru(e.target.value)
-                                }
-                                className="md:w-44"
-                            />
+                            <div className="flex gap-1">
+                                <Input
+                                    id={`tanggal-akhir-${konfirmasi.id}`}
+                                    type="date"
+                                    min={tanggalSetelah(
+                                        konfirmasi.tanggal_batas,
+                                    )}
+                                    value={tanggalAkhirKontrakBaru}
+                                    onChange={(e) =>
+                                        setTanggalAkhirKontrakBaru(
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="md:w-44"
+                                />
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() =>
+                                        setTanggalAkhirKontrakBaru(
+                                            tambahSatuTahun(
+                                                konfirmasi.tanggal_batas,
+                                            ),
+                                        )
+                                    }
+                                >
+                                    1 Tahun
+                                </Button>
+                            </div>
                             <InputError
                                 message={errors.tanggal_akhir_kontrak_baru}
                             />
