@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Karyawan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
@@ -30,6 +31,30 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_users_can_authenticate_using_their_nip(): void
+    {
+        $karyawan = Karyawan::factory()->create(['nip' => '1234567890']);
+        $user = User::factory()->create(['karyawan_id' => $karyawan->id]);
+
+        $response = $this->post(route('login.store'), [
+            'email' => $karyawan->nip,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+        $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_users_can_not_authenticate_with_a_nip_that_does_not_exist(): void
+    {
+        $this->post(route('login.store'), [
+            'email' => '0000000000',
+            'password' => 'password',
+        ]);
+
+        $this->assertGuest();
     }
 
     public function test_users_with_two_factor_enabled_are_redirected_to_two_factor_challenge()
