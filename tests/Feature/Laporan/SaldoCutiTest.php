@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Laporan;
 
+use App\Enums\JenisKelamin;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\KonfirmasiKontrakCuti;
@@ -270,5 +271,40 @@ class SaldoCutiTest extends TestCase
         $this->assertSame('FF4F46E5', $sheet->getStyle('A1')->getFill()->getStartColor()->getARGB());
         $this->assertSame('FFFEE2E2', $sheet->getStyle('H2')->getFill()->getStartColor()->getARGB());
         $this->assertSame('FF991B1B', $sheet->getStyle('H2')->getFont()->getColor()->getARGB());
+    }
+
+    public function test_hrd_can_export_saldo_cuti_as_pdf(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawan = Karyawan::factory()->create();
+        SaldoCuti::factory()->create(['karyawan_id' => $karyawan->id]);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti.export.pdf'));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString(
+            'saldo-cuti-'.now()->format('Y-m-d').'.pdf',
+            $response->headers->get('content-disposition'),
+        );
+    }
+
+    public function test_export_pdf_excludes_a_leave_type_not_relevant_to_the_employee_gender(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawan = Karyawan::factory()->lakiLaki()->create();
+        $cutiHamil = JenisCuti::factory()->create(['nama_jenis' => 'Cuti Hamil', 'khusus_gender' => JenisKelamin::Perempuan]);
+        SaldoCuti::factory()->create(['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $cutiHamil->id]);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti.export.pdf'));
+
+        $response->assertOk();
+    }
+
+    public function test_karyawan_cannot_export_saldo_cuti_pdf(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan');
+
+        $this->actingAs($karyawan)->get(route('laporan.saldo-cuti.export.pdf'))->assertForbidden();
     }
 }

@@ -13,5 +13,6 @@ Route::middleware(['auth', 'verified', 'role:hrd|admin|manager'])->prefix('lapor
 Route::middleware(['auth', 'verified', 'role:hrd|admin|manager|kepala_bagian'])->prefix('laporan')->name('laporan.')->group(function () {
     Route::get('/saldo-cuti', [SaldoCutiController::class, 'index'])->name('saldo-cuti');
     Route::get('/saldo-cuti/export/excel', [SaldoCutiController::class, 'exportExcel'])->name('saldo-cuti.export.excel');
+    Route::get('/saldo-cuti/export/pdf', [SaldoCutiController::class, 'exportPdf'])->name('saldo-cuti.export.pdf');
     Route::get('/saldo-cuti/{saldoCuti}/riwayat', [SaldoCutiController::class, 'riwayat'])->name('saldo-cuti.riwayat');
 });

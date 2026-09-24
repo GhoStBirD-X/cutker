@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Download } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
 import { Fragment, useState } from 'react';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,10 @@ import {
     saldoCuti as saldoCutiIndex,
 } from '@/routes/laporan';
 import { riwayat as saldoCutiRiwayat } from '@/routes/laporan/saldo-cuti';
-import { excel as exportExcel } from '@/routes/laporan/saldo-cuti/export';
+import {
+    excel as exportExcel,
+    pdf as exportPdf,
+} from '@/routes/laporan/saldo-cuti/export';
 import type {
     Departemen,
     JenisCuti,
@@ -136,6 +139,15 @@ export default function LaporanSaldoCuti() {
                                     >
                                         <Download className="size-4" />
                                         Excel
+                                    </a>
+                                </Button>
+                                <Button asChild variant="outline">
+                                    <a
+                                        href={exportPdf.url({ query: form })}
+                                        className="gap-1.5"
+                                    >
+                                        <FileText className="size-4" />
+                                        PDF
                                     </a>
                                 </Button>
                             </div>

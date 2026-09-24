@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\SaldoCuti;
 use App\Support\ExcelStyler;
+use App\Support\SaldoSeverity;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -27,10 +28,6 @@ class SaldoCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMa
     /**
      * Warna sel "Sisa" per baris (indeks 0 = baris data pertama), diisi
      * saat map() supaya bisa dipakai lagi di styles() tanpa query ulang.
-     * Nilainya {fill: warna latar, teks: warna font} mengikuti palet
-     * urgensi saldo yang sama dengan resources/js/lib/saldo-severity.ts
-     * (unlimited=sky, aman=blue, menipis=amber, minus=red) — kalau ambang
-     * batas di sana berubah, sesuaikan juga severityUntuk() di bawah.
      *
      * @var list<array{fill: string, teks: string}>
      */
@@ -62,7 +59,7 @@ class SaldoCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMa
      */
     public function map($saldo): array
     {
-        $this->warnaSisa[] = $this->severityUntuk($saldo->sisa, $saldo->kuota);
+        $this->warnaSisa[] = SaldoSeverity::warnaBadge(SaldoSeverity::hitung($saldo->sisa, $saldo->kuota));
 
         return [
             $saldo->karyawan->nip,
@@ -95,27 +92,5 @@ class SaldoCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMa
         $sheet->freezePane('A2');
 
         return null;
-    }
-
-    /**
-     * @return array{fill: string, teks: string}
-     */
-    private function severityUntuk(?int $sisa, ?int $kuota): array
-    {
-        if ($sisa === null || $kuota === null) {
-            return ['fill' => 'E0F2FE', 'teks' => '075985']; // sky — tanpa batas
-        }
-
-        if ($sisa < 0) {
-            return ['fill' => 'FEE2E2', 'teks' => '991B1B']; // red — minus
-        }
-
-        $rasio = $kuota > 0 ? $sisa / $kuota : ($sisa > 0 ? 1 : 0);
-
-        if ($rasio <= 0.25) {
-            return ['fill' => 'FEF3C7', 'teks' => '92400E']; // amber — menipis
-        }
-
-        return ['fill' => 'DBEAFE', 'teks' => '1E40AF']; // blue — aman
     }
 }

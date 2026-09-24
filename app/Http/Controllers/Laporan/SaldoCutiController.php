@@ -11,8 +11,11 @@ use App\Models\Departemen;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
+use App\Support\SaldoSeverity;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,6 +25,16 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class SaldoCutiController extends Controller
 {
     use HasPerPage;
+
+    /**
+     * Kategori cuti tetap yang ditampilkan di kolom laporan matriks —
+     * sengaja daftar tetap (bukan diambil dari tabel jenis_cutis) supaya
+     * urutan & cakupan kolomnya sama persis dengan tabel di halaman
+     * frontend (resources/js/pages/laporan/saldo-cuti.tsx).
+     *
+     * @var list<string>
+     */
+    private const KOLOM_JENIS_CUTI = ['Cuti Tahunan', 'Cuti Besar', 'Cuti Haid', 'Cuti Hamil'];
 
     public function index(Request $request): Response
     {
@@ -58,6 +71,68 @@ class SaldoCutiController extends Controller
         $nama = 'saldo-cuti-'.now()->format('Y-m-d').'.xlsx';
 
         return Excel::download(new SaldoCutiExport($query), $nama);
+    }
+
+    /**
+     * PDF matriks yang tampilannya disamakan dengan tabel di halaman
+     * Laporan Saldo Cuti Karyawan (satu baris per karyawan, kolom
+     * Terpakai/Sisa per kategori cuti, warna "Sisa" mengikuti urgensi
+     * yang sama seperti di layar).
+     */
+    public function exportPdf(Request $request): HttpResponse
+    {
+        $filters = $this->filters($request);
+
+        $karyawans = $this->filteredKaryawanQuery($request)
+            ->with(['saldoCutis' => fn ($query) => $query->aktif()->with('jenisCuti')->orderBy('jenis_cuti_id')])
+            ->orderBy('nama')
+            ->get()
+            ->map(fn (Karyawan $karyawan) => $this->barisLaporanPdf($karyawan));
+
+        $pdf = Pdf::loadView('laporan.saldo-cuti-pdf', [
+            'karyawans' => $karyawans,
+            'kolomJenisCuti' => self::KOLOM_JENIS_CUTI,
+            'departemen' => $filters['departemen_id'] ? Departemen::query()->find($filters['departemen_id']) : null,
+            'filters' => $filters,
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download('saldo-cuti-'.now()->format('Y-m-d').'.pdf');
+    }
+
+    /**
+     * Satu baris matriks untuk PDF: kolom cuti yang tidak relevan untuk
+     * karyawan tsb (khusus_gender tidak cocok) atau belum punya baris
+     * saldo aktif diisi null supaya blade cukup menampilkan "—".
+     *
+     * @return array{nama: string, nip: string, status_kontrak: string, kolom: list<array{terpakai: int, sisa: int|null, warna: string}|null>}
+     */
+    private function barisLaporanPdf(Karyawan $karyawan): array
+    {
+        return [
+            'nama' => $karyawan->nama,
+            'nip' => $karyawan->nip,
+            'status_kontrak' => $this->statusKontrak($karyawan),
+            'kolom' => collect(self::KOLOM_JENIS_CUTI)
+                ->map(function (string $namaJenis) use ($karyawan) {
+                    $saldo = $karyawan->saldoCutis->first(fn (SaldoCuti $saldo) => $saldo->jenisCuti?->nama_jenis === $namaJenis);
+
+                    if (! $saldo) {
+                        return null;
+                    }
+
+                    $khusus = $saldo->jenisCuti->khusus_gender;
+                    if ($khusus !== null && $khusus !== $karyawan->jenis_kelamin) {
+                        return null;
+                    }
+
+                    return [
+                        'terpakai' => $saldo->terpakai,
+                        'sisa' => $saldo->sisa,
+                        'warna' => SaldoSeverity::warnaTeks(SaldoSeverity::hitung($saldo->sisa, $saldo->kuota)),
+                    ];
+                })
+                ->all(),
+        ];
     }
 
     /**
