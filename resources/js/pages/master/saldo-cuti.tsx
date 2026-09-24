@@ -1,5 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import SaldoCutiController from '@/actions/App/Http/Controllers/Master/SaldoCutiController';
 import InputError from '@/components/input-error';
 import { MasterNav } from '@/components/master-nav';
@@ -21,6 +21,12 @@ type SaldoCutiRow = SaldoCuti & {
     diubah_oleh?: Pick<Karyawan, 'id' | 'nama'>;
 };
 
+type PeriodeOption = {
+    periode_ke: number;
+    periode_mulai: string;
+    periode_selesai: string;
+};
+
 type PageProps = {
     saldoCutis: Paginated<SaldoCutiRow>;
     karyawans: Pick<Karyawan, 'id' | 'nama' | 'nip'>[];
@@ -32,9 +38,7 @@ const emptyForm = {
     karyawan_id: '',
     jenis_cuti_id: '',
     tahun: String(new Date().getFullYear()),
-    periode_ke: '1',
-    periode_mulai: '',
-    periode_selesai: '',
+    periode_ke: '',
     kuota: '',
     terpakai: '0',
     sisa: '',
@@ -46,6 +50,8 @@ export default function MasterSaldoCuti() {
         usePage<PageProps>().props;
     const [editing, setEditing] = useState<SaldoCutiRow | null>(null);
     const [search, setSearch] = useState(filters.search ?? '');
+    const [periodeOptions, setPeriodeOptions] = useState<PeriodeOption[]>([]);
+    const [loadingPeriode, setLoadingPeriode] = useState(false);
 
     const { data, setData, post, put, processing, errors, reset } =
         useForm(emptyForm);
@@ -56,15 +62,67 @@ export default function MasterSaldoCuti() {
     );
     const bertipePeriode = jenisCutiTerpilih?.masa_kerja_minimal_bulan != null;
 
+    // Periode selalu dihitung dari tanggal_masuk karyawan di backend
+    // (lihat SaldoCutiService::periodeTersediaUntuk()) supaya HRD tidak
+    // bisa salah ketik tanggal mulai/selesai periode.
+    useEffect(() => {
+        if (
+            editing ||
+            !bertipePeriode ||
+            !data.karyawan_id ||
+            !data.jenis_cuti_id
+        ) {
+            setPeriodeOptions([]);
+            return;
+        }
+
+        let dibatalkan = false;
+        setLoadingPeriode(true);
+
+        fetch(
+            SaldoCutiController.periodeTersedia.url({
+                query: {
+                    karyawan_id: data.karyawan_id,
+                    jenis_cuti_id: data.jenis_cuti_id,
+                },
+            }),
+            { headers: { Accept: 'application/json' } },
+        )
+            .then((response) => response.json())
+            .then((body: { periodes: PeriodeOption[] }) => {
+                if (dibatalkan) {
+                    return;
+                }
+
+                setPeriodeOptions(body.periodes);
+                setData(
+                    'periode_ke',
+                    body.periodes[0] ? String(body.periodes[0].periode_ke) : '',
+                );
+            })
+            .finally(() => {
+                if (!dibatalkan) {
+                    setLoadingPeriode(false);
+                }
+            });
+
+        return () => {
+            dibatalkan = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data.karyawan_id, data.jenis_cuti_id, bertipePeriode, editing]);
+
+    const periodeTerpilih = periodeOptions.find(
+        (p) => String(p.periode_ke) === data.periode_ke,
+    );
+
     const startEdit = (saldo: SaldoCutiRow) => {
         setEditing(saldo);
         setData({
             karyawan_id: String(saldo.karyawan_id),
             jenis_cuti_id: String(saldo.jenis_cuti_id),
             tahun: String(saldo.tahun),
-            periode_ke: String(saldo.periode_ke ?? 1),
-            periode_mulai: saldo.periode_mulai?.slice(0, 10) ?? '',
-            periode_selesai: saldo.periode_selesai?.slice(0, 10) ?? '',
+            periode_ke: String(saldo.periode_ke ?? ''),
             kuota: saldo.kuota === null ? '' : String(saldo.kuota),
             terpakai: String(saldo.terpakai),
             sisa: saldo.sisa === null ? '' : String(saldo.sisa),
@@ -88,6 +146,20 @@ export default function MasterSaldoCuti() {
             post(SaldoCutiController.store.url(), {
                 onSuccess: () => reset(),
             });
+        }
+    };
+
+    const destroy = (saldo: SaldoCutiRow) => {
+        const label = saldo.periode_ke
+            ? `periode ke-${saldo.periode_ke}`
+            : `tahun ${saldo.tahun}`;
+
+        if (
+            confirm(
+                `Hapus baris saldo cuti ${saldo.karyawan?.nama} · ${saldo.jenis_cuti?.nama_jenis} (${label})? Tindakan ini tidak bisa dibatalkan.`,
+            )
+        ) {
+            router.delete(SaldoCutiController.destroy.url(saldo.id));
         }
     };
 
@@ -166,59 +238,52 @@ export default function MasterSaldoCuti() {
                                         <Label htmlFor="periode_ke">
                                             Periode Ke-
                                         </Label>
-                                        <Input
+                                        <select
                                             id="periode_ke"
-                                            type="number"
-                                            min={1}
+                                            className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm disabled:opacity-50"
                                             value={data.periode_ke}
+                                            disabled={
+                                                loadingPeriode ||
+                                                periodeOptions.length === 0
+                                            }
                                             onChange={(e) =>
                                                 setData(
                                                     'periode_ke',
                                                     e.target.value,
                                                 )
                                             }
-                                        />
+                                        >
+                                            {periodeOptions.length === 0 && (
+                                                <option value="">
+                                                    {loadingPeriode
+                                                        ? 'Memuat periode...'
+                                                        : !data.karyawan_id
+                                                          ? 'Pilih karyawan dahulu'
+                                                          : 'Tidak ada periode tersedia'}
+                                                </option>
+                                            )}
+                                            {periodeOptions.map((p) => (
+                                                <option
+                                                    key={p.periode_ke}
+                                                    value={p.periode_ke}
+                                                >
+                                                    Periode ke-{p.periode_ke}
+                                                </option>
+                                            ))}
+                                        </select>
                                         <InputError
                                             message={errors.periode_ke}
                                         />
                                     </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="periode_mulai">
-                                            Periode Mulai
+                                    <div className="grid gap-2 sm:col-span-2">
+                                        <Label>
+                                            Rentang Periode (otomatis)
                                         </Label>
-                                        <Input
-                                            id="periode_mulai"
-                                            type="date"
-                                            value={data.periode_mulai}
-                                            onChange={(e) =>
-                                                setData(
-                                                    'periode_mulai',
-                                                    e.target.value,
-                                                )
-                                            }
-                                        />
-                                        <InputError
-                                            message={errors.periode_mulai}
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="periode_selesai">
-                                            Periode Selesai
-                                        </Label>
-                                        <Input
-                                            id="periode_selesai"
-                                            type="date"
-                                            value={data.periode_selesai}
-                                            onChange={(e) =>
-                                                setData(
-                                                    'periode_selesai',
-                                                    e.target.value,
-                                                )
-                                            }
-                                        />
-                                        <InputError
-                                            message={errors.periode_selesai}
-                                        />
+                                        <p className="flex h-9 items-center rounded-md border border-dashed border-input px-2 text-sm text-muted-foreground">
+                                            {periodeTerpilih
+                                                ? `${formatDate(periodeTerpilih.periode_mulai)} s/d ${formatDate(periodeTerpilih.periode_selesai)}`
+                                                : 'Dihitung dari tanggal masuk karyawan'}
+                                        </p>
                                     </div>
                                 </>
                             )}
@@ -297,7 +362,15 @@ export default function MasterSaldoCuti() {
                                 <InputError message={errors.catatan} />
                             </div>
                             <div className="col-span-1 flex flex-wrap items-end gap-2 sm:col-span-2 md:col-span-4">
-                                <Button type="submit" disabled={processing}>
+                                <Button
+                                    type="submit"
+                                    disabled={
+                                        processing ||
+                                        (!editing &&
+                                            bertipePeriode &&
+                                            !data.periode_ke)
+                                    }
+                                >
                                     {editing ? 'Simpan Koreksi' : 'Tambah'}
                                 </Button>
                                 {editing && (
@@ -361,14 +434,22 @@ export default function MasterSaldoCuti() {
                                         </div>
                                     )}
                                 </div>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="self-start sm:self-center"
-                                    onClick={() => startEdit(saldo)}
-                                >
-                                    Sesuaikan
-                                </Button>
+                                <div className="flex shrink-0 gap-2 self-start sm:self-center">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => startEdit(saldo)}
+                                    >
+                                        Sesuaikan
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        onClick={() => destroy(saldo)}
+                                    >
+                                        Hapus
+                                    </Button>
+                                </div>
                             </div>
                         ))}
                     </CardContent>

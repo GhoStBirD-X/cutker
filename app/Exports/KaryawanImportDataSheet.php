@@ -2,13 +2,12 @@
 
 namespace App\Exports;
 
+use App\Support\ExcelStyler;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class KaryawanImportDataSheet implements FromArray, ShouldAutoSize, WithHeadings, WithStyles, WithTitle
@@ -39,14 +38,8 @@ class KaryawanImportDataSheet implements FromArray, ShouldAutoSize, WithHeadings
 
     public function styles(Worksheet $sheet): ?array
     {
-        $sheet->getStyle('A1:K1')->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-        $sheet->getStyle('A1:K1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('4F46E5');
-        $sheet->getStyle('A1:K1')->getAlignment()->setVertical('center');
-        $sheet->getRowDimension(1)->setRowHeight(20);
-
-        $highestRow = $sheet->getHighestRow();
-        $sheet->getStyle("A1:K{$highestRow}")->getBorders()->getAllBorders()
-            ->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB('D1D5DB');
+        ExcelStyler::header($sheet, 'A1:K1');
+        ExcelStyler::border($sheet, 'A1:K'.$sheet->getHighestRow());
 
         $sheet->freezePane('A2');
 

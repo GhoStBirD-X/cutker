@@ -11,6 +11,7 @@ use App\Services\PeriodeCutiService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
@@ -253,5 +254,21 @@ class SaldoCutiTest extends TestCase
         $karyawan = $this->karyawanUser('karyawan');
 
         $this->actingAs($karyawan)->get(route('laporan.saldo-cuti.export.excel'))->assertForbidden();
+    }
+
+    public function test_export_excel_colors_the_sisa_column_by_severity(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawan = Karyawan::factory()->create();
+        SaldoCuti::factory()->create(['karyawan_id' => $karyawan->id, 'kuota' => 12, 'terpakai' => 15, 'sisa' => -3]);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti.export.excel'));
+
+        $response->assertOk();
+        $sheet = IOFactory::load($response->getFile()->getPathname())->getActiveSheet();
+
+        $this->assertSame('FF4F46E5', $sheet->getStyle('A1')->getFill()->getStartColor()->getARGB());
+        $this->assertSame('FFFEE2E2', $sheet->getStyle('H2')->getFill()->getStartColor()->getARGB());
+        $this->assertSame('FF991B1B', $sheet->getStyle('H2')->getFont()->getColor()->getARGB());
     }
 }

@@ -20,7 +20,8 @@ Route::middleware(['auth', 'verified', 'role:hrd|admin'])->prefix('master')->nam
     Route::resource('alasan-cuti', AlasanCutiController::class)->parameters(['alasan-cuti' => 'alasan_cuti'])->only(['index', 'store', 'update', 'destroy']);
     Route::resource('shift', ShiftController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('hari-libur', HariLiburController::class)->parameters(['hari-libur' => 'hari_libur'])->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('saldo-cuti', SaldoCutiController::class)->parameters(['saldo-cuti' => 'saldo_cuti'])->only(['index', 'store', 'update']);
+    Route::get('saldo-cuti/periode-tersedia', [SaldoCutiController::class, 'periodeTersedia'])->name('saldo-cuti.periode-tersedia');
+    Route::resource('saldo-cuti', SaldoCutiController::class)->parameters(['saldo-cuti' => 'saldo_cuti'])->only(['index', 'store', 'update', 'destroy']);
 });
 
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('master')->name('master.')->group(function () {

@@ -8,6 +8,7 @@ use App\Models\PengajuanCuti;
 use App\Models\Shift;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -115,5 +116,20 @@ class LaporanCutiTest extends TestCase
         $response = $this->actingAs($karyawan)->get(route('laporan.index'));
 
         $response->assertForbidden();
+    }
+
+    public function test_export_excel_colors_the_status_column_by_status(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        PengajuanCuti::factory()->disetujui()->create();
+
+        $response = $this->actingAs($hrd)->get(route('laporan.export.excel'));
+
+        $response->assertOk();
+        $sheet = IOFactory::load($response->getFile()->getPathname())->getActiveSheet();
+
+        $this->assertSame('FF4F46E5', $sheet->getStyle('A1')->getFill()->getStartColor()->getARGB());
+        $this->assertSame('FFD1FAE5', $sheet->getStyle('G2')->getFill()->getStartColor()->getARGB());
+        $this->assertSame('FF065F46', $sheet->getStyle('G2')->getFont()->getColor()->getARGB());
     }
 }

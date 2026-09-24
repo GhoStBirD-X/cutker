@@ -182,17 +182,32 @@ class SaldoCutiService
      * jenis cuti yang belum punya baris aktif — dipakai saat migrasi data
      * karyawan lama ke sistem ini, atau kasus lain di luar alur otomatis.
      *
-     * @param  array{karyawan_id: int, jenis_cuti_id: int, tahun: int|null, periode_ke: int|null, periode_mulai: string|null, periode_selesai: string|null, kuota: int|null, terpakai: int, sisa: int|null, catatan: string}  $data
+     * Untuk jenis cuti bertipe periode, periode_mulai/periode_selesai
+     * SELALU dihitung dari tanggal_masuk karyawan (lihat hitungTanggalPeriode())
+     * dan tidak pernah dipercaya dari input pengguna — supaya tanggal
+     * periode tidak bisa salah ketik.
+     *
+     * @param  array{karyawan_id: int, jenis_cuti_id: int, tahun: int|null, periode_ke: int|null, kuota: int|null, terpakai: int, sisa: int|null, catatan: string}  $data
      */
     public function buatManual(array $data, Karyawan $olehSiapa): SaldoCuti
     {
+        $karyawan = Karyawan::query()->findOrFail($data['karyawan_id']);
+        $jenisCuti = JenisCuti::query()->findOrFail($data['jenis_cuti_id']);
+
+        $periodeMulai = null;
+        $periodeSelesai = null;
+
+        if ($jenisCuti->masa_kerja_minimal_bulan !== null) {
+            [$periodeMulai, $periodeSelesai] = $this->hitungTanggalPeriode($karyawan, $jenisCuti, $data['periode_ke']);
+        }
+
         return SaldoCuti::query()->create([
             'karyawan_id' => $data['karyawan_id'],
             'jenis_cuti_id' => $data['jenis_cuti_id'],
-            'tahun' => $data['tahun'] ?? Carbon::parse($data['periode_mulai'])->year,
+            'tahun' => $data['tahun'] ?? $periodeMulai->year,
             'periode_ke' => $data['periode_ke'],
-            'periode_mulai' => $data['periode_mulai'],
-            'periode_selesai' => $data['periode_selesai'],
+            'periode_mulai' => $periodeMulai,
+            'periode_selesai' => $periodeSelesai,
             'kuota' => $data['kuota'],
             'terpakai' => $data['terpakai'],
             'sisa' => $data['sisa'],
@@ -203,11 +218,13 @@ class SaldoCutiService
     }
 
     /**
-     * HRD mengoreksi kuota/terpakai/sisa (atau tanggal periode) pada baris
-     * saldo yang sudah ada. Alasan koreksi wajib diisi setiap kali sebagai
-     * jejak audit minimal.
+     * HRD mengoreksi kuota/terpakai/sisa pada baris saldo yang sudah ada.
+     * Tanggal periode tidak bisa dikoreksi di sini secara sengaja — kalau
+     * periodenya sendiri salah, baris ini dihapus lalu dibuat ulang lewat
+     * buatManual() supaya tanggalnya tetap konsisten dengan tanggal_masuk.
+     * Alasan koreksi wajib diisi setiap kali sebagai jejak audit minimal.
      *
-     * @param  array{kuota: int|null, terpakai: int, sisa: int|null, periode_mulai: string|null, periode_selesai: string|null, catatan: string}  $data
+     * @param  array{kuota: int|null, terpakai: int, sisa: int|null, catatan: string}  $data
      */
     public function sesuaikanManual(SaldoCuti $saldo, array $data, Karyawan $olehSiapa): SaldoCuti
     {
@@ -215,13 +232,74 @@ class SaldoCutiService
             'kuota' => $data['kuota'],
             'terpakai' => $data['terpakai'],
             'sisa' => $data['sisa'],
-            'periode_mulai' => $data['periode_mulai'] ?? $saldo->periode_mulai,
-            'periode_selesai' => $data['periode_selesai'] ?? $saldo->periode_selesai,
             'catatan' => $data['catatan'],
             'diubah_oleh_id' => $olehSiapa->id,
             'diubah_pada' => now(),
         ]);
 
         return $saldo;
+    }
+
+    /**
+     * Daftar periode_ke yang masih tersedia (belum tercatat di saldo_cutis,
+     * baik yang aktif maupun yang sudah ditutup) untuk kombinasi karyawan +
+     * jenis cuti bertipe periode tertentu, lengkap dengan tanggal mulai/
+     * selesai yang dihitung otomatis dari tanggal_masuk. Dipakai untuk
+     * mengisi dropdown "Periode Ke-" di form tambah saldo manual supaya
+     * HRD tidak bisa memilih nomor periode yang sudah ada atau salah ketik
+     * tanggalnya.
+     *
+     * @return list<array{periode_ke: int, periode_mulai: string, periode_selesai: string}>
+     */
+    public function periodeTersediaUntuk(Karyawan $karyawan, JenisCuti $jenisCuti): array
+    {
+        if ($jenisCuti->masa_kerja_minimal_bulan === null) {
+            return [];
+        }
+
+        $sudahAda = SaldoCuti::query()
+            ->where('karyawan_id', $karyawan->id)
+            ->where('jenis_cuti_id', $jenisCuti->id)
+            ->pluck('periode_ke')
+            ->all();
+
+        $periodeTertinggi = $sudahAda === [] ? 1 : max($sudahAda) + 1;
+
+        $tersedia = [];
+
+        for ($periodeKe = 1; $periodeKe <= $periodeTertinggi; $periodeKe++) {
+            if (in_array($periodeKe, $sudahAda, true)) {
+                continue;
+            }
+
+            [$mulai, $selesai] = $this->hitungTanggalPeriode($karyawan, $jenisCuti, $periodeKe);
+
+            $tersedia[] = [
+                'periode_ke' => $periodeKe,
+                'periode_mulai' => $mulai->toDateString(),
+                'periode_selesai' => $selesai->toDateString(),
+            ];
+        }
+
+        return $tersedia;
+    }
+
+    /**
+     * Hitung tanggal mulai & selesai periode ke-N berdasarkan tanggal_masuk
+     * karyawan dan masa kerja minimal (dalam bulan) jenis cuti — rumus yang
+     * sama dengan yang dipakai PeriodeCutiService::lanjutkanPeriode() saat
+     * merangkai periode secara berantai, supaya tanggal periode manapun
+     * (baik dibuat otomatis maupun manual) selalu konsisten satu sama lain.
+     *
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    public function hitungTanggalPeriode(Karyawan $karyawan, JenisCuti $jenisCuti, int $periodeKe): array
+    {
+        $bulan = $jenisCuti->masa_kerja_minimal_bulan;
+
+        $mulai = $karyawan->tanggal_masuk->copy()->addMonths(($periodeKe - 1) * $bulan);
+        $selesai = $karyawan->tanggal_masuk->copy()->addMonths($periodeKe * $bulan)->subDay();
+
+        return [$mulai, $selesai];
     }
 }

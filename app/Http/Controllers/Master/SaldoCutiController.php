@@ -9,6 +9,7 @@ use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\SaldoCuti;
 use App\Services\SaldoCutiService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -45,8 +46,6 @@ class SaldoCutiController extends Controller
             'jenis_cuti_id' => $request->integer('jenis_cuti_id'),
             'tahun' => $request->filled('tahun') ? $request->integer('tahun') : null,
             'periode_ke' => $request->filled('periode_ke') ? $request->integer('periode_ke') : null,
-            'periode_mulai' => $request->filled('periode_mulai') ? $request->string('periode_mulai')->toString() : null,
-            'periode_selesai' => $request->filled('periode_selesai') ? $request->string('periode_selesai')->toString() : null,
             'kuota' => $request->filled('kuota') ? $request->integer('kuota') : null,
             'terpakai' => $request->integer('terpakai'),
             'sisa' => $request->filled('sisa') ? $request->integer('sisa') : null,
@@ -64,13 +63,43 @@ class SaldoCutiController extends Controller
             'kuota' => $request->filled('kuota') ? $request->integer('kuota') : null,
             'terpakai' => $request->integer('terpakai'),
             'sisa' => $request->filled('sisa') ? $request->integer('sisa') : null,
-            'periode_mulai' => $request->filled('periode_mulai') ? $request->string('periode_mulai')->toString() : null,
-            'periode_selesai' => $request->filled('periode_selesai') ? $request->string('periode_selesai')->toString() : null,
             'catatan' => $request->string('catatan')->toString(),
         ], $request->user()->karyawan);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Saldo cuti berhasil disesuaikan.']);
 
         return back();
+    }
+
+    public function destroy(Request $request, SaldoCuti $saldo_cuti): RedirectResponse
+    {
+        abort_unless($request->user()->hasPermissionTo('master-data.manage'), 403);
+
+        $saldo_cuti->delete();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Baris saldo cuti berhasil dihapus.']);
+
+        return back();
+    }
+
+    /**
+     * Nomor periode yang belum tercatat untuk kombinasi karyawan + jenis
+     * cuti bertipe periode, lengkap dengan tanggal mulai/selesai yang
+     * sudah dihitung otomatis — dipakai mengisi dropdown "Periode Ke-" di
+     * form tambah saldo manual.
+     */
+    public function periodeTersedia(Request $request, SaldoCutiService $saldoCutiService): JsonResponse
+    {
+        $request->validate([
+            'karyawan_id' => ['required', 'integer', 'exists:karyawans,id'],
+            'jenis_cuti_id' => ['required', 'integer', 'exists:jenis_cutis,id'],
+        ]);
+
+        $karyawan = Karyawan::query()->findOrFail($request->integer('karyawan_id'));
+        $jenisCuti = JenisCuti::query()->findOrFail($request->integer('jenis_cuti_id'));
+
+        return response()->json([
+            'periodes' => $saldoCutiService->periodeTersediaUntuk($karyawan, $jenisCuti),
+        ]);
     }
 }

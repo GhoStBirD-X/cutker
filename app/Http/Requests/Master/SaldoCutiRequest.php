@@ -31,9 +31,17 @@ class SaldoCutiRequest extends FormRequest
             'karyawan_id' => $isUpdate ? ['sometimes'] : ['required', 'integer', 'exists:karyawans,id'],
             'jenis_cuti_id' => $isUpdate ? ['sometimes'] : ['required', 'integer', 'exists:jenis_cutis,id'],
             'tahun' => [Rule::requiredIf(fn () => ! $isUpdate && ! $bertipePeriode()), 'nullable', 'integer', 'min:2000', 'max:2100'],
-            'periode_ke' => [Rule::requiredIf(fn () => ! $isUpdate && $bertipePeriode()), 'nullable', 'integer', 'min:1'],
-            'periode_mulai' => [Rule::requiredIf(fn () => ! $isUpdate && $bertipePeriode()), 'nullable', 'date'],
-            'periode_selesai' => [Rule::requiredIf(fn () => ! $isUpdate && $bertipePeriode()), 'nullable', 'date', 'after:periode_mulai'],
+            'periode_ke' => [
+                Rule::requiredIf(fn () => ! $isUpdate && $bertipePeriode()),
+                'nullable',
+                'integer',
+                'min:1',
+                Rule::unique('saldo_cutis', 'periode_ke')
+                    ->where(fn ($query) => $query
+                        ->where('karyawan_id', $this->integer('karyawan_id'))
+                        ->where('jenis_cuti_id', $jenisCutiId))
+                    ->ignore($isUpdate && $saldoCuti instanceof SaldoCuti ? $saldoCuti->id : null),
+            ],
             'kuota' => ['nullable', 'integer', 'min:0', 'max:365'],
             'terpakai' => ['required', 'integer', 'min:0'],
             'sisa' => ['nullable', 'integer', 'min:0'],
