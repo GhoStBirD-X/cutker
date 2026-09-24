@@ -41,8 +41,11 @@ class PengajuanCutiDiajukan extends Notification
     {
         $pengajuan = $this->pengajuanCuti;
 
-        return "{$pengajuan->karyawan->nama} mengajukan {$pengajuan->jenisCuti->nama_jenis} ".
-            "pada {$pengajuan->tanggal_mulai->toDateString()} s/d {$pengajuan->tanggal_selesai->toDateString()}.\n".
+        return "Pengajuan Cuti Baru\n\n".
+            "Karyawan: *{$pengajuan->karyawan->nama}*\n".
+            "Jenis Cuti: {$pengajuan->jenisCuti->nama_jenis}\n".
+            "Tanggal: {$pengajuan->tanggal_mulai->toDateString()} s/d {$pengajuan->tanggal_selesai->toDateString()}\n".
+            "Alasan: {$pengajuan->alasan}\n\n".
             'Tinjau: '.url('/approval');
     }
 

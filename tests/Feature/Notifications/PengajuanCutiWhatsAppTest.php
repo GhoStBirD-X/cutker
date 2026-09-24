@@ -63,7 +63,8 @@ class PengajuanCutiWhatsAppTest extends TestCase
         Http::assertSent(function (Request $request) use ($karyawan) {
             return $request->url() === 'http://localhost:3000/api/sendText'
                 && $request['chatId'] === '6281234567890@c.us'
-                && str_contains($request['text'], $karyawan->nama)
+                && str_contains($request['text'], "*{$karyawan->nama}*")
+                && str_contains($request['text'], 'Acara keluarga')
                 && str_contains($request['text'], url('/approval'));
         });
     }
