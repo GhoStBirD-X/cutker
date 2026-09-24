@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\JenisKelamin;
 use Database\Factories\JenisCutiFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -56,5 +57,20 @@ class JenisCuti extends Model
     public function alasanCutis(): HasMany
     {
         return $this->hasMany(AlasanCuti::class);
+    }
+
+    /**
+     * Jenis cuti yang tidak dikhususkan untuk gender tertentu, atau yang
+     * khusus_gender-nya cocok dengan $jenisKelamin (mis. Cuti Hamil/Haid
+     * disembunyikan dari karyawan laki-laki).
+     *
+     * @param  Builder<JenisCuti>  $query
+     * @return Builder<JenisCuti>
+     */
+    public function scopeSesuaiGender(Builder $query, JenisKelamin $jenisKelamin): Builder
+    {
+        return $query->where(function (Builder $query) use ($jenisKelamin) {
+            $query->whereNull('khusus_gender')->orWhere('khusus_gender', $jenisKelamin);
+        });
     }
 }

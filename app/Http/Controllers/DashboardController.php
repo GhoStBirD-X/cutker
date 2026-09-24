@@ -32,7 +32,7 @@ class DashboardController extends Controller
                 ->with('jenisCuti')
                 ->where('karyawan_id', $karyawan->id)
                 ->aktif()
-                ->whereHas('jenisCuti', fn ($query) => $query->whereNull('khusus_gender')->orWhere('khusus_gender', $karyawan->jenis_kelamin->value))
+                ->whereHas('jenisCuti', fn ($query) => $query->sesuaiGender($karyawan->jenis_kelamin))
                 ->get();
 
             $data['riwayatCuti'] = PengajuanCuti::query()
@@ -44,6 +44,7 @@ class DashboardController extends Controller
 
             $data['resumeCuti'] = $karyawan->riwayatSaldoCutis()
                 ->with('jenisCuti')
+                ->whereHas('jenisCuti', fn ($query) => $query->sesuaiGender($karyawan->jenis_kelamin))
                 ->latest('periode_selesai')
                 ->limit(5)
                 ->get();

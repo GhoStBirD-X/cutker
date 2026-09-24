@@ -54,12 +54,13 @@ class PengajuanCutiController extends Controller
         $karyawan = $request->user()->karyawan;
 
         return [
-            'jenisCutis' => JenisCuti::all(),
+            'jenisCutis' => JenisCuti::query()->sesuaiGender($karyawan->jenis_kelamin)->get(),
             'alasanCutis' => AlasanCuti::all(),
             'saldoCuti' => SaldoCuti::query()
                 ->with('jenisCuti')
                 ->where('karyawan_id', $karyawan->id)
-                ->where('tahun', now()->year)
+                ->aktif()
+                ->whereHas('jenisCuti', fn ($query) => $query->sesuaiGender($karyawan->jenis_kelamin))
                 ->get(),
         ];
     }
