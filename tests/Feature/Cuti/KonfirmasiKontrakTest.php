@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Cuti;
 
+use App\Enums\StatusKonfirmasiKontrak;
 use App\Enums\TipeKaryawan;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
@@ -153,5 +154,70 @@ class KonfirmasiKontrakTest extends TestCase
         $response = $this->actingAs($karyawan)->get(route('cuti.konfirmasi-kontrak.index'));
 
         $response->assertForbidden();
+    }
+
+    public function test_perpanjang_massal_memperpanjang_tiap_karyawan_satu_tahun_dari_tanggal_batasnya_sendiri(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $pertama = $this->konfirmasiMenunggu('2026-09-30');
+        $kedua = $this->konfirmasiMenunggu('2026-10-02');
+        $tidakDipilih = $this->konfirmasiMenunggu('2026-10-01');
+
+        $response = $this->actingAs($hrd)->post(route('cuti.konfirmasi-kontrak.perpanjang-massal'), [
+            'konfirmasi_ids' => [$pertama->id, $kedua->id],
+            'catatan' => 'Perpanjangan kontrak gelombang Oktober.',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertSame('2027-09-30', $pertama->karyawan->fresh()->tanggal_akhir_kontrak->toDateString());
+        $this->assertSame('2027-10-02', $kedua->karyawan->fresh()->tanggal_akhir_kontrak->toDateString());
+        $this->assertDatabaseHas('konfirmasi_kontrak_cutis', ['id' => $pertama->id, 'status' => 'diperpanjang', 'dikonfirmasi_oleh_id' => $hrd->karyawan->id]);
+        $this->assertDatabaseHas('konfirmasi_kontrak_cutis', ['id' => $tidakDipilih->id, 'status' => 'menunggu']);
+    }
+
+    public function test_perpanjang_massal_semua_memproses_seluruh_yang_menunggu_dan_melewati_yang_sudah_diproses(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $menunggu = $this->konfirmasiMenunggu('2026-09-30');
+        $sudahDiproses = $this->konfirmasiMenunggu('2026-09-30');
+        $sudahDiproses->update(['status' => StatusKonfirmasiKontrak::TidakDiperpanjang]);
+
+        $this->actingAs($hrd)->post(route('cuti.konfirmasi-kontrak.perpanjang-massal'), [
+            'semua' => true,
+        ])->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('konfirmasi_kontrak_cutis', ['id' => $menunggu->id, 'status' => 'diperpanjang']);
+        $this->assertDatabaseHas('konfirmasi_kontrak_cutis', ['id' => $sudahDiproses->id, 'status' => 'tidak_diperpanjang']);
+    }
+
+    public function test_perpanjang_massal_wajib_memilih_karyawan_kalau_tidak_semua(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+
+        $response = $this->actingAs($hrd)->post(route('cuti.konfirmasi-kontrak.perpanjang-massal'), []);
+
+        $response->assertSessionHasErrors('konfirmasi_ids');
+    }
+
+    private function konfirmasiMenunggu(string $tanggalBatas): KonfirmasiKontrakCuti
+    {
+        $karyawan = Karyawan::factory()->create([
+            'tipe_karyawan' => TipeKaryawan::Kontrak,
+            'tanggal_akhir_kontrak' => $tanggalBatas,
+        ]);
+        $saldoCuti = SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => JenisCuti::factory()->create(['kuota_default' => 12, 'masa_kerja_minimal_bulan' => 12])->id,
+            'periode_ke' => 1,
+            'periode_mulai' => '2025-10-01',
+            'periode_selesai' => $tanggalBatas,
+        ]);
+
+        return KonfirmasiKontrakCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'saldo_cuti_id' => $saldoCuti->id,
+            'tanggal_batas' => $tanggalBatas,
+        ]);
     }
 }

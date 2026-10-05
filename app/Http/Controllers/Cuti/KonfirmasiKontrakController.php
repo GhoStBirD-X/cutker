@@ -9,6 +9,7 @@ use App\Models\KonfirmasiKontrakCuti;
 use App\Services\PeriodeCutiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,6 +27,7 @@ class KonfirmasiKontrakController extends Controller
 
         return Inertia::render('cuti/konfirmasi-kontrak/index', [
             'konfirmasiKontraks' => $konfirmasiKontraks,
+            'jumlahMenunggu' => KonfirmasiKontrakCuti::query()->where('status', StatusKonfirmasiKontrak::Menunggu)->count(),
         ]);
     }
 
@@ -63,6 +65,40 @@ class KonfirmasiKontrakController extends Controller
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Konfirmasi perpanjangan kontrak berhasil disimpan.']);
+
+        return back();
+    }
+
+    /**
+     * Perpanjang 1 tahun untuk konfirmasi yang dicentang, atau `semua`
+     * konfirmasi yang masih menunggu (lintas halaman pagination).
+     */
+    public function perpanjangMassal(Request $request, PeriodeCutiService $periodeCutiService): RedirectResponse
+    {
+        $data = $request->validate([
+            'semua' => ['boolean'],
+            'konfirmasi_ids' => [Rule::requiredIf(fn () => ! $request->boolean('semua')), 'array'],
+            'konfirmasi_ids.*' => ['integer', 'distinct', 'exists:konfirmasi_kontrak_cutis,id'],
+            'catatan' => ['nullable', 'string', 'max:500'],
+        ], [
+            'konfirmasi_ids.required' => 'Pilih minimal satu karyawan.',
+        ]);
+
+        $konfirmasis = KonfirmasiKontrakCuti::query()
+            ->with(['saldoCuti', 'karyawan'])
+            ->where('status', StatusKonfirmasiKontrak::Menunggu)
+            ->when(! $request->boolean('semua'), fn ($query) => $query->whereKey($data['konfirmasi_ids']))
+            ->get();
+
+        if ($konfirmasis->isEmpty()) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Konfirmasi yang dipilih sudah diproses sebelumnya.']);
+
+            return back();
+        }
+
+        $jumlah = $periodeCutiService->perpanjangSatuTahunMassal($konfirmasis, $request->user()->karyawan, $data['catatan'] ?? null);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => "Kontrak {$jumlah} karyawan berhasil diperpanjang 1 tahun."]);
 
         return back();
     }

@@ -10,6 +10,7 @@ use App\Models\KompensasiCuti;
 use App\Models\KonfirmasiKontrakCuti;
 use App\Models\RiwayatSaldoCuti;
 use App\Models\SaldoCuti;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class PeriodeCutiService
@@ -116,6 +117,33 @@ class PeriodeCutiService
 
             $konfirmasi->karyawan->update(['status' => StatusKaryawan::Nonaktif]);
         });
+    }
+
+    /**
+     * Perpanjang kontrak banyak karyawan sekaligus, masing-masing tepat 1
+     * tahun dari tanggal_batas konfirmasinya sendiri (sama dengan tombol
+     * "1 Tahun" di form per orang). Konfirmasi yang sudah diproses dilewati.
+     * Satu transaksi supaya tidak ada yang setengah jadi bila satu gagal.
+     *
+     * @param  Collection<int, KonfirmasiKontrakCuti>  $konfirmasis
+     */
+    public function perpanjangSatuTahunMassal(Collection $konfirmasis, Karyawan $olehSiapa, ?string $catatan): int
+    {
+        $menunggu = $konfirmasis->filter(fn (KonfirmasiKontrakCuti $k): bool => $k->status === StatusKonfirmasiKontrak::Menunggu);
+
+        DB::transaction(function () use ($menunggu, $olehSiapa, $catatan): void {
+            foreach ($menunggu as $konfirmasi) {
+                $this->konfirmasiPerpanjangan(
+                    $konfirmasi,
+                    $olehSiapa,
+                    true,
+                    $catatan,
+                    $konfirmasi->tanggal_batas->copy()->addYearNoOverflow()->toDateString(),
+                );
+            }
+        });
+
+        return $menunggu->count();
     }
 
     protected function arsipkan(SaldoCuti $saldo): RiwayatSaldoCuti

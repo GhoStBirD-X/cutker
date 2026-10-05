@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { CalendarClock } from 'lucide-react';
+import { CalendarClock, CalendarPlus } from 'lucide-react';
 import { useState } from 'react';
 import KonfirmasiKontrakController from '@/actions/App/Http/Controllers/Cuti/KonfirmasiKontrakController';
 import InputError from '@/components/input-error';
@@ -7,6 +7,7 @@ import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { formatDate } from '@/lib/format';
@@ -17,6 +18,7 @@ import type { KonfirmasiKontrakCuti, Paginated } from '@/types';
 
 type PageProps = {
     konfirmasiKontraks: Paginated<KonfirmasiKontrakCuti>;
+    jumlahMenunggu: number;
 };
 
 const STATUS_LABEL: Record<KonfirmasiKontrakCuti['status'], string> = {
@@ -40,7 +42,15 @@ function tambahSatuTahun(tanggal: string): string {
     return `${tahun + 1}-${String(bulan).padStart(2, '0')}-${String(hari).padStart(2, '0')}`;
 }
 
-function KonfirmasiRow({ konfirmasi }: { konfirmasi: KonfirmasiKontrakCuti }) {
+function KonfirmasiRow({
+    konfirmasi,
+    dipilih,
+    onPilih,
+}: {
+    konfirmasi: KonfirmasiKontrakCuti;
+    dipilih: boolean;
+    onPilih: (dipilih: boolean) => void;
+}) {
     const [catatan, setCatatan] = useState('');
     const [tanggalAkhirKontrakBaru, setTanggalAkhirKontrakBaru] = useState('');
     const [processing, setProcessing] = useState(false);
@@ -75,21 +85,33 @@ function KonfirmasiRow({ konfirmasi }: { konfirmasi: KonfirmasiKontrakCuti }) {
                     : 'border-l-transparent',
             )}
         >
-            <div>
-                <div className="font-medium">
-                    {konfirmasi.karyawan?.nama} &middot;{' '}
-                    {konfirmasi.saldo_cuti?.jenis_cuti?.nama_jenis}
-                </div>
-                <div className="text-muted-foreground">
-                    Periode ke-{konfirmasi.periode_ke} berakhir{' '}
-                    {formatDate(konfirmasi.tanggal_batas)}
-                </div>
-                {konfirmasi.karyawan?.tanggal_akhir_kontrak && (
-                    <div className="text-xs text-muted-foreground">
-                        Kontrak saat ini berakhir{' '}
-                        {formatDate(konfirmasi.karyawan.tanggal_akhir_kontrak)}
-                    </div>
+            <div className="flex items-start gap-3">
+                {menunggu && (
+                    <Checkbox
+                        className="mt-0.5"
+                        aria-label={`Pilih ${konfirmasi.karyawan?.nama}`}
+                        checked={dipilih}
+                        onCheckedChange={(v) => onPilih(v === true)}
+                    />
                 )}
+                <div>
+                    <div className="font-medium">
+                        {konfirmasi.karyawan?.nama} &middot;{' '}
+                        {konfirmasi.saldo_cuti?.jenis_cuti?.nama_jenis}
+                    </div>
+                    <div className="text-muted-foreground">
+                        Periode ke-{konfirmasi.periode_ke} berakhir{' '}
+                        {formatDate(konfirmasi.tanggal_batas)}
+                    </div>
+                    {konfirmasi.karyawan?.tanggal_akhir_kontrak && (
+                        <div className="text-xs text-muted-foreground">
+                            Kontrak saat ini berakhir{' '}
+                            {formatDate(
+                                konfirmasi.karyawan.tanggal_akhir_kontrak,
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
             {konfirmasi.status === 'menunggu' ? (
                 <div className="flex flex-col gap-2 md:items-end">
@@ -184,7 +206,79 @@ function KonfirmasiRow({ konfirmasi }: { konfirmasi: KonfirmasiKontrakCuti }) {
 }
 
 export default function KonfirmasiKontrakIndex() {
-    const { konfirmasiKontraks } = usePage<PageProps>().props;
+    const { konfirmasiKontraks, jumlahMenunggu } = usePage<PageProps>().props;
+
+    const menungguDiHalaman = konfirmasiKontraks.data.filter(
+        (k) => k.status === 'menunggu',
+    );
+    const [dipilih, setDipilih] = useState<Set<number>>(new Set());
+    const [semua, setSemua] = useState(false);
+    const [catatanMassal, setCatatanMassal] = useState('');
+    const [errorsMassal, setErrorsMassal] = useState<Record<string, string>>(
+        {},
+    );
+    const [processingMassal, setProcessingMassal] = useState(false);
+
+    const idDipilih = menungguDiHalaman
+        .filter((k) => dipilih.has(k.id))
+        .map((k) => k.id);
+    const jumlahDipilih = semua ? jumlahMenunggu : idDipilih.length;
+    const semuaHalamanDipilih =
+        menungguDiHalaman.length > 0 &&
+        idDipilih.length === menungguDiHalaman.length;
+
+    const pilih = (id: number, nilai: boolean) => {
+        setSemua(false);
+        setDipilih((prev) => {
+            const next = new Set(prev);
+
+            if (nilai) {
+                next.add(id);
+            } else {
+                next.delete(id);
+            }
+
+            return next;
+        });
+    };
+
+    const pilihSemuaHalaman = (nilai: boolean) => {
+        setSemua(false);
+        setDipilih(
+            nilai ? new Set(menungguDiHalaman.map((k) => k.id)) : new Set(),
+        );
+    };
+
+    const perpanjangMassal = () => {
+        if (
+            !confirm(
+                `Perpanjang kontrak ${jumlahDipilih} karyawan masing-masing 1 tahun dari tanggal berakhir periodenya?`,
+            )
+        ) {
+            return;
+        }
+
+        router.post(
+            KonfirmasiKontrakController.perpanjangMassal.url(),
+            {
+                semua,
+                konfirmasi_ids: semua ? [] : idDipilih,
+                catatan: catatanMassal || undefined,
+            },
+            {
+                preserveScroll: true,
+                onStart: () => setProcessingMassal(true),
+                onFinish: () => setProcessingMassal(false),
+                onError: (err) => setErrorsMassal(err),
+                onSuccess: () => {
+                    setDipilih(new Set());
+                    setSemua(false);
+                    setCatatanMassal('');
+                    setErrorsMassal({});
+                },
+            },
+        );
+    };
 
     return (
         <>
@@ -200,6 +294,72 @@ export default function KonfirmasiKontrakIndex() {
                     perpanjangan kontraknya.
                 </p>
 
+                {jumlahMenunggu > 0 && (
+                    <Card>
+                        <CardContent className="flex flex-col gap-3">
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                                <label className="flex cursor-pointer items-center gap-2 font-medium">
+                                    <Checkbox
+                                        checked={semuaHalamanDipilih && !semua}
+                                        disabled={
+                                            menungguDiHalaman.length === 0
+                                        }
+                                        onCheckedChange={(v) =>
+                                            pilihSemuaHalaman(v === true)
+                                        }
+                                    />
+                                    Pilih semua di halaman ini (
+                                    {menungguDiHalaman.length})
+                                </label>
+                                <label className="flex cursor-pointer items-center gap-2 font-medium">
+                                    <Checkbox
+                                        checked={semua}
+                                        onCheckedChange={(v) => {
+                                            setSemua(v === true);
+                                            setDipilih(new Set());
+                                        }}
+                                    />
+                                    Semua yang menunggu ({jumlahMenunggu})
+                                </label>
+                            </div>
+                            <div className="flex flex-col gap-2 md:flex-row md:items-start">
+                                <div className="grid flex-1 gap-1">
+                                    <Input
+                                        placeholder="Catatan (opsional), mis. Perpanjangan kontrak gelombang Oktober"
+                                        value={catatanMassal}
+                                        onChange={(e) =>
+                                            setCatatanMassal(e.target.value)
+                                        }
+                                    />
+                                    <InputError
+                                        message={
+                                            errorsMassal.konfirmasi_ids ??
+                                            errorsMassal.catatan
+                                        }
+                                    />
+                                </div>
+                                <Button
+                                    className="gap-1.5"
+                                    disabled={
+                                        processingMassal || jumlahDipilih === 0
+                                    }
+                                    onClick={perpanjangMassal}
+                                >
+                                    <CalendarPlus className="size-4" />
+                                    Perpanjang 1 Tahun ({jumlahDipilih})
+                                </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Kontrak baru tiap karyawan berlaku hingga tepat
+                                1 tahun setelah periodenya berakhir. Untuk
+                                tanggal lain atau &quot;Tidak
+                                Diperpanjang&quot;, gunakan form di
+                                masing-masing baris.
+                            </p>
+                        </CardContent>
+                    </Card>
+                )}
+
                 <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="divide-y p-0">
                         {konfirmasiKontraks.data.length === 0 && (
@@ -211,6 +371,8 @@ export default function KonfirmasiKontrakIndex() {
                             <KonfirmasiRow
                                 key={konfirmasi.id}
                                 konfirmasi={konfirmasi}
+                                dipilih={semua || dipilih.has(konfirmasi.id)}
+                                onPilih={(nilai) => pilih(konfirmasi.id, nilai)}
                             />
                         ))}
                     </CardContent>
