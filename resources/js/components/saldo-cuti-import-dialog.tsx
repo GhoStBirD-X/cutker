@@ -133,7 +133,7 @@ export function SaldoCutiImportDialog({
             <DialogTrigger asChild>
                 <Button variant="outline" className="gap-1.5">
                     <Upload className="size-4" />
-                    Import Excel
+                    Template & Import Excel
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
@@ -147,7 +147,10 @@ export function SaldoCutiImportDialog({
                 <ol className="grid gap-3 text-sm">
                     <li className="flex flex-wrap items-center gap-2">
                         <Badge variant="secondary">1</Badge>
-                        <span>Unduh data saldo sesuai filter halaman ini</span>
+                        <span>
+                            Unduh template — sudah berisi semua saldo karyawan
+                            sesuai filter halaman ini
+                        </span>
                         <Button
                             asChild
                             size="sm"
@@ -160,16 +163,17 @@ export function SaldoCutiImportDialog({
                                 })}
                             >
                                 <Download className="size-4" />
-                                Unduh Excel
+                                Unduh Template
                             </a>
                         </Button>
                     </li>
                     <li className="flex flex-wrap items-center gap-2">
                         <Badge variant="secondary">2</Badge>
                         <span>
-                            Ubah kolom <b>kuota</b>, <b>terpakai</b>,{' '}
-                            <b>sisa</b> saja (kosong = tanpa batas). Jangan ubah
-                            kolom <b>id</b> & <b>nip</b>.
+                            Isi kolom berwarna kuning: <b>kuota</b>,{' '}
+                            <b>terpakai</b>, <b>sisa</b> (kosong = tanpa batas).
+                            Kolom abu-abu jangan diubah, terutama kolom{' '}
+                            <b>id</b> & <b>nip</b>.
                         </span>
                     </li>
                     <li>

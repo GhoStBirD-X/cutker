@@ -249,6 +249,23 @@ class SaldoCutiMassalTest extends TestCase
         $response->assertDownload('saldo-cuti-'.now()->format('Y-m-d').'.xlsx');
     }
 
+    public function test_exported_file_can_be_imported_back_unchanged_including_zero_values(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        SaldoCuti::factory()->create(['kuota' => 12, 'terpakai' => 0, 'sisa' => 12]);
+        SaldoCuti::factory()->create(['kuota' => null, 'terpakai' => 0, 'sisa' => null]);
+
+        $isiFile = $this->actingAs($hrd)->get(route('master.saldo-cuti.export'))->streamedContent();
+
+        $response = $this->actingAs($hrd)->post(route('master.saldo-cuti.import.pratinjau'), [
+            'file' => UploadedFile::fake()->createWithContent('saldo.xlsx', $isiFile),
+        ]);
+
+        $response->assertInertiaFlash('importPratinjau.tidak_berubah', 2);
+        $response->assertInertiaFlash('importPratinjau.failures', []);
+        $response->assertInertiaFlash('importPratinjau.perubahan', []);
+    }
+
     public function test_pratinjau_import_lists_changes_and_errors_without_saving(): void
     {
         $hrd = $this->karyawanUser('hrd');
