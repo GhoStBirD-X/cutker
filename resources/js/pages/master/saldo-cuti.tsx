@@ -1,5 +1,14 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { Download, ListChecks, Trash2, X } from 'lucide-react';
+import {
+    ChevronDown,
+    ChevronsDownUp,
+    ChevronsUpDown,
+    Download,
+    ListChecks,
+    SlidersHorizontal,
+    Trash2,
+    X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import SaldoCutiController from '@/actions/App/Http/Controllers/Master/SaldoCutiController';
 import InputError from '@/components/input-error';
@@ -13,10 +22,18 @@ import type {
 import { SaldoCutiImportDialog } from '@/components/saldo-cuti-import-dialog';
 import { SaldoCutiTambahDialog } from '@/components/saldo-cuti-tambah-dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from '@/components/ui/sheet';
 import { formatDate } from '@/lib/format';
 import { saldoSeverity } from '@/lib/saldo-severity';
 import { cn } from '@/lib/utils';
@@ -30,14 +47,19 @@ import type {
     SaldoCuti,
 } from '@/types';
 
-type SaldoCutiRow = SaldoCuti & {
+type SaldoCutiRow = Omit<SaldoCuti, 'karyawan'> & {
     karyawan?: Pick<Karyawan, 'id' | 'nama' | 'nip' | 'departemen'>;
     jenis_cuti?: JenisCuti;
     diubah_oleh?: Pick<Karyawan, 'id' | 'nama'>;
 };
 
+type GrupKaryawan = Pick<Karyawan, 'id' | 'nama' | 'nip' | 'departemen'> & {
+    saldo_cutis: Omit<SaldoCutiRow, 'karyawan'>[];
+};
+
 type PageProps = {
-    saldoCutis: Paginated<SaldoCutiRow>;
+    grupKaryawan: Paginated<GrupKaryawan>;
+    totalBaris: number;
     karyawans: Pick<Karyawan, 'id' | 'nama' | 'nip' | 'departemen_id'>[];
     jenisCutis: JenisCuti[];
     departemens: Pick<Departemen, 'id' | 'nama_departemen'>[];
@@ -79,7 +101,8 @@ const keAngka = (nilai: string): number | null =>
 
 export default function MasterSaldoCuti() {
     const {
-        saldoCutis,
+        grupKaryawan,
+        totalBaris,
         karyawans,
         jenisCutis,
         departemens,
@@ -98,12 +121,25 @@ export default function MasterSaldoCuti() {
     const [dipilih, setDipilih] = useState<Set<number>>(new Set());
     const [semuaFilter, setSemuaFilter] = useState(false);
     const [aksiOpen, setAksiOpen] = useState(false);
+    const [filterOpen, setFilterOpen] = useState(false);
+    // Di layar sempit grup dimulai tertutup supaya daftar nama mudah
+    // dipindai; di desktop langsung terbuka seperti tabel biasa.
+    const [bawaanTerbuka, setBawaanTerbuka] = useState(
+        () => !window.matchMedia('(max-width: 639px)').matches,
+    );
+    const [grupDibalik, setGrupDibalik] = useState<Set<number>>(new Set());
+    const grupTerbuka = (id: number) => bawaanTerbuka !== grupDibalik.has(id);
+
+    /** Baris saldo diratakan (karyawan disisipkan) untuk pilihan, draft & label. */
+    const rows: SaldoCutiRow[] = grupKaryawan.data.flatMap((grup) =>
+        grup.saldo_cutis.map((saldo) => ({ ...saldo, karyawan: grup })),
+    );
 
     // Isi halaman berganti (pindah halaman, filter, atau habis simpan) →
     // draft & pilihan lama tidak berlaku lagi. Dibandingkan per isi, bukan
     // per referensi, supaya draft tidak hilang saat simpan ditolak validasi.
     const kunciData = JSON.stringify(
-        saldoCutis.data.map((r) => [r.id, r.kuota, r.terpakai, r.sisa]),
+        rows.map((r) => [r.id, r.kuota, r.terpakai, r.sisa]),
     );
     const [kunciSebelumnya, setKunciSebelumnya] = useState(kunciData);
 
@@ -115,7 +151,6 @@ export default function MasterSaldoCuti() {
         setSemuaFilter(false);
     }
 
-    const rows = saldoCutis.data;
     const jumlahDraft = Object.keys(drafts).length;
     const adaSelTidakValid = Object.values(drafts).some((d) =>
         KOLOM.some((k) => !selValid(k, d[k])),
@@ -282,7 +317,50 @@ export default function MasterSaldoCuti() {
         setDipilih(pilih ? new Set(rows.map((r) => r.id)) : new Set());
     };
 
-    const jumlahDipilih = semuaFilter ? saldoCutis.total : dipilih.size;
+    const jumlahDipilih = semuaFilter ? totalBaris : dipilih.size;
+
+    const toggleGrupDipilih = (grup: GrupKaryawan, pilih: boolean) => {
+        setSemuaFilter(false);
+        setDipilih((prev) => {
+            const next = new Set(prev);
+            grup.saldo_cutis.forEach((s) =>
+                pilih ? next.add(s.id) : next.delete(s.id),
+            );
+
+            return next;
+        });
+    };
+
+    const toggleGrupTerbuka = (id: number) =>
+        setGrupDibalik((prev) => {
+            const next = new Set(prev);
+
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+
+            return next;
+        });
+
+    const aturSemuaGrup = (terbuka: boolean) => {
+        setBawaanTerbuka(terbuka);
+        setGrupDibalik(new Set());
+    };
+
+    const adaGrupTerbuka = grupKaryawan.data.some((g) => grupTerbuka(g.id));
+
+    const jumlahFilterAktif = [
+        filters.jenis_cuti_id,
+        filters.departemen_id,
+        filters.tahun,
+    ].filter((v) => v !== null).length;
+
+    /** Urutan sel untuk navigasi Enter/↑/↓ — hanya baris di grup yang terbuka. */
+    const urutanBaris = new Map(
+        rows.filter((r) => grupTerbuka(r.karyawan_id)).map((r, i) => [r.id, i]),
+    );
 
     const hapusSatu = (saldo: SaldoCutiRow) => {
         const label = saldo.periode_ke
@@ -298,6 +376,194 @@ export default function MasterSaldoCuti() {
                 preserveScroll: true,
             });
         }
+    };
+
+    const pilihanFilter = (
+        <>
+            <NativeSelect
+                wrapperClassName="w-full sm:w-44"
+                aria-label="Filter jenis cuti"
+                value={filters.jenis_cuti_id ?? ''}
+                onChange={(e) =>
+                    terapkanFilter({
+                        jenis_cuti_id: Number(e.target.value) || null,
+                    })
+                }
+            >
+                <option value="">Semua jenis cuti</option>
+                {jenisCutis.map((j) => (
+                    <option key={j.id} value={j.id}>
+                        {j.nama_jenis}
+                    </option>
+                ))}
+            </NativeSelect>
+            <NativeSelect
+                wrapperClassName="w-full sm:w-44"
+                aria-label="Filter departemen"
+                value={filters.departemen_id ?? ''}
+                onChange={(e) =>
+                    terapkanFilter({
+                        departemen_id: Number(e.target.value) || null,
+                    })
+                }
+            >
+                <option value="">Semua departemen</option>
+                {departemens.map((d) => (
+                    <option key={d.id} value={d.id}>
+                        {d.nama_departemen}
+                    </option>
+                ))}
+            </NativeSelect>
+            <NativeSelect
+                wrapperClassName="w-full sm:w-32"
+                aria-label="Filter tahun"
+                value={filters.tahun ?? ''}
+                onChange={(e) =>
+                    terapkanFilter({
+                        tahun: Number(e.target.value) || null,
+                    })
+                }
+            >
+                <option value="">Semua tahun</option>
+                {tahunTersedia.map((t) => (
+                    <option key={t} value={t}>
+                        {t}
+                    </option>
+                ))}
+            </NativeSelect>
+        </>
+    );
+
+    const LABEL_KOLOM: Record<Kolom, string> = {
+        kuota: 'Kuota',
+        terpakai: 'Terpakai',
+        sisa: 'Sisa',
+    };
+
+    /**
+     * Satu jenis cuti di dalam grup karyawan. Di layar sempit tampil
+     * bertumpuk (nama jenis di atas, tiga input berdampingan di bawah);
+     * mulai `sm` berubah jadi kolom sejajar seperti tabel.
+     */
+    const renderBarisSaldo = (saldo: SaldoCutiRow) => {
+        const diubah = saldo.id in drafts;
+        const baris = urutanBaris.get(saldo.id) ?? -1;
+        const severity = saldoSeverity(
+            keAngka(nilaiSel(saldo, 'sisa')),
+            keAngka(nilaiSel(saldo, 'kuota')),
+        );
+
+        return (
+            <div
+                key={saldo.id}
+                className={cn(
+                    'grid grid-cols-[1.5rem_minmax(0,1fr)_2rem] items-center gap-x-2 gap-y-2 px-3 py-2 transition-colors hover:bg-muted/30 sm:grid-cols-[1.5rem_minmax(0,1fr)_5.5rem_5.5rem_5.5rem_minmax(0,14rem)_2rem] sm:py-1.5',
+                    dipilih.has(saldo.id) && 'bg-primary/5',
+                    diubah &&
+                        'bg-amber-50 hover:bg-amber-50 dark:bg-amber-950/20 dark:hover:bg-amber-950/20',
+                )}
+            >
+                <Checkbox
+                    aria-label={`Pilih ${saldo.karyawan?.nama} · ${saldo.jenis_cuti?.nama_jenis}`}
+                    checked={semuaFilter || dipilih.has(saldo.id)}
+                    onCheckedChange={(v) => toggleBaris(saldo.id, v === true)}
+                />
+                <div className="min-w-0">
+                    <div className="truncate">
+                        {saldo.jenis_cuti?.nama_jenis}
+                    </div>
+                    <div
+                        className="text-xs text-muted-foreground"
+                        title={
+                            saldo.periode_ke
+                                ? `${formatDate(saldo.periode_mulai!)} s/d ${formatDate(saldo.periode_selesai!)}`
+                                : undefined
+                        }
+                    >
+                        {saldo.periode_ke
+                            ? `Periode ke-${saldo.periode_ke}`
+                            : `Tahun ${saldo.tahun}`}
+                    </div>
+                </div>
+                <div className="col-span-3 col-start-1 row-start-2 grid grid-cols-3 gap-2 sm:col-span-3 sm:col-start-3 sm:row-start-1">
+                    {KOLOM.map((kolom) => {
+                        const nilai = nilaiSel(saldo, kolom);
+                        const galatServer =
+                            simpanErrors[`${saldo.id}.${kolom}`];
+                        const tidakValid =
+                            !selValid(kolom, nilai) ||
+                            galatServer !== undefined;
+                        const berubah = nilai !== nilaiAsli(saldo)[kolom];
+
+                        return (
+                            <label key={kolom} className="flex flex-col gap-1">
+                                <span className="text-xs text-muted-foreground sm:sr-only">
+                                    {LABEL_KOLOM[kolom]}
+                                </span>
+                                <Input
+                                    data-sel={`${baris}:${kolom}`}
+                                    inputMode="numeric"
+                                    aria-label={`${kolom} ${saldo.karyawan?.nama} ${saldo.jenis_cuti?.nama_jenis}`}
+                                    aria-invalid={tidakValid}
+                                    title={
+                                        galatServer ??
+                                        (tidakValid
+                                            ? 'Harus bilangan bulat ≥ 0'
+                                            : undefined)
+                                    }
+                                    placeholder={
+                                        kolom === 'terpakai' ? '0' : '∞'
+                                    }
+                                    value={nilai}
+                                    onChange={(e) =>
+                                        ubahSel(
+                                            saldo,
+                                            kolom,
+                                            e.target.value.trim(),
+                                        )
+                                    }
+                                    onKeyDown={(e) =>
+                                        pindahSel(e, baris, kolom)
+                                    }
+                                    onFocus={(e) => e.target.select()}
+                                    className={cn(
+                                        'h-9 text-center tabular-nums sm:h-8',
+                                        berubah &&
+                                            'border-amber-400 font-semibold dark:border-amber-700',
+                                        kolom === 'sisa' && severity.text,
+                                    )}
+                                />
+                            </label>
+                        );
+                    })}
+                </div>
+                <div className="col-span-3 col-start-1 row-start-3 min-w-0 text-xs text-muted-foreground sm:col-span-1 sm:col-start-6 sm:row-start-1">
+                    {saldo.catatan ? (
+                        <div
+                            className="truncate"
+                            title={`${saldo.catatan} — ${saldo.diubah_oleh?.nama ?? ''}`}
+                        >
+                            {saldo.catatan}
+                            <span className="opacity-70">
+                                {' '}
+                                · {saldo.diubah_oleh?.nama}
+                            </span>
+                        </div>
+                    ) : (
+                        <span className="hidden opacity-50 sm:inline">—</span>
+                    )}
+                </div>
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Hapus saldo ${saldo.karyawan?.nama} · ${saldo.jenis_cuti?.nama_jenis}`}
+                    className="col-start-3 row-start-1 size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:col-start-7"
+                    onClick={() => hapusSatu(saldo)}
+                >
+                    <Trash2 className="size-4" />
+                </Button>
+            </div>
+        );
     };
 
     return (
@@ -322,67 +588,62 @@ export default function MasterSaldoCuti() {
                                 e.preventDefault();
                                 terapkanFilter({ search });
                             }}
-                            className="w-full sm:w-56"
+                            className="min-w-0 flex-1 sm:w-56 sm:flex-none"
                         >
                             <Input
+                                type="search"
                                 placeholder="Cari nama/NIP..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
                         </form>
-                        <NativeSelect
-                            wrapperClassName="w-full sm:w-44"
-                            aria-label="Filter jenis cuti"
-                            value={filters.jenis_cuti_id ?? ''}
-                            onChange={(e) =>
-                                terapkanFilter({
-                                    jenis_cuti_id:
-                                        Number(e.target.value) || null,
-                                })
-                            }
-                        >
-                            <option value="">Semua jenis cuti</option>
-                            {jenisCutis.map((j) => (
-                                <option key={j.id} value={j.id}>
-                                    {j.nama_jenis}
-                                </option>
-                            ))}
-                        </NativeSelect>
-                        <NativeSelect
-                            wrapperClassName="w-full sm:w-44"
-                            aria-label="Filter departemen"
-                            value={filters.departemen_id ?? ''}
-                            onChange={(e) =>
-                                terapkanFilter({
-                                    departemen_id:
-                                        Number(e.target.value) || null,
-                                })
-                            }
-                        >
-                            <option value="">Semua departemen</option>
-                            {departemens.map((d) => (
-                                <option key={d.id} value={d.id}>
-                                    {d.nama_departemen}
-                                </option>
-                            ))}
-                        </NativeSelect>
-                        <NativeSelect
-                            wrapperClassName="w-full sm:w-32"
-                            aria-label="Filter tahun"
-                            value={filters.tahun ?? ''}
-                            onChange={(e) =>
-                                terapkanFilter({
-                                    tahun: Number(e.target.value) || null,
-                                })
-                            }
-                        >
-                            <option value="">Semua tahun</option>
-                            {tahunTersedia.map((t) => (
-                                <option key={t} value={t}>
-                                    {t}
-                                </option>
-                            ))}
-                        </NativeSelect>
+                        <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
+                            <SheetTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="gap-1.5 sm:hidden"
+                                >
+                                    <SlidersHorizontal className="size-4" />
+                                    Filter
+                                    {jumlahFilterAktif > 0 && (
+                                        <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground tabular-nums">
+                                            {jumlahFilterAktif}
+                                        </span>
+                                    )}
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent
+                                side="bottom"
+                                className="rounded-t-xl pb-6"
+                            >
+                                <SheetHeader>
+                                    <SheetTitle>Filter saldo cuti</SheetTitle>
+                                    <SheetDescription>
+                                        Filter langsung diterapkan saat dipilih.
+                                    </SheetDescription>
+                                </SheetHeader>
+                                <div className="flex flex-col gap-3 px-4">
+                                    {pilihanFilter}
+                                    {jumlahFilterAktif > 0 && (
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() =>
+                                                terapkanFilter({
+                                                    jenis_cuti_id: null,
+                                                    departemen_id: null,
+                                                    tahun: null,
+                                                })
+                                            }
+                                        >
+                                            Reset filter
+                                        </Button>
+                                    )}
+                                </div>
+                            </SheetContent>
+                        </Sheet>
+                        <div className="hidden flex-wrap items-center gap-2 sm:flex">
+                            {pilihanFilter}
+                        </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <Button asChild variant="outline" className="gap-1.5">
@@ -417,14 +678,13 @@ export default function MasterSaldoCuti() {
                         </span>
                         {semuaHalamanDipilih &&
                             !semuaFilter &&
-                            saldoCutis.total > rows.length && (
+                            totalBaris > rows.length && (
                                 <button
                                     type="button"
                                     className="text-primary underline underline-offset-4"
                                     onClick={() => setSemuaFilter(true)}
                                 >
-                                    Pilih semua {saldoCutis.total} baris sesuai
-                                    filter
+                                    Pilih semua {totalBaris} baris sesuai filter
                                 </button>
                             )}
                         <div className="ml-auto flex gap-2">
@@ -444,243 +704,196 @@ export default function MasterSaldoCuti() {
                     </div>
                 )}
 
-                <Card className="gap-0 overflow-hidden py-0">
-                    <CardContent className="overflow-x-auto p-0">
-                        <table className="w-full min-w-[880px] text-sm">
-                            <thead>
-                                <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
-                                    <th className="w-10 px-3 py-2">
-                                        <Checkbox
-                                            aria-label="Pilih semua di halaman ini"
-                                            checked={
-                                                semuaHalamanDipilih
-                                                    ? true
-                                                    : sebagianDipilih
-                                                      ? 'indeterminate'
-                                                      : false
-                                            }
-                                            onCheckedChange={(v) =>
-                                                toggleSemuaHalaman(v === true)
-                                            }
-                                        />
-                                    </th>
-                                    <th className="px-3 py-2 font-medium">
-                                        Karyawan
-                                    </th>
-                                    <th className="px-3 py-2 font-medium">
-                                        Jenis Cuti
-                                    </th>
-                                    <th className="w-24 px-2 py-2 text-center font-medium">
-                                        Kuota
-                                    </th>
-                                    <th className="w-24 px-2 py-2 text-center font-medium">
-                                        Terpakai
-                                    </th>
-                                    <th
-                                        className="w-24 px-2 py-2 text-center font-medium"
-                                        title="Otomatis = kuota − terpakai, tetap bisa diubah manual"
-                                    >
-                                        Sisa
-                                    </th>
-                                    <th className="px-3 py-2 font-medium">
-                                        Catatan Terakhir
-                                    </th>
-                                    <th className="w-10 px-2 py-2" />
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {rows.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={8}
-                                            className="p-4 text-sm text-muted-foreground"
-                                        >
-                                            Tidak ada saldo cuti aktif yang
-                                            cocok dengan filter.
-                                        </td>
-                                    </tr>
+                <div className="flex items-center gap-3 px-1 text-sm text-muted-foreground">
+                    <Checkbox
+                        aria-label="Pilih semua di halaman ini"
+                        checked={
+                            semuaHalamanDipilih
+                                ? true
+                                : sebagianDipilih
+                                  ? 'indeterminate'
+                                  : false
+                        }
+                        onCheckedChange={(v) => toggleSemuaHalaman(v === true)}
+                        disabled={rows.length === 0}
+                    />
+                    <span>
+                        {grupKaryawan.total} karyawan · {totalBaris} baris saldo
+                    </span>
+                    {grupKaryawan.data.length > 0 && (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="ml-auto h-8 gap-1.5"
+                            onClick={() => aturSemuaGrup(!adaGrupTerbuka)}
+                        >
+                            {adaGrupTerbuka ? (
+                                <ChevronsDownUp className="size-4" />
+                            ) : (
+                                <ChevronsUpDown className="size-4" />
+                            )}
+                            {adaGrupTerbuka ? 'Tutup semua' : 'Buka semua'}
+                        </Button>
+                    )}
+                </div>
+
+                {grupKaryawan.data.length === 0 && (
+                    <Card className="p-4 text-sm text-muted-foreground">
+                        Tidak ada saldo cuti aktif yang cocok dengan filter.
+                    </Card>
+                )}
+
+                <div className="flex flex-col gap-3">
+                    {grupKaryawan.data.map((grup) => {
+                        const terbuka = grupTerbuka(grup.id);
+                        const barisGrup = rows.filter(
+                            (r) => r.karyawan_id === grup.id,
+                        );
+                        const jumlahGrupDipilih = barisGrup.filter((r) =>
+                            dipilih.has(r.id),
+                        ).length;
+                        const jumlahGrupDiubah = barisGrup.filter(
+                            (r) => r.id in drafts,
+                        ).length;
+
+                        return (
+                            <Card
+                                key={grup.id}
+                                className={cn(
+                                    'gap-0 overflow-hidden py-0',
+                                    jumlahGrupDiubah > 0 &&
+                                        'border-amber-300 dark:border-amber-800',
                                 )}
-                                {rows.map((saldo, baris) => {
-                                    const diubah = saldo.id in drafts;
-                                    const severity = saldoSeverity(
-                                        keAngka(nilaiSel(saldo, 'sisa')),
-                                        keAngka(nilaiSel(saldo, 'kuota')),
-                                    );
-
-                                    return (
-                                        <tr
-                                            key={saldo.id}
-                                            className={cn(
-                                                'transition-colors hover:bg-muted/30',
-                                                dipilih.has(saldo.id) &&
-                                                    'bg-primary/5',
-                                                diubah &&
-                                                    'bg-amber-50 hover:bg-amber-50 dark:bg-amber-950/20 dark:hover:bg-amber-950/20',
-                                            )}
-                                        >
-                                            <td className="px-3 py-1.5">
-                                                <Checkbox
-                                                    aria-label={`Pilih ${saldo.karyawan?.nama}`}
-                                                    checked={
-                                                        semuaFilter ||
-                                                        dipilih.has(saldo.id)
-                                                    }
-                                                    onCheckedChange={(v) =>
-                                                        toggleBaris(
-                                                            saldo.id,
-                                                            v === true,
-                                                        )
-                                                    }
-                                                />
-                                            </td>
-                                            <td className="px-3 py-1.5">
-                                                <div className="font-medium">
-                                                    {saldo.karyawan?.nama}
-                                                </div>
-                                                <div className="text-xs text-muted-foreground">
-                                                    {saldo.karyawan?.nip}
-                                                    {saldo.karyawan
-                                                        ?.departemen &&
-                                                        ` · ${saldo.karyawan.departemen.nama_departemen}`}
-                                                </div>
-                                            </td>
-                                            <td className="px-3 py-1.5">
-                                                <div>
-                                                    {
-                                                        saldo.jenis_cuti
-                                                            ?.nama_jenis
-                                                    }
-                                                </div>
-                                                <div
-                                                    className="text-xs text-muted-foreground"
-                                                    title={
-                                                        saldo.periode_ke
-                                                            ? `${formatDate(saldo.periode_mulai!)} s/d ${formatDate(saldo.periode_selesai!)}`
-                                                            : undefined
-                                                    }
-                                                >
-                                                    {saldo.periode_ke
-                                                        ? `Periode ke-${saldo.periode_ke}`
-                                                        : `Tahun ${saldo.tahun}`}
-                                                </div>
-                                            </td>
-                                            {KOLOM.map((kolom) => {
-                                                const nilai = nilaiSel(
-                                                    saldo,
-                                                    kolom,
-                                                );
-                                                const galatServer =
-                                                    simpanErrors[
-                                                        `${saldo.id}.${kolom}`
-                                                    ];
-                                                const tidakValid =
-                                                    !selValid(kolom, nilai) ||
-                                                    galatServer !== undefined;
-                                                const berubah =
-                                                    nilai !==
-                                                    nilaiAsli(saldo)[kolom];
-
-                                                return (
-                                                    <td
-                                                        key={kolom}
-                                                        className="px-2 py-1.5"
-                                                    >
-                                                        <Input
-                                                            data-sel={`${baris}:${kolom}`}
-                                                            inputMode="numeric"
-                                                            aria-label={`${kolom} ${saldo.karyawan?.nama}`}
-                                                            aria-invalid={
-                                                                tidakValid
-                                                            }
-                                                            title={
-                                                                galatServer ??
-                                                                (tidakValid
-                                                                    ? 'Harus bilangan bulat ≥ 0'
-                                                                    : undefined)
-                                                            }
-                                                            placeholder={
-                                                                kolom ===
-                                                                'terpakai'
-                                                                    ? '0'
-                                                                    : '∞'
-                                                            }
-                                                            value={nilai}
-                                                            onChange={(e) =>
-                                                                ubahSel(
-                                                                    saldo,
-                                                                    kolom,
-                                                                    e.target.value.trim(),
-                                                                )
-                                                            }
-                                                            onKeyDown={(e) =>
-                                                                pindahSel(
-                                                                    e,
-                                                                    baris,
-                                                                    kolom,
-                                                                )
-                                                            }
-                                                            onFocus={(e) =>
-                                                                e.target.select()
-                                                            }
-                                                            className={cn(
-                                                                'h-8 text-center tabular-nums',
-                                                                berubah &&
-                                                                    'border-amber-400 font-semibold dark:border-amber-700',
-                                                                kolom ===
-                                                                    'sisa' &&
-                                                                    severity.text,
-                                                            )}
-                                                        />
-                                                    </td>
-                                                );
-                                            })}
-                                            <td className="max-w-56 px-3 py-1.5 text-xs text-muted-foreground">
-                                                {saldo.catatan ? (
-                                                    <div
-                                                        className="truncate"
-                                                        title={`${saldo.catatan} — ${saldo.diubah_oleh?.nama ?? ''}`}
-                                                    >
-                                                        {saldo.catatan}
-                                                        <span className="opacity-70">
-                                                            {' '}
-                                                            ·{' '}
-                                                            {
-                                                                saldo
-                                                                    .diubah_oleh
-                                                                    ?.nama
-                                                            }
-                                                        </span>
-                                                    </div>
-                                                ) : (
-                                                    <span className="opacity-50">
-                                                        —
+                            >
+                                <div className="flex items-start gap-3 px-3 py-2.5">
+                                    <Checkbox
+                                        className="mt-0.5"
+                                        aria-label={`Pilih semua saldo ${grup.nama}`}
+                                        checked={
+                                            semuaFilter ||
+                                            (jumlahGrupDipilih > 0 &&
+                                                jumlahGrupDipilih ===
+                                                    barisGrup.length)
+                                                ? true
+                                                : jumlahGrupDipilih > 0
+                                                  ? 'indeterminate'
+                                                  : false
+                                        }
+                                        onCheckedChange={(v) =>
+                                            toggleGrupDipilih(grup, v === true)
+                                        }
+                                    />
+                                    <button
+                                        type="button"
+                                        className="flex min-w-0 flex-1 items-start gap-2 text-left"
+                                        aria-expanded={terbuka}
+                                        onClick={() =>
+                                            toggleGrupTerbuka(grup.id)
+                                        }
+                                    >
+                                        <div className="min-w-0 flex-1">
+                                            <div className="truncate font-medium">
+                                                {grup.nama}
+                                                {jumlahGrupDiubah > 0 && (
+                                                    <span className="ml-2 text-xs font-normal text-amber-700 dark:text-amber-400">
+                                                        {jumlahGrupDiubah}{' '}
+                                                        diubah
                                                     </span>
                                                 )}
-                                            </td>
-                                            <td className="px-2 py-1.5">
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    aria-label={`Hapus saldo ${saldo.karyawan?.nama}`}
-                                                    className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                                                    onClick={() =>
-                                                        hapusSatu(saldo)
-                                                    }
-                                                >
-                                                    <Trash2 className="size-4" />
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </CardContent>
-                </Card>
+                                            </div>
+                                            <div className="truncate text-xs text-muted-foreground">
+                                                {grup.nip}
+                                                {grup.departemen &&
+                                                    ` · ${grup.departemen.nama_departemen}`}
+                                            </div>
+                                            {!terbuka && (
+                                                <div className="mt-1.5 flex flex-wrap gap-1">
+                                                    {barisGrup.map((saldo) => {
+                                                        const sisa = keAngka(
+                                                            nilaiSel(
+                                                                saldo,
+                                                                'sisa',
+                                                            ),
+                                                        );
+                                                        const kuota = keAngka(
+                                                            nilaiSel(
+                                                                saldo,
+                                                                'kuota',
+                                                            ),
+                                                        );
+
+                                                        return (
+                                                            <span
+                                                                key={saldo.id}
+                                                                className={cn(
+                                                                    'rounded-md border px-1.5 py-0.5 text-xs tabular-nums',
+                                                                    saldoSeverity(
+                                                                        sisa,
+                                                                        kuota,
+                                                                    ).badge,
+                                                                )}
+                                                            >
+                                                                {
+                                                                    saldo
+                                                                        .jenis_cuti
+                                                                        ?.nama_jenis
+                                                                }{' '}
+                                                                {sisa === null
+                                                                    ? '∞'
+                                                                    : `${sisa}/${kuota}`}
+                                                            </span>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className="mt-0.5 shrink-0 text-xs text-muted-foreground">
+                                            {barisGrup.length} jenis
+                                        </span>
+                                        <ChevronDown
+                                            className={cn(
+                                                'mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform',
+                                                terbuka && 'rotate-180',
+                                            )}
+                                        />
+                                    </button>
+                                </div>
+
+                                {terbuka && (
+                                    <div className="border-t">
+                                        <div className="hidden grid-cols-[1.5rem_minmax(0,1fr)_5.5rem_5.5rem_5.5rem_minmax(0,14rem)_2rem] gap-x-2 bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground sm:grid">
+                                            <span />
+                                            <span>Jenis Cuti</span>
+                                            <span className="text-center">
+                                                Kuota
+                                            </span>
+                                            <span className="text-center">
+                                                Terpakai
+                                            </span>
+                                            <span
+                                                className="text-center"
+                                                title="Otomatis = kuota − terpakai, tetap bisa diubah manual"
+                                            >
+                                                Sisa
+                                            </span>
+                                            <span>Catatan Terakhir</span>
+                                            <span />
+                                        </div>
+                                        <div className="divide-y">
+                                            {barisGrup.map((saldo) =>
+                                                renderBarisSaldo(saldo),
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </Card>
+                        );
+                    })}
+                </div>
 
                 <Pagination
-                    links={saldoCutis.links}
-                    perPage={saldoCutis.per_page}
+                    links={grupKaryawan.links}
+                    perPage={grupKaryawan.per_page}
                 />
 
                 {jumlahDraft > 0 && (

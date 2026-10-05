@@ -43,8 +43,30 @@ class SaldoCutiMassalTest extends TestCase
         ]));
 
         $response->assertInertia(fn (Assert $page) => $page
-            ->has('saldoCutis.data', 1)
-            ->where('saldoCutis.data.0.id', $cocok->id));
+            ->where('totalBaris', 1)
+            ->has('grupKaryawan.data', 1)
+            ->has('grupKaryawan.data.0.saldo_cutis', 1)
+            ->where('grupKaryawan.data.0.saldo_cutis.0.id', $cocok->id));
+    }
+
+    public function test_index_groups_every_saldo_of_a_karyawan_on_the_same_page(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $andi = Karyawan::factory()->create(['nama' => 'Andi']);
+        $budi = Karyawan::factory()->create(['nama' => 'Budi']);
+        $jenisCutis = JenisCuti::factory()->count(4)->create();
+        $jenisCutis->each(fn (JenisCuti $jenisCuti) => SaldoCuti::factory()->create(['karyawan_id' => $andi->id, 'jenis_cuti_id' => $jenisCuti->id]));
+        SaldoCuti::factory()->create(['karyawan_id' => $budi->id, 'jenis_cuti_id' => $jenisCutis->first()->id]);
+
+        $response = $this->actingAs($hrd)->get(route('master.saldo-cuti.index', ['per_page' => 10]));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->where('totalBaris', 5)
+            ->where('grupKaryawan.total', 2)
+            ->where('grupKaryawan.data.0.nama', 'Andi')
+            ->has('grupKaryawan.data.0.saldo_cutis', 4)
+            ->where('grupKaryawan.data.1.nama', 'Budi')
+            ->has('grupKaryawan.data.1.saldo_cutis', 1));
     }
 
     public function test_update_massal_saves_every_row_with_one_catatan(): void
