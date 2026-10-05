@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NativeSelect } from '@/components/ui/native-select';
 import { saldoSeverity } from '@/lib/saldo-severity';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -111,9 +112,9 @@ export default function LaporanSaldoCuti() {
                                 <Label htmlFor="departemen_id">
                                     Departemen
                                 </Label>
-                                <select
+                                <NativeSelect
                                     id="departemen_id"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                     value={form.departemen_id}
                                     onChange={(e) =>
                                         setForm({
@@ -128,7 +129,7 @@ export default function LaporanSaldoCuti() {
                                             {d.nama_departemen}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 <Button type="submit">Filter</Button>
@@ -155,7 +156,7 @@ export default function LaporanSaldoCuti() {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="overflow-x-auto p-0">
                         <table className="w-full min-w-[960px] text-sm">
                             <thead>

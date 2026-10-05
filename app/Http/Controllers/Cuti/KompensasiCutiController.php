@@ -19,7 +19,7 @@ class KompensasiCutiController extends Controller
     public function index(Request $request): Response
     {
         $kompensasiCutis = KompensasiCuti::query()
-            ->with(['karyawan', 'jenisCuti', 'diprosesOleh'])
+            ->with(['karyawan', 'jenisCuti', 'diprosesOleh', 'riwayatSaldoCuti'])
             ->latest('id')
             ->paginate($this->resolvePerPage($request, 30))
             ->withQueryString();

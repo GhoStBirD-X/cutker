@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NativeSelect } from '@/components/ui/native-select';
 import { formatDate } from '@/lib/format';
 import { dashboard } from '@/routes';
 import { index as saldoCutiIndex } from '@/routes/master/saldo-cuti';
@@ -50,8 +51,10 @@ export default function MasterSaldoCuti() {
         usePage<PageProps>().props;
     const [editing, setEditing] = useState<SaldoCutiRow | null>(null);
     const [search, setSearch] = useState(filters.search ?? '');
-    const [periodeOptions, setPeriodeOptions] = useState<PeriodeOption[]>([]);
-    const [loadingPeriode, setLoadingPeriode] = useState(false);
+    const [hasilPeriode, setHasilPeriode] = useState<{
+        kunci: string;
+        periodes: PeriodeOption[];
+    } | null>(null);
 
     const { data, setData, post, put, processing, errors, reset } =
         useForm(emptyForm);
@@ -65,19 +68,23 @@ export default function MasterSaldoCuti() {
     // Periode selalu dihitung dari tanggal_masuk karyawan di backend
     // (lihat SaldoCutiService::periodeTersediaUntuk()) supaya HRD tidak
     // bisa salah ketik tanggal mulai/selesai periode.
+    const kunciPeriode =
+        !editing && bertipePeriode && data.karyawan_id && data.jenis_cuti_id
+            ? `${data.karyawan_id}:${data.jenis_cuti_id}`
+            : null;
+    const periodeOptions =
+        kunciPeriode !== null && hasilPeriode?.kunci === kunciPeriode
+            ? hasilPeriode.periodes
+            : [];
+    const loadingPeriode =
+        kunciPeriode !== null && hasilPeriode?.kunci !== kunciPeriode;
+
     useEffect(() => {
-        if (
-            editing ||
-            !bertipePeriode ||
-            !data.karyawan_id ||
-            !data.jenis_cuti_id
-        ) {
-            setPeriodeOptions([]);
+        if (kunciPeriode === null) {
             return;
         }
 
         let dibatalkan = false;
-        setLoadingPeriode(true);
 
         fetch(
             SaldoCutiController.periodeTersedia.url({
@@ -94,15 +101,18 @@ export default function MasterSaldoCuti() {
                     return;
                 }
 
-                setPeriodeOptions(body.periodes);
+                setHasilPeriode({
+                    kunci: kunciPeriode,
+                    periodes: body.periodes,
+                });
                 setData(
                     'periode_ke',
                     body.periodes[0] ? String(body.periodes[0].periode_ke) : '',
                 );
             })
-            .finally(() => {
+            .catch(() => {
                 if (!dibatalkan) {
-                    setLoadingPeriode(false);
+                    setHasilPeriode({ kunci: kunciPeriode, periodes: [] });
                 }
             });
 
@@ -110,7 +120,7 @@ export default function MasterSaldoCuti() {
             dibatalkan = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data.karyawan_id, data.jenis_cuti_id, bertipePeriode, editing]);
+    }, [kunciPeriode]);
 
     const periodeTerpilih = periodeOptions.find(
         (p) => String(p.periode_ke) === data.periode_ke,
@@ -191,9 +201,9 @@ export default function MasterSaldoCuti() {
                         >
                             <div className="grid gap-2">
                                 <Label htmlFor="karyawan_id">Karyawan</Label>
-                                <select
+                                <NativeSelect
                                     id="karyawan_id"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                     value={data.karyawan_id}
                                     disabled={!!editing}
                                     onChange={(e) =>
@@ -206,16 +216,16 @@ export default function MasterSaldoCuti() {
                                             {k.nama} ({k.nip})
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                                 <InputError message={errors.karyawan_id} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="jenis_cuti_id">
                                     Jenis Cuti
                                 </Label>
-                                <select
+                                <NativeSelect
                                     id="jenis_cuti_id"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                     value={data.jenis_cuti_id}
                                     disabled={!!editing}
                                     onChange={(e) =>
@@ -228,7 +238,7 @@ export default function MasterSaldoCuti() {
                                             {j.nama_jenis}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                                 <InputError message={errors.jenis_cuti_id} />
                             </div>
 
@@ -238,9 +248,9 @@ export default function MasterSaldoCuti() {
                                         <Label htmlFor="periode_ke">
                                             Periode Ke-
                                         </Label>
-                                        <select
+                                        <NativeSelect
                                             id="periode_ke"
-                                            className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm disabled:opacity-50"
+
                                             value={data.periode_ke}
                                             disabled={
                                                 loadingPeriode ||
@@ -270,7 +280,7 @@ export default function MasterSaldoCuti() {
                                                     Periode ke-{p.periode_ke}
                                                 </option>
                                             ))}
-                                        </select>
+                                        </NativeSelect>
                                         <InputError
                                             message={errors.periode_ke}
                                         />
@@ -395,7 +405,7 @@ export default function MasterSaldoCuti() {
                     />
                 </form>
 
-                <Card>
+                <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="divide-y p-0">
                         {saldoCutis.data.length === 0 && (
                             <p className="p-4 text-sm text-muted-foreground">
@@ -444,7 +454,8 @@ export default function MasterSaldoCuti() {
                                     </Button>
                                     <Button
                                         size="sm"
-                                        variant="destructive"
+                                        variant="outline"
+                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                         onClick={() => destroy(saldo)}
                                     >
                                         Hapus

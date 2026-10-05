@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { formatDateTime } from '@/lib/format';
+import { formatDate, formatDateTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { index as kompensasiIndex } from '@/routes/cuti/kompensasi';
@@ -63,6 +63,21 @@ function KompensasiRow({
                         {kompensasi.jenis_cuti?.nama_jenis}
                     </div>
                     <div className="text-muted-foreground">
+                        {kompensasi.riwayat_saldo_cuti && (
+                            <>
+                                Periode ke-
+                                {kompensasi.riwayat_saldo_cuti.periode_ke} (
+                                {formatDate(
+                                    kompensasi.riwayat_saldo_cuti.periode_mulai,
+                                )}{' '}
+                                s/d{' '}
+                                {formatDate(
+                                    kompensasi.riwayat_saldo_cuti
+                                        .periode_selesai,
+                                )}
+                                ) &middot;{' '}
+                            </>
+                        )}
                         {kompensasi.jumlah_hari} hari sisa cuti hangus
                     </div>
                 </div>
@@ -219,7 +234,7 @@ export default function KompensasiCutiIndex() {
                     </Card>
                 )}
 
-                <Card>
+                <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="divide-y p-0">
                         {kompensasiCutis.data.length === 0 && (
                             <p className="p-4 text-sm text-muted-foreground">

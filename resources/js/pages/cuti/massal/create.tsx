@@ -220,7 +220,7 @@ export default function CutiMassalCreate() {
 
                 {eligibleKaryawans && (
                     <form onSubmit={submit} className="space-y-4">
-                        <Card className="max-w-3xl">
+                        <Card className="max-w-3xl gap-0 overflow-hidden py-0">
                             <CardContent className="space-y-3 p-0">
                                 {eligibleKaryawans.length === 0 && (
                                     <p className="p-4 text-sm text-muted-foreground">

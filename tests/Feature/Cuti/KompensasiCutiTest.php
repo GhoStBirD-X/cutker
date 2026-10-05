@@ -5,8 +5,10 @@ namespace Tests\Feature\Cuti;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\KompensasiCuti;
+use App\Models\RiwayatSaldoCuti;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -120,6 +122,24 @@ class KompensasiCutiTest extends TestCase
             'id' => $sudahDiproses->id,
             'rate_per_hari' => $sudahDiproses->rate_per_hari,
         ]);
+    }
+
+    public function test_kompensasi_list_includes_the_periode_that_expired(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $riwayat = RiwayatSaldoCuti::factory()->create(['periode_ke' => 3]);
+        KompensasiCuti::factory()->create([
+            'karyawan_id' => $riwayat->karyawan_id,
+            'jenis_cuti_id' => $riwayat->jenis_cuti_id,
+            'riwayat_saldo_cuti_id' => $riwayat->id,
+        ]);
+
+        $response = $this->actingAs($hrd)->get(route('cuti.kompensasi.index'));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('cuti/kompensasi/index')
+            ->where('kompensasiCutis.data.0.riwayat_saldo_cuti.periode_ke', 3)
+        );
     }
 
     public function test_karyawan_cannot_access_kompensasi_cuti_page(): void

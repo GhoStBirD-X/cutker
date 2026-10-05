@@ -34,7 +34,7 @@ export default function CutiMassalIndex() {
                     </Button>
                 </div>
 
-                <Card>
+                <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="divide-y p-0">
                         {cutiMassals.data.length === 0 && (
                             <p className="p-4 text-sm text-muted-foreground">

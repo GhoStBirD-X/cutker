@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NativeSelect } from '@/components/ui/native-select';
 import { dashboard } from '@/routes';
 import { index as karyawanIndex } from '@/routes/master/karyawan';
 import type { Auth, Departemen, Jabatan, Karyawan, Paginated } from '@/types';
@@ -472,9 +473,9 @@ export default function MasterKaryawan() {
                                 <Label htmlFor="jenis_kelamin">
                                     Jenis Kelamin
                                 </Label>
-                                <select
+                                <NativeSelect
                                     id="jenis_kelamin"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                     value={data.jenis_kelamin}
                                     onChange={(e) =>
                                         setData('jenis_kelamin', e.target.value)
@@ -482,16 +483,16 @@ export default function MasterKaryawan() {
                                 >
                                     <option value="laki_laki">Laki-laki</option>
                                     <option value="perempuan">Perempuan</option>
-                                </select>
+                                </NativeSelect>
                                 <InputError message={errors.jenis_kelamin} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="departemen_id">
                                     Departemen
                                 </Label>
-                                <select
+                                <NativeSelect
                                     id="departemen_id"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                     value={data.departemen_id}
                                     onChange={(e) =>
                                         setData('departemen_id', e.target.value)
@@ -503,14 +504,14 @@ export default function MasterKaryawan() {
                                             {d.nama_departemen}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                                 <InputError message={errors.departemen_id} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="jabatan_id">Jabatan</Label>
-                                <select
+                                <NativeSelect
                                     id="jabatan_id"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                     value={data.jabatan_id}
                                     onChange={(e) =>
                                         setData('jabatan_id', e.target.value)
@@ -522,7 +523,7 @@ export default function MasterKaryawan() {
                                             {j.nama_jabatan}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                                 <InputError message={errors.jabatan_id} />
                             </div>
                             <div className="grid gap-2">
@@ -541,9 +542,9 @@ export default function MasterKaryawan() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="status">Status</Label>
-                                <select
+                                <NativeSelect
                                     id="status"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                     value={data.status}
                                     onChange={(e) =>
                                         setData('status', e.target.value)
@@ -551,16 +552,16 @@ export default function MasterKaryawan() {
                                 >
                                     <option value="aktif">Aktif</option>
                                     <option value="nonaktif">Nonaktif</option>
-                                </select>
+                                </NativeSelect>
                                 <InputError message={errors.status} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="tipe_karyawan">
                                     Tipe Karyawan
                                 </Label>
-                                <select
+                                <NativeSelect
                                     id="tipe_karyawan"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                     value={data.tipe_karyawan}
                                     onChange={(e) =>
                                         setData('tipe_karyawan', e.target.value)
@@ -572,7 +573,7 @@ export default function MasterKaryawan() {
                                     <option value="kontrak">
                                         Karyawan Kontrak
                                     </option>
-                                </select>
+                                </NativeSelect>
                                 <InputError message={errors.tipe_karyawan} />
                             </div>
                             {data.tipe_karyawan === 'kontrak' && (
@@ -597,7 +598,7 @@ export default function MasterKaryawan() {
                                 </div>
                             )}
                             {!editing && (
-                                <div className="col-span-2 grid gap-3 rounded-md border p-3 md:col-span-4">
+                                <div className="col-span-full grid gap-3 rounded-md border p-3">
                                     <label className="flex items-center gap-2 text-sm">
                                         <Checkbox
                                             checked={data.buat_akun}
@@ -638,9 +639,9 @@ export default function MasterKaryawan() {
                                                 <Label htmlFor="akun_role">
                                                     Role
                                                 </Label>
-                                                <select
+                                                <NativeSelect
                                                     id="akun_role"
-                                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                                     value={data.akun_role}
                                                     onChange={(e) =>
                                                         setData(
@@ -657,7 +658,7 @@ export default function MasterKaryawan() {
                                                             {role}
                                                         </option>
                                                     ))}
-                                                </select>
+                                                </NativeSelect>
                                                 <InputError
                                                     message={errors.akun_role}
                                                 />
@@ -666,7 +667,7 @@ export default function MasterKaryawan() {
                                     )}
                                 </div>
                             )}
-                            <div className="col-span-2 flex items-end gap-2 md:col-span-4">
+                            <div className="col-span-full flex items-end gap-2">
                                 <Button type="submit" disabled={processing}>
                                     {editing ? 'Simpan' : 'Tambah Karyawan'}
                                 </Button>
@@ -691,8 +692,8 @@ export default function MasterKaryawan() {
                         onChange={(e) => setSearch(e.target.value)}
                         className="max-w-sm"
                     />
-                    <select
-                        className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm sm:w-auto"
+                    <NativeSelect
+                        wrapperClassName="sm:w-auto"
                         value={departemenFilter}
                         onChange={(e) => setDepartemenFilter(e.target.value)}
                     >
@@ -702,13 +703,13 @@ export default function MasterKaryawan() {
                                 {d.nama_departemen}
                             </option>
                         ))}
-                    </select>
+                    </NativeSelect>
                     <Button type="submit" variant="outline">
                         Filter
                     </Button>
                 </form>
 
-                <Card>
+                <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="divide-y p-0">
                         {karyawans.data.map((karyawan) => (
                             <div
@@ -755,7 +756,8 @@ export default function MasterKaryawan() {
                                     </Button>
                                     <Button
                                         size="sm"
-                                        variant="destructive"
+                                        variant="outline"
+                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                         onClick={() => destroy(karyawan)}
                                     >
                                         Hapus

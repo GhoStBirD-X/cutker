@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NativeSelect } from '@/components/ui/native-select';
 import { UnlimitedBadge } from '@/components/unlimited-badge';
 import { dashboard } from '@/routes';
 import { index as jenisCutiIndex } from '@/routes/master/jenis-cuti';
@@ -165,9 +166,9 @@ export default function MasterJenisCuti() {
                                 <Label htmlFor="khusus_gender">
                                     Khusus Gender
                                 </Label>
-                                <select
+                                <NativeSelect
                                     id="khusus_gender"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                     value={data.khusus_gender}
                                     onChange={(e) =>
                                         setData(
@@ -180,7 +181,7 @@ export default function MasterJenisCuti() {
                                     <option value="">Semua</option>
                                     <option value="laki_laki">Laki-laki</option>
                                     <option value="perempuan">Perempuan</option>
-                                </select>
+                                </NativeSelect>
                                 <InputError message={errors.khusus_gender} />
                             </div>
                             <div className="grid gap-2">
@@ -223,7 +224,7 @@ export default function MasterJenisCuti() {
                     />
                 </form>
 
-                <Card>
+                <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="divide-y p-0">
                         {jenisCutis.data.map((jenis) => (
                             <div
@@ -281,7 +282,8 @@ export default function MasterJenisCuti() {
                                     </Button>
                                     <Button
                                         size="sm"
-                                        variant="destructive"
+                                        variant="outline"
+                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                         onClick={() => destroy(jenis)}
                                     >
                                         Hapus

@@ -160,6 +160,7 @@ export type KompensasiCuti = {
     karyawan?: Karyawan;
     jenis_cuti?: JenisCuti;
     diproses_oleh?: Karyawan;
+    riwayat_saldo_cuti?: RiwayatSaldoCuti | null;
 };
 
 export type StatusKonfirmasiKontrak =

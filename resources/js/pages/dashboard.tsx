@@ -151,7 +151,7 @@ export default function Dashboard() {
                         <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
                             Riwayat Pengajuan Terbaru
                         </h2>
-                        <Card>
+                        <Card className="gap-0 overflow-hidden py-0">
                             <CardContent className="divide-y p-0">
                                 {riwayatCuti.length === 0 && (
                                     <p className="p-4 text-sm text-muted-foreground">
@@ -200,7 +200,7 @@ export default function Dashboard() {
                         <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
                             Resume Cuti Tahunan
                         </h2>
-                        <Card>
+                        <Card className="gap-0 overflow-hidden py-0">
                             <CardContent className="divide-y p-0">
                                 {resumeCuti.map((riwayat) => (
                                     <div

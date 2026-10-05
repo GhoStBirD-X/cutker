@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NativeSelect } from '@/components/ui/native-select';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { index as jadwalShiftIndex } from '@/routes/jadwal-shift';
@@ -299,13 +300,25 @@ export default function JadwalShiftCalendar() {
     }
 
     useEffect(() => {
-        stripRef.current
-            ?.querySelector<HTMLElement>(`[data-tanggal="${selectedDate}"]`)
-            ?.scrollIntoView({
-                behavior: 'smooth',
-                inline: 'center',
-                block: 'nearest',
-            });
+        const strip = stripRef.current;
+        const tombol = strip?.querySelector<HTMLElement>(
+            `[data-tanggal="${selectedDate}"]`,
+        );
+
+        if (!strip || !tombol) {
+            return;
+        }
+
+        // Geser strip secara horizontal saja — scrollIntoView ikut
+        // menggulir halaman ke bawah di layar pendek (mobile).
+        strip.scrollTo({
+            left:
+                strip.scrollLeft +
+                tombol.getBoundingClientRect().left -
+                strip.getBoundingClientRect().left -
+                (strip.clientWidth - tombol.clientWidth) / 2,
+            behavior: 'smooth',
+        });
     }, [selectedDate]);
 
     const pilihTanggalKalender = (tanggal: string) => {
@@ -443,8 +456,8 @@ export default function JadwalShiftCalendar() {
                         />
 
                         {bisaPilihDepartemen && (
-                            <select
-                                className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm sm:w-auto"
+                            <NativeSelect
+                                wrapperClassName="sm:w-auto"
                                 value={filters.departemen_id ?? ''}
                                 onChange={(e) =>
                                     gantiDepartemen(e.target.value)
@@ -456,7 +469,7 @@ export default function JadwalShiftCalendar() {
                                         {d.nama_departemen}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         )}
                     </div>
                 </div>
@@ -473,9 +486,9 @@ export default function JadwalShiftCalendar() {
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                                     <div className="grid gap-2">
                                         <Label htmlFor="shift_id">Shift</Label>
-                                        <select
+                                        <NativeSelect
                                             id="shift_id"
-                                            className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                             value={data.shift_id}
                                             onChange={(e) =>
                                                 setData(
@@ -494,7 +507,7 @@ export default function JadwalShiftCalendar() {
                                                     {s.jam_selesai})
                                                 </option>
                                             ))}
-                                        </select>
+                                        </NativeSelect>
                                         <InputError message={errors.shift_id} />
                                     </div>
                                     <div className="grid gap-2">

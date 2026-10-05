@@ -54,21 +54,24 @@ export function SaldoCutiMeter({
             </CardHeader>
             <CardContent>
                 <div className={cn('text-2xl font-bold', style.text)}>
-                    {sisa ?? '∞'} {sisa !== null && 'hari'}
+                    {sisa === null ? 'Tanpa batas' : `${sisa} hari`}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                    dari kuota {kuota ?? 'tanpa batas'} hari, terpakai{' '}
-                    {terpakai}
+                    {kuota === null
+                        ? `terpakai ${terpakai} hari`
+                        : `dari kuota ${kuota} hari, terpakai ${terpakai}`}
                 </p>
-                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                        className={cn(
-                            'h-full rounded-full transition-all',
-                            style.bar,
-                        )}
-                        style={{ width: `${progress}%` }}
-                    />
-                </div>
+                {kuota !== null && (
+                    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                            className={cn(
+                                'h-full rounded-full transition-all',
+                                style.bar,
+                            )}
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

@@ -40,7 +40,7 @@ export default function CutiIndex() {
                     </div>
                 </div>
 
-                <Card>
+                <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="divide-y p-0">
                         {pengajuans.data.length === 0 && (
                             <p className="p-4 text-sm text-muted-foreground">

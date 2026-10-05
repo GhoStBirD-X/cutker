@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NativeSelect } from '@/components/ui/native-select';
 import { dashboard } from '@/routes';
 import { index as usersIndex } from '@/routes/users';
 import type { Paginated, Role, User } from '@/types';
@@ -171,9 +172,9 @@ export default function UsersIndex() {
                                 <Label htmlFor="karyawan_id">
                                     Hubungkan ke Karyawan (opsional)
                                 </Label>
-                                <select
+                                <NativeSelect
                                     id="karyawan_id"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                     value={data.karyawan_id}
                                     onChange={(e) =>
                                         setData('karyawan_id', e.target.value)
@@ -185,7 +186,7 @@ export default function UsersIndex() {
                                             {k.nama} ({k.nip})
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                                 <InputError message={errors.karyawan_id} />
                             </div>
                             <div className="flex items-end gap-2">
@@ -214,7 +215,7 @@ export default function UsersIndex() {
                     />
                 </form>
 
-                <Card>
+                <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="divide-y p-0">
                         {users.data.map((user) => (
                             <div
@@ -250,7 +251,8 @@ export default function UsersIndex() {
                                     </Button>
                                     <Button
                                         size="sm"
-                                        variant="destructive"
+                                        variant="outline"
+                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                         onClick={() => destroy(user)}
                                     >
                                         Hapus

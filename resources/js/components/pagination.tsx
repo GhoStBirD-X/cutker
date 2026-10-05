@@ -11,6 +11,10 @@ import type { PaginationLink } from '@/types';
 
 const PILIHAN_PER_HALAMAN = [10, 20, 30, 50];
 
+/** Label bawaan paginator Laravel berbahasa Inggris; seluruh UI berbahasa Indonesia. */
+const terjemahkanLabel = (label: string): string =>
+    label.replace('Previous', 'Sebelumnya').replace('Next', 'Berikutnya');
+
 type PaginationProps = {
     links: PaginationLink[];
     /** Sertakan untuk menampilkan selektor "baris per halaman" di sebelah navigasi. */
@@ -29,6 +33,11 @@ export function Pagination({ links, perPage }: PaginationProps) {
             { preserveState: true, preserveScroll: true },
         );
     };
+
+    const pilihanPerHalaman =
+        perPage === undefined || PILIHAN_PER_HALAMAN.includes(perPage)
+            ? PILIHAN_PER_HALAMAN
+            : [...PILIHAN_PER_HALAMAN, perPage].sort((a, b) => a - b);
 
     if (links.length <= 3 && perPage === undefined) {
         return null;
@@ -50,7 +59,9 @@ export function Pagination({ links, perPage }: PaginationProps) {
                                     : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                                 !link.url && 'pointer-events-none opacity-40',
                             )}
-                            dangerouslySetInnerHTML={{ __html: link.label }}
+                            dangerouslySetInnerHTML={{
+                                __html: terjemahkanLabel(link.label),
+                            }}
                         />
                     ))}
                 </nav>
@@ -68,7 +79,7 @@ export function Pagination({ links, perPage }: PaginationProps) {
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            {PILIHAN_PER_HALAMAN.map((opsi) => (
+                            {pilihanPerHalaman.map((opsi) => (
                                 <SelectItem key={opsi} value={String(opsi)}>
                                     {opsi}
                                 </SelectItem>

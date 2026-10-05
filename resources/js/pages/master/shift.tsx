@@ -140,7 +140,7 @@ export default function MasterShift() {
                     />
                 </form>
 
-                <Card>
+                <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="divide-y p-0">
                         {shifts.data.map((shift) => (
                             <div
@@ -165,7 +165,8 @@ export default function MasterShift() {
                                     </Button>
                                     <Button
                                         size="sm"
-                                        variant="destructive"
+                                        variant="outline"
+                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                         onClick={() => destroy(shift)}
                                     >
                                         Hapus

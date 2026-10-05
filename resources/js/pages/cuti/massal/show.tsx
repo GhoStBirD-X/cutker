@@ -111,7 +111,7 @@ export default function CutiMassalShow() {
                     </CardContent>
                 </Card>
 
-                <Card className="max-w-3xl">
+                <Card className="max-w-3xl gap-0 overflow-hidden py-0">
                     <CardContent className="space-y-2 p-0">
                         <h2 className="px-4 pt-4 text-sm font-semibold">
                             Karyawan Diproses ({cutiMassal.jumlah_karyawan})
@@ -136,7 +136,7 @@ export default function CutiMassalShow() {
                 </Card>
 
                 {cutiMassal.dilewati && cutiMassal.dilewati.length > 0 && (
-                    <Card className="max-w-3xl">
+                    <Card className="max-w-3xl gap-0 overflow-hidden py-0">
                         <CardContent className="space-y-2 p-0">
                             <h2 className="px-4 pt-4 text-sm font-semibold">
                                 Dilewati ({cutiMassal.dilewati.length})
@@ -161,7 +161,7 @@ export default function CutiMassalShow() {
                 )}
 
                 {cutiMassal.status === 'aktif' && karyawanBaru.length > 0 && (
-                    <Card className="max-w-3xl">
+                    <Card className="max-w-3xl gap-0 overflow-hidden py-0">
                         <CardContent className="space-y-3 p-0">
                             <div className="flex items-center justify-between gap-2 px-4 pt-4">
                                 <div>

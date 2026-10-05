@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NativeSelect } from '@/components/ui/native-select';
 import { formatDate } from '@/lib/format';
 import { dashboard } from '@/routes';
 import { index as laporanIndex } from '@/routes/laporan';
@@ -89,9 +90,9 @@ export default function LaporanIndex() {
                                 <Label htmlFor="departemen_id">
                                     Departemen
                                 </Label>
-                                <select
+                                <NativeSelect
                                     id="departemen_id"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                     value={form.departemen_id}
                                     onChange={(e) =>
                                         setForm({
@@ -106,13 +107,13 @@ export default function LaporanIndex() {
                                             {d.nama_departemen}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="karyawan_id">Karyawan</Label>
-                                <select
+                                <NativeSelect
                                     id="karyawan_id"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                     value={form.karyawan_id}
                                     onChange={(e) =>
                                         setForm({
@@ -127,15 +128,15 @@ export default function LaporanIndex() {
                                             {k.nama}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="jenis_cuti_id">
                                     Jenis Cuti
                                 </Label>
-                                <select
+                                <NativeSelect
                                     id="jenis_cuti_id"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+
                                     value={form.jenis_cuti_id}
                                     onChange={(e) =>
                                         setForm({
@@ -150,7 +151,7 @@ export default function LaporanIndex() {
                                             {j.nama_jenis}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="dari">Dari Tanggal</Label>
@@ -205,7 +206,7 @@ export default function LaporanIndex() {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="divide-y p-0">
                         {pengajuans.data.length === 0 && (
                             <p className="p-4 text-sm text-muted-foreground">
@@ -249,7 +250,7 @@ export default function LaporanIndex() {
                     Ringkasan Lembur
                 </h2>
 
-                <Card>
+                <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="divide-y p-0">
                         {lemburSummary.length === 0 && (
                             <p className="p-4 text-sm text-muted-foreground">
