@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use App\Enums\AksiMassalSaldoCuti;
 use App\Enums\StatusKaryawan;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\SaldoCuti;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class SaldoCutiService
 {
@@ -238,6 +241,189 @@ class SaldoCutiService
         ]);
 
         return $saldo;
+    }
+
+    /**
+     * Versi massal sesuaikanManual() untuk edit langsung di tabel & import
+     * Excel: semua baris disimpan dalam satu transaksi dengan satu catatan
+     * yang sama, supaya kalau satu baris gagal tidak ada yang setengah jadi.
+     *
+     * @param  list<array{id: int, kuota: int|null, terpakai: int, sisa: int|null}>  $perubahan
+     */
+    public function sesuaikanMassal(array $perubahan, string $catatan, Karyawan $olehSiapa): int
+    {
+        return DB::transaction(function () use ($perubahan, $catatan, $olehSiapa): int {
+            $saldos = SaldoCuti::query()->whereKey(array_column($perubahan, 'id'))->get()->keyBy('id');
+
+            foreach ($perubahan as $baris) {
+                $this->sesuaikanManual($saldos[$baris['id']], [
+                    'kuota' => $baris['kuota'],
+                    'terpakai' => $baris['terpakai'],
+                    'sisa' => $baris['sisa'],
+                    'catatan' => $catatan,
+                ], $olehSiapa);
+            }
+
+            return count($perubahan);
+        });
+    }
+
+    /**
+     * Buat saldo satu jenis cuti untuk banyak karyawan sekaligus. Karyawan
+     * yang sudah punya baris aktif untuk jenis cuti tsb dilewati (bukan
+     * ditimpa) supaya tidak ada dua saldo aktif untuk kombinasi yang sama.
+     * Untuk jenis cuti bertipe periode, nomor periode diambil dari periode
+     * yang sedang berjalan untuk masing-masing karyawan (berbeda-beda
+     * tergantung tanggal_masuk) — tanggalnya tetap dihitung otomatis.
+     *
+     * @param  list<int>  $karyawanIds
+     * @return array{dibuat: int, dilewati: list<string>}
+     */
+    public function buatMassal(array $karyawanIds, JenisCuti $jenisCuti, ?int $tahun, ?int $kuota, int $terpakai, string $catatan, Karyawan $olehSiapa): array
+    {
+        $bertipePeriode = $jenisCuti->masa_kerja_minimal_bulan !== null;
+        $dibuat = 0;
+        $dilewati = [];
+
+        DB::transaction(function () use ($karyawanIds, $jenisCuti, $tahun, $kuota, $terpakai, $catatan, $olehSiapa, $bertipePeriode, &$dibuat, &$dilewati): void {
+            foreach (Karyawan::query()->whereKey($karyawanIds)->orderBy('nama')->get() as $karyawan) {
+                $barisLama = SaldoCuti::query()
+                    ->where('karyawan_id', $karyawan->id)
+                    ->where('jenis_cuti_id', $jenisCuti->id);
+
+                if ((clone $barisLama)->aktif()->exists()) {
+                    $dilewati[] = "{$karyawan->nama} (sudah punya saldo aktif)";
+
+                    continue;
+                }
+
+                $periodeKe = $bertipePeriode ? $this->periodeBerjalanKe($karyawan, $jenisCuti) : null;
+                $sudahTercatat = $bertipePeriode
+                    ? (clone $barisLama)->where('periode_ke', $periodeKe)->exists()
+                    : (clone $barisLama)->where('tahun', $tahun)->exists();
+
+                if ($sudahTercatat) {
+                    $dilewati[] = $bertipePeriode
+                        ? "{$karyawan->nama} (periode ke-{$periodeKe} sudah tercatat)"
+                        : "{$karyawan->nama} (tahun {$tahun} sudah tercatat)";
+
+                    continue;
+                }
+
+                $this->buatManual([
+                    'karyawan_id' => $karyawan->id,
+                    'jenis_cuti_id' => $jenisCuti->id,
+                    'tahun' => $bertipePeriode ? null : $tahun,
+                    'periode_ke' => $periodeKe,
+                    'kuota' => $kuota,
+                    'terpakai' => $terpakai,
+                    'sisa' => $kuota === null ? null : $kuota - $terpakai,
+                    'catatan' => $catatan,
+                ], $olehSiapa);
+
+                $dibuat++;
+            }
+        });
+
+        return ['dibuat' => $dibuat, 'dilewati' => $dilewati];
+    }
+
+    /**
+     * Nomor periode yang memuat hari ini untuk karyawan + jenis cuti bertipe
+     * periode, mengikuti rumus hitungTanggalPeriode(). Karyawan yang
+     * tanggal_masuk-nya masih di masa depan dianggap di periode ke-1.
+     */
+    public function periodeBerjalanKe(Karyawan $karyawan, JenisCuti $jenisCuti): int
+    {
+        $hariIni = now()->startOfDay();
+
+        if ($karyawan->tanggal_masuk->greaterThan($hariIni)) {
+            return 1;
+        }
+
+        $periodeKe = intdiv((int) $karyawan->tanggal_masuk->diffInMonths($hariIni), $jenisCuti->masa_kerja_minimal_bulan) + 1;
+
+        while ($this->hitungTanggalPeriode($karyawan, $jenisCuti, $periodeKe)[1]->lessThan($hariIni)) {
+            $periodeKe++;
+        }
+
+        return $periodeKe;
+    }
+
+    /**
+     * Hitung hasil aksi massal untuk tiap baris tanpa menyimpan apa pun —
+     * dipakai pratinjau (sebelum → sesudah) dan juga oleh
+     * terapkanAksiMassal() supaya yang dilihat HRD sama persis dengan yang
+     * disimpan. Baris yang hasilnya tidak valid diberi `galat` dan dilewati
+     * saat diterapkan (baris lain tetap jalan).
+     *
+     * @param  Collection<int, SaldoCuti>  $saldos
+     * @return list<array{saldo: SaldoCuti, kuota: int|null, terpakai: int, sisa: int|null, galat: string|null}>
+     */
+    public function hitungAksiMassal(Collection $saldos, AksiMassalSaldoCuti $aksi, ?int $nilai): array
+    {
+        return $saldos->map(function (SaldoCuti $saldo) use ($aksi, $nilai): array {
+            $kuota = $saldo->kuota;
+            $sisa = $saldo->sisa;
+            $galat = null;
+
+            switch ($aksi) {
+                case AksiMassalSaldoCuti::SetKuota:
+                    $kuota = $nilai;
+                    $sisa = $nilai - $saldo->terpakai;
+                    break;
+                case AksiMassalSaldoCuti::TambahKuota:
+                case AksiMassalSaldoCuti::KurangiKuota:
+                    if ($saldo->kuota === null || $saldo->sisa === null) {
+                        $galat = 'Saldo tanpa batas, tidak bisa ditambah/dikurangi.';
+                        break;
+                    }
+
+                    $selisih = $aksi === AksiMassalSaldoCuti::TambahKuota ? $nilai : -$nilai;
+                    $kuota = $saldo->kuota + $selisih;
+                    $sisa = $saldo->sisa + $selisih;
+                    break;
+                case AksiMassalSaldoCuti::Hapus:
+                    break;
+            }
+
+            if ($galat === null && $kuota !== null && ($kuota < 0 || $kuota > 365)) {
+                $galat = 'Kuota hasil harus di antara 0 dan 365.';
+            } elseif ($galat === null && $sisa !== null && $sisa < 0) {
+                $galat = 'Sisa hasil menjadi minus.';
+            }
+
+            return ['saldo' => $saldo, 'kuota' => $kuota, 'terpakai' => $saldo->terpakai, 'sisa' => $sisa, 'galat' => $galat];
+        })->values()->all();
+    }
+
+    /**
+     * @param  Collection<int, SaldoCuti>  $saldos
+     * @return array{diterapkan: int, dilewati: int}
+     */
+    public function terapkanAksiMassal(Collection $saldos, AksiMassalSaldoCuti $aksi, ?int $nilai, string $catatan, Karyawan $olehSiapa): array
+    {
+        $hasil = $this->hitungAksiMassal($saldos, $aksi, $nilai);
+        $valid = array_values(array_filter($hasil, fn (array $baris): bool => $baris['galat'] === null));
+
+        DB::transaction(function () use ($valid, $aksi, $catatan, $olehSiapa): void {
+            foreach ($valid as $baris) {
+                if ($aksi === AksiMassalSaldoCuti::Hapus) {
+                    $baris['saldo']->delete();
+
+                    continue;
+                }
+
+                $this->sesuaikanManual($baris['saldo'], [
+                    'kuota' => $baris['kuota'],
+                    'terpakai' => $baris['terpakai'],
+                    'sisa' => $baris['sisa'],
+                    'catatan' => $catatan,
+                ], $olehSiapa);
+            }
+        });
+
+        return ['diterapkan' => count($valid), 'dilewati' => count($hasil) - count($valid)];
     }
 
     /**

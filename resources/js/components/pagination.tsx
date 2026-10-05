@@ -9,7 +9,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { PaginationLink } from '@/types';
 
-const PILIHAN_PER_HALAMAN = [10, 20, 30, 50];
+const PILIHAN_PER_HALAMAN = [10, 20, 30, 50, 100];
 
 /** Label bawaan paginator Laravel berbahasa Inggris; seluruh UI berbahasa Indonesia. */
 const terjemahkanLabel = (label: string): string =>

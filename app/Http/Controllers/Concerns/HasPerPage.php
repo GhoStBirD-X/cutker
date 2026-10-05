@@ -15,6 +15,6 @@ trait HasPerPage
     {
         $perPage = $request->integer('per_page');
 
-        return in_array($perPage, [10, 20, 30, 50], true) ? $perPage : $default;
+        return in_array($perPage, [10, 20, 30, 50, 100], true) ? $perPage : $default;
     }
 }
