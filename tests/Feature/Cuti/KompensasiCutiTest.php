@@ -63,7 +63,7 @@ class KompensasiCutiTest extends TestCase
         $this->assertDatabaseHas('kompensasi_cutis', ['id' => $kompensasi->id, 'rate_per_hari' => $kompensasi->rate_per_hari]);
     }
 
-    public function test_hrd_can_process_many_kompensasi_cuti_at_once_with_a_shared_rate(): void
+    public function test_hrd_can_process_many_kompensasi_cuti_at_once_each_with_its_own_rate(): void
     {
         $hrd = $this->karyawanUser('hrd');
         $jenisCuti = JenisCuti::factory()->create();
@@ -77,8 +77,10 @@ class KompensasiCutiTest extends TestCase
         ]);
 
         $response = $this->actingAs($hrd)->post(route('cuti.kompensasi.proses-massal'), [
-            'kompensasi_cuti_ids' => [$kompensasiSatu->id, $kompensasiDua->id],
-            'rate_per_hari' => 150000,
+            'items' => [
+                ['id' => $kompensasiSatu->id, 'rate_per_hari' => 150000],
+                ['id' => $kompensasiDua->id, 'rate_per_hari' => 200000],
+            ],
             'catatan' => 'Dibayarkan bersama gaji September.',
         ]);
 
@@ -93,8 +95,8 @@ class KompensasiCutiTest extends TestCase
         ]);
         $this->assertDatabaseHas('kompensasi_cutis', [
             'id' => $kompensasiDua->id,
-            'rate_per_hari' => 150000,
-            'total_rupiah' => 600000,
+            'rate_per_hari' => 200000,
+            'total_rupiah' => 800000,
             'status' => 'diproses',
             'diproses_oleh_id' => $hrd->karyawan->id,
         ]);
@@ -107,8 +109,10 @@ class KompensasiCutiTest extends TestCase
         $sudahDiproses = KompensasiCuti::factory()->diproses()->create();
 
         $response = $this->actingAs($hrd)->post(route('cuti.kompensasi.proses-massal'), [
-            'kompensasi_cuti_ids' => [$pending->id, $sudahDiproses->id],
-            'rate_per_hari' => 100000,
+            'items' => [
+                ['id' => $pending->id, 'rate_per_hari' => 100000],
+                ['id' => $sudahDiproses->id, 'rate_per_hari' => 100000],
+            ],
         ]);
 
         $response->assertRedirect();
@@ -149,5 +153,41 @@ class KompensasiCutiTest extends TestCase
         $response = $this->actingAs($karyawan)->get(route('cuti.kompensasi.index'));
 
         $response->assertForbidden();
+    }
+
+    public function test_bulk_process_rejects_everything_when_one_rate_is_missing(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $adaRate = KompensasiCuti::factory()->create();
+        $tanpaRate = KompensasiCuti::factory()->create();
+
+        $response = $this->actingAs($hrd)->post(route('cuti.kompensasi.proses-massal'), [
+            'items' => [
+                ['id' => $adaRate->id, 'rate_per_hari' => 100000],
+                ['id' => $tanpaRate->id, 'rate_per_hari' => ''],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors('items.1.rate_per_hari');
+        $this->assertDatabaseHas('kompensasi_cutis', ['id' => $adaRate->id, 'status' => 'menunggu_diproses']);
+    }
+
+    public function test_list_defaults_to_menunggu_and_can_switch_to_diproses(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $menunggu = KompensasiCuti::factory()->create();
+        $diproses = KompensasiCuti::factory()->diproses()->create();
+
+        $this->actingAs($hrd)->get(route('cuti.kompensasi.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('kompensasiCutis.data', 1)
+                ->where('kompensasiCutis.data.0.id', $menunggu->id)
+                ->where('jumlahMenunggu', 1)
+                ->where('jumlahDiproses', 1));
+
+        $this->actingAs($hrd)->get(route('cuti.kompensasi.index', ['status' => 'diproses']))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('kompensasiCutis.data', 1)
+                ->where('kompensasiCutis.data.0.id', $diproses->id));
     }
 }
