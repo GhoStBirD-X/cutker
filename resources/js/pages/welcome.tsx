@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { CalendarCheck, ClipboardCheck, Users } from 'lucide-react';
 import AppLogoFull from '@/components/app-logo-full';
+import { Globe } from '@/components/globe';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -51,30 +52,36 @@ export default function Welcome() {
                 </header>
 
                 <main className="flex flex-1 flex-col items-center justify-center gap-16 px-6 py-16 sm:px-10">
-                    <div className="max-w-2xl text-center">
-                        <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-5xl">
-                            Sistem Manajemen{' '}
-                            <span className="text-primary">
-                                Cuti Kerja Pabrik
-                            </span>
-                        </h1>
-                        <p className="mt-4 text-base text-muted-foreground sm:text-lg">
-                            Kelola pengajuan cuti, approval berjenjang, saldo,
-                            dan jadwal shift karyawan pabrik dalam satu sistem
-                            yang mudah dipakai dari HP maupun komputer.
-                        </p>
-                        <div className="mt-8 flex justify-center gap-3">
-                            <Button asChild size="lg">
-                                <Link href={auth.user ? dashboard() : login()}>
-                                    {auth.user
-                                        ? 'Ke Dashboard'
-                                        : 'Masuk ke Sistem'}
-                                </Link>
-                            </Button>
+                    <div className="grid w-full max-w-5xl items-center gap-10 lg:grid-cols-2">
+                        <div className="text-center lg:text-left">
+                            <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-5xl">
+                                Sistem Manajemen{' '}
+                                <span className="text-primary">
+                                    Cuti Kerja Pabrik
+                                </span>
+                            </h1>
+                            <p className="mt-4 text-base text-muted-foreground sm:text-lg">
+                                Kelola pengajuan cuti, approval berjenjang,
+                                saldo, dan jadwal shift karyawan pabrik dalam
+                                satu sistem yang mudah dipakai dari HP maupun
+                                komputer.
+                            </p>
+                            <div className="mt-8 flex justify-center gap-3 lg:justify-start">
+                                <Button asChild size="lg">
+                                    <Link
+                                        href={auth.user ? dashboard() : login()}
+                                    >
+                                        {auth.user
+                                            ? 'Ke Dashboard'
+                                            : 'Masuk ke Sistem'}
+                                    </Link>
+                                </Button>
+                            </div>
                         </div>
+                        <Globe className="mx-auto max-w-[420px]" />
                     </div>
 
-                    <div className="grid w-full max-w-4xl gap-4 sm:grid-cols-3">
+                    <div className="grid w-full max-w-5xl gap-4 sm:grid-cols-3">
                         {FEATURES.map((feature) => (
                             <Card key={feature.title}>
                                 <CardContent className="flex flex-col items-start gap-3 pt-2">
