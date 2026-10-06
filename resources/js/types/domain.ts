@@ -175,6 +175,8 @@ export type KonfirmasiKontrakCuti = {
     /** Posisi kontrak yang berakhir dalam siklus K1–K5. */
     urutan_kontrak: number;
     status: StatusKonfirmasiKontrak;
+    /** Konfirmasi susulan untuk kontrak yang telanjur melewati K5 (perintah kontrak:tinjau-siklus). */
+    tinjauan_siklus: boolean;
     dikonfirmasi_oleh_id: number | null;
     dikonfirmasi_pada: string | null;
     catatan: string | null;

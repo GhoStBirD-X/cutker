@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property int $periode_ke
  * @property Carbon $tanggal_batas
  * @property StatusKonfirmasiKontrak $status
+ * @property bool $tinjauan_siklus
  * @property int|null $dikonfirmasi_oleh_id
  * @property Carbon|null $dikonfirmasi_pada
  * @property string|null $catatan
@@ -29,6 +30,7 @@ use Illuminate\Support\Carbon;
     'periode_ke',
     'tanggal_batas',
     'status',
+    'tinjauan_siklus',
     'dikonfirmasi_oleh_id',
     'dikonfirmasi_pada',
     'catatan',
@@ -46,6 +48,11 @@ class KonfirmasiKontrakCuti extends Model
     {
         return [
             'status' => StatusKonfirmasiKontrak::class,
+            // Konfirmasi susulan untuk karyawan kontrak yang telanjur
+            // melewati K5 sebelum aturan siklus K1–K5 berlaku (dibuat oleh
+            // perintah kontrak:tinjau-siklus). Saldo yang ditunjuk masih
+            // berjalan, bukan periode yang sudah ditutup.
+            'tinjauan_siklus' => 'boolean',
             // Format eksplisit "Y-m-d" (bukan default ISO datetime) supaya
             // nilai yang dikirim ke frontend bisa langsung dipakai sebagai
             // atribut "min" pada input tanggal HTML.

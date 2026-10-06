@@ -5,11 +5,13 @@ namespace App\Services;
 use App\Enums\StatusKaryawan;
 use App\Enums\StatusKonfirmasiKontrak;
 use App\Enums\TipeKaryawan;
+use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\KompensasiCuti;
 use App\Models\KonfirmasiKontrakCuti;
 use App\Models\RiwayatSaldoCuti;
 use App\Models\SaldoCuti;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -99,6 +101,12 @@ class PeriodeCutiService
 
             $saldo = $konfirmasi->saldoCuti;
 
+            if ($konfirmasi->tinjauan_siklus) {
+                $this->terapkanTinjauanSiklus($konfirmasi, $saldo, $olehSiapa, $diperpanjang, $catatan, $tanggalAkhirKontrakBaru);
+
+                return;
+            }
+
             if ($diperpanjang) {
                 $riwayat = RiwayatSaldoCuti::query()
                     ->where('karyawan_id', $saldo->karyawan_id)
@@ -128,7 +136,7 @@ class PeriodeCutiService
      * karyawan tetap. Cuti Tahunan langsung lanjut ke periode berikutnya
      * dengan kuota penuh (masa kerjanya sudah terpenuhi), sedangkan Cuti
      * Besar baru mulai dihitung sejak tanggal pengangkatan — yaitu hari
-     * setelah periode kontrak terakhir berakhir.
+     * setelah periode kontrak terakhir (tanggal_batas) berakhir.
      */
     public function angkatKaryawanTetap(KonfirmasiKontrakCuti $konfirmasi, Karyawan $olehSiapa, ?string $catatan): void
     {
@@ -146,13 +154,122 @@ class PeriodeCutiService
                 'tanggal_akhir_kontrak' => null,
             ]);
 
-            $saldo = $konfirmasi->saldoCuti;
-            $saldo->setRelation('karyawan', $karyawan);
+            // Tinjauan siklus menunjuk saldo yang masih berjalan dengan kuota
+            // penuh — cukup dibiarkan lanjut, tidak perlu membuka periode baru.
+            if (! $konfirmasi->tinjauan_siklus) {
+                $saldo = $konfirmasi->saldoCuti;
+                $saldo->setRelation('karyawan', $karyawan);
 
-            $this->lanjutkanPeriode($saldo, $this->riwayatUntuk($saldo));
+                $this->lanjutkanPeriode($saldo, $this->riwayatUntuk($saldo));
+            }
 
-            $this->saldoCutiService->mulaiSaldoKhususKaryawanTetap($karyawan, $saldo->periode_selesai->copy()->addDay());
+            $this->saldoCutiService->mulaiSaldoKhususKaryawanTetap($karyawan, $konfirmasi->tanggal_batas->copy()->addDay());
         });
+    }
+
+    /**
+     * Karyawan kontrak yang telanjur melewati K5 sebelum aturan siklus
+     * K1–K5 berlaku (saldo Cuti Tahunan aktif di periode ke-6 dst.) dan
+     * belum punya konfirmasi menunggu. Mereka dulu diperpanjang otomatis
+     * tanpa keputusan "angkat tetap atau kontrak ulang ke K1". Saldo yang
+     * sudah pernah ditinjau tidak diambil lagi (aman dijalankan ulang).
+     *
+     * @return Collection<int, SaldoCuti>
+     */
+    public function kandidatTinjauanSiklus(): Collection
+    {
+        return SaldoCuti::query()
+            ->with(['karyawan', 'jenisCuti'])
+            ->aktif()
+            ->where('periode_ke', '>', SaldoCuti::PANJANG_SIKLUS_KONTRAK)
+            ->whereHas('jenisCuti', fn ($query) => $query->where('nama_jenis', JenisCuti::NAMA_CUTI_TAHUNAN))
+            ->whereHas('karyawan', fn ($query) => $query
+                ->where('tipe_karyawan', TipeKaryawan::Kontrak)
+                ->where('status', StatusKaryawan::Aktif))
+            ->whereDoesntHave('karyawan.konfirmasiKontrakCutis', fn ($query) => $query->where('status', StatusKonfirmasiKontrak::Menunggu))
+            ->whereNotIn('id', KonfirmasiKontrakCuti::query()->where('tinjauan_siklus', true)->select('saldo_cuti_id'))
+            ->orderBy('karyawan_id')
+            ->get();
+    }
+
+    /**
+     * Buat konfirmasi susulan "akhir K5" untuk satu kandidat tinjauan, supaya
+     * HRD memutuskan lewat halaman Konfirmasi Kontrak seperti biasa.
+     * periode_ke & tanggal_batas menunjuk K5 terakhir yang sudah dilewati
+     * (mis. saldo periode ke-7 → periode ke-5), sehingga pilihan K5 muncul.
+     */
+    public function buatTinjauanSiklus(SaldoCuti $saldo): KonfirmasiKontrakCuti
+    {
+        $periodeAkhirK5 = $saldo->periode_ke - $saldo->urutanKontrak();
+
+        $tanggalAkhirK5 = $this->tanggalAkhirPeriode($saldo, $periodeAkhirK5)
+            ?? $saldo->periode_mulai?->copy()->subDay()
+            ?? today();
+
+        return KonfirmasiKontrakCuti::query()->create([
+            'karyawan_id' => $saldo->karyawan_id,
+            'saldo_cuti_id' => $saldo->id,
+            'periode_ke' => $periodeAkhirK5,
+            'tanggal_batas' => $tanggalAkhirK5,
+            'status' => StatusKonfirmasiKontrak::Menunggu,
+            'tinjauan_siklus' => true,
+        ]);
+    }
+
+    protected function tanggalAkhirPeriode(SaldoCuti $saldo, int $periodeKe): ?CarbonInterface
+    {
+        $riwayat = RiwayatSaldoCuti::query()
+            ->where('karyawan_id', $saldo->karyawan_id)
+            ->where('jenis_cuti_id', $saldo->jenis_cuti_id)
+            ->where('periode_ke', $periodeKe)
+            ->first();
+
+        if ($riwayat?->periode_selesai) {
+            return $riwayat->periode_selesai;
+        }
+
+        return SaldoCuti::query()
+            ->where('karyawan_id', $saldo->karyawan_id)
+            ->where('jenis_cuti_id', $saldo->jenis_cuti_id)
+            ->where('periode_ke', $periodeKe)
+            ->value('periode_selesai');
+    }
+
+    /**
+     * Keputusan atas konfirmasi tinjauan siklus. Saldo yang ditunjuk masih
+     * berjalan, jadi tidak ada periode baru yang dibuka:
+     * - kontrak ulang ke K1: bila saldo berjalan adalah K1, sisa kuotanya
+     *   dikoreksi jadi 0 (hari yang sudah terpakai tidak dijadikan utang);
+     * - tidak diperpanjang: saldo berjalan diarsipkan & ditutup, sisanya
+     *   jadi kompensasi, dan karyawan dinonaktifkan.
+     */
+    protected function terapkanTinjauanSiklus(KonfirmasiKontrakCuti $konfirmasi, SaldoCuti $saldo, Karyawan $olehSiapa, bool $diperpanjang, ?string $catatan, ?string $tanggalAkhirKontrakBaru): void
+    {
+        if ($diperpanjang) {
+            if ($saldo->urutanKontrak() === 1 && $saldo->kuota !== null) {
+                $this->saldoCutiService->sesuaikanManual($saldo, [
+                    'kuota' => $saldo->terpakai,
+                    'terpakai' => $saldo->terpakai,
+                    'sisa' => 0,
+                    'catatan' => 'Tinjauan siklus kontrak: kontrak ulang ke K1 setelah K5, saldo dimulai dari 0. Alasan: '.$catatan,
+                ], $olehSiapa);
+            }
+
+            if ($tanggalAkhirKontrakBaru !== null) {
+                $konfirmasi->karyawan->update(['tanggal_akhir_kontrak' => $tanggalAkhirKontrakBaru]);
+            }
+
+            return;
+        }
+
+        $riwayat = $this->arsipkan($saldo);
+        $saldo->update(['ditutup_pada' => now()]);
+
+        if ($saldo->sisa > 0) {
+            $this->buatKompensasi($saldo, $riwayat);
+        }
+
+        $konfirmasi->karyawan->update(['status' => StatusKaryawan::Nonaktif]);
     }
 
     /**

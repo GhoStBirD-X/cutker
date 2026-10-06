@@ -67,19 +67,22 @@ function KonfirmasiRow({
     const nama = konfirmasi.karyawan?.nama;
     const akhirK5 = konfirmasi.urutan_kontrak === AKHIR_SIKLUS_KONTRAK;
     const menunggu = konfirmasi.status === 'menunggu';
+    const tinjauan = konfirmasi.tinjauan_siklus;
 
     const DIALOG: Record<Keputusan, KonfirmasiOptions> = {
         angkat_tetap: {
             title: `Angkat ${nama} menjadi karyawan tetap?`,
-            description:
-                'Cuti Tahunan berikutnya langsung penuh. Cuti Besar mulai dihitung 5 tahun sejak tanggal pengangkatan.',
+            description: tinjauan
+                ? 'Saldo Cuti Tahunan yang sedang berjalan tetap. Cuti Besar mulai dihitung 5 tahun sejak akhir K5.'
+                : 'Cuti Tahunan berikutnya langsung penuh. Cuti Besar mulai dihitung 5 tahun sejak tanggal pengangkatan.',
             confirmText: 'Angkat Tetap',
         },
         perpanjang: akhirK5
             ? {
                   title: `Kontrak ulang ${nama} ke K1?`,
-                  description:
-                      'Keadaan khusus: hitungan kontrak kembali ke K1 dan saldo Cuti Tahunan dimulai dari 0 seperti karyawan baru.',
+                  description: tinjauan
+                      ? 'Keadaan khusus: bila karyawan sedang berada di K1, sisa saldo Cuti Tahunan-nya dikoreksi menjadi 0. Hari yang sudah terpakai tidak dijadikan utang.'
+                      : 'Keadaan khusus: hitungan kontrak kembali ke K1 dan saldo Cuti Tahunan dimulai dari 0 seperti karyawan baru.',
                   confirmText: 'Kontrak Ulang ke K1',
               }
             : {
@@ -162,6 +165,21 @@ function KonfirmasiRow({
                                 konfirmasi.karyawan.tanggal_akhir_kontrak,
                             )}
                         </div>
+                    )}
+                    {tinjauan && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            <Badge variant="outline" className="mr-1">
+                                Tinjauan susulan
+                            </Badge>
+                            Telanjur diperpanjang melewati K5 sebelum aturan
+                            siklus berlaku; saat ini berada di K
+                            {konfirmasi.saldo_cuti?.periode_ke
+                                ? ((konfirmasi.saldo_cuti.periode_ke - 1) %
+                                      AKHIR_SIKLUS_KONTRAK) +
+                                  1
+                                : '-'}
+                            .
+                        </p>
                     )}
                     {menunggu && akhirK5 && (
                         <p className="mt-1 text-xs font-medium text-amber-800 dark:text-amber-300">
