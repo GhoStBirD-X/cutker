@@ -35,10 +35,10 @@ return [
         ],
     ],
 
-    'waha' => [
-        'base_url' => env('WAHA_BASE_URL', 'http://localhost:3000'),
-        'session' => env('WAHA_SESSION', 'default'),
-        'api_key' => env('WAHA_API_KEY'),
+    'evolution' => [
+        'base_url' => env('EVOLUTION_BASE_URL', 'http://localhost:8081'),
+        'instance' => env('EVOLUTION_INSTANCE', 'cutker'),
+        'api_key' => env('EVOLUTION_API_KEY'),
     ],
 
 ];

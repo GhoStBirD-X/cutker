@@ -21,6 +21,11 @@ class PengajuanCutiWhatsAppTest extends TestCase
         parent::setUp();
 
         $this->seed(RoleSeeder::class);
+
+        config([
+            'services.evolution.base_url' => 'http://evolution.test',
+            'services.evolution.instance' => 'cutker',
+        ]);
     }
 
     /**
@@ -56,13 +61,13 @@ class PengajuanCutiWhatsAppTest extends TestCase
 
     public function test_kepala_bagian_receives_whatsapp_message_when_leave_is_submitted(): void
     {
-        Http::fake(['*/api/sendText' => Http::response(['status' => 'sent'], 200)]);
+        Http::fake(['*/message/sendText/*' => Http::response(['status' => 'PENDING'], 201)]);
 
         [$karyawan] = $this->ajukanCuti(noHpKepalaBagian: '081234567890');
 
         Http::assertSent(function (Request $request) use ($karyawan) {
-            return $request->url() === 'http://localhost:3000/api/sendText'
-                && $request['chatId'] === '6281234567890@c.us'
+            return $request->url() === 'http://evolution.test/message/sendText/cutker'
+                && $request['number'] === '6281234567890'
                 && str_contains($request['text'], "*{$karyawan->nama}*")
                 && str_contains($request['text'], 'Acara keluarga')
                 && str_contains($request['text'], url('/approval'));
@@ -71,7 +76,7 @@ class PengajuanCutiWhatsAppTest extends TestCase
 
     public function test_leave_request_still_succeeds_when_whatsapp_gateway_is_unreachable(): void
     {
-        Http::fake(['*/api/sendText' => Http::response(null, 500)]);
+        Http::fake(['*/message/sendText/*' => Http::response(null, 500)]);
 
         $this->ajukanCuti();
 

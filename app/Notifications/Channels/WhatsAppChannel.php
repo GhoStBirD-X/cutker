@@ -9,7 +9,7 @@ use Throwable;
 
 /**
  * Sengaja tidak melempar exception sama sekali (lihat .ai/rules/notifications.md)
- * — WAHA down/timeout tidak boleh menggagalkan pengajuan cuti atau channel
+ * — Evolution API down/timeout tidak boleh menggagalkan pengajuan cuti atau channel
  * notifikasi lain (database/mail).
  */
 class WhatsAppChannel
@@ -31,11 +31,10 @@ class WhatsAppChannel
         try {
             $response = Http::timeout(5)
                 ->withHeaders(array_filter([
-                    'X-Api-Key' => config('services.waha.api_key'),
+                    'apikey' => config('services.evolution.api_key'),
                 ]))
-                ->post(rtrim(config('services.waha.base_url'), '/').'/api/sendText', [
-                    'session' => config('services.waha.session'),
-                    'chatId' => $this->keChatId($nomor),
+                ->post($this->urlSendText(), [
+                    'number' => $this->keNomorInternasional($nomor),
                     'text' => $pesan,
                 ]);
 
@@ -47,7 +46,15 @@ class WhatsAppChannel
         }
     }
 
-    protected function keChatId(string $nomor): string
+    protected function urlSendText(): string
+    {
+        $baseUrl = rtrim(config('services.evolution.base_url'), '/');
+        $instance = rawurlencode(config('services.evolution.instance'));
+
+        return "{$baseUrl}/message/sendText/{$instance}";
+    }
+
+    protected function keNomorInternasional(string $nomor): string
     {
         $nomor = preg_replace('/\D/', '', $nomor);
 
@@ -55,6 +62,6 @@ class WhatsAppChannel
             $nomor = '62'.substr($nomor, 1);
         }
 
-        return "{$nomor}@c.us";
+        return $nomor;
     }
 }

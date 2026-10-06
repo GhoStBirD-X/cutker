@@ -39,19 +39,35 @@ services:
         depends_on:
             - app
 
-    waha:
-        image: devlikeapro/waha:latest
+    evolution-api:
+        image: evoapicloud/evolution-api:v2.3.7
         restart: unless-stopped
         ports:
-            - "3000:3000"
+            - "8081:8080"
         environment:
-            WAHA_API_KEY: ${WAHA_API_KEY}
-            WAHA_DASHBOARD_USERNAME: ${WAHA_DASHBOARD_USERNAME}
-            WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD}
+            AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
+            DATABASE_ENABLED: "true"
+            DATABASE_PROVIDER: postgresql
+            DATABASE_CONNECTION_URI: postgresql://evolution:${EVOLUTION_DB_PASSWORD}@evolution-db:5432/evolution?schema=public
+            CACHE_REDIS_ENABLED: "false"
+            CACHE_LOCAL_ENABLED: "true"
         volumes:
-            - waha_sessions:/app/.sessions
+            - evolution_instances:/evolution/instances
+        depends_on:
+            - evolution-db
+
+    evolution-db:
+        image: postgres:16-alpine
+        restart: unless-stopped
+        environment:
+            POSTGRES_USER: evolution
+            POSTGRES_PASSWORD: ${EVOLUTION_DB_PASSWORD}
+            POSTGRES_DB: evolution
+        volumes:
+            - evolution_db:/var/lib/postgresql/data
 
 volumes:
     storage:
     database:
-    waha_sessions:
+    evolution_instances:
+    evolution_db:
