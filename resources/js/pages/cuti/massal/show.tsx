@@ -1,6 +1,7 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import CutiMassalController from '@/actions/App/Http/Controllers/Cuti/CutiMassalController';
+import { konfirmasi } from '@/components/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -51,13 +52,18 @@ export default function CutiMassalShow() {
         );
     };
 
-    const batalkan = (e: React.FormEvent) => {
+    const batalkan = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (
-            !confirm(
-                'Batalkan cuti massal ini? Saldo cuti seluruh karyawan terdampak akan dikembalikan.',
-            )
+            !(await konfirmasi({
+                title: 'Batalkan cuti massal ini?',
+                description:
+                    'Saldo cuti seluruh karyawan terdampak akan dikembalikan.',
+                confirmText: 'Batalkan Cuti Massal',
+                cancelText: 'Kembali',
+                destructive: true,
+            }))
         ) {
             return;
         }

@@ -1,6 +1,7 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import HariLiburController from '@/actions/App/Http/Controllers/Master/HariLiburController';
+import { konfirmasi } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
 import { MasterNav } from '@/components/master-nav';
 import { Pagination } from '@/components/pagination';
@@ -56,8 +57,15 @@ export default function MasterHariLibur() {
         }
     };
 
-    const destroy = (hariLibur: HariLibur) => {
-        if (confirm(`Hapus hari libur "${hariLibur.keterangan}"?`)) {
+    const destroy = async (hariLibur: HariLibur) => {
+        if (
+            await konfirmasi({
+                title: `Hapus hari libur "${hariLibur.keterangan}"?`,
+                description: 'Data yang dihapus tidak bisa dikembalikan.',
+                confirmText: 'Hapus',
+                destructive: true,
+            })
+        ) {
             router.delete(HariLiburController.destroy.url(hariLibur.id));
         }
     };

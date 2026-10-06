@@ -1,41 +1,101 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { CheckSquare, FileText, History, Paperclip } from 'lucide-react';
+import {
+    CheckSquare,
+    FileText,
+    History,
+    Paperclip,
+    Users,
+    Wallet,
+} from 'lucide-react';
+import { useState } from 'react';
 import ApprovalController from '@/actions/App/Http/Controllers/Approval/ApprovalController';
+import { konfirmasi } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
+import { RiwayatApprovalList } from '@/components/riwayat-approval-list';
 import { StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import {
-    approvalLevelLabel,
-    approverDisplayName,
-    formatDate,
-} from '@/lib/format';
+import { approvalLevelLabel, formatDate } from '@/lib/format';
+import { saldoSeverity } from '@/lib/saldo-severity';
+import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { index as approvalIndex } from '@/routes/approval';
-import type { Approval } from '@/types';
+import type { Approval, PengajuanCuti, StatusPengajuan } from '@/types';
+
+type RekanCuti = Pick<
+    PengajuanCuti,
+    'id' | 'tanggal_mulai' | 'tanggal_selesai' | 'karyawan' | 'jenis_cuti'
+> & { status: StatusPengajuan };
 
 type PageProps = {
     approval: Approval;
     canAct: boolean;
+    saldoKaryawan: {
+        kuota: number | null;
+        terpakai: number;
+        sisa: number | null;
+    } | null;
+    rekanCutiBersamaan: RekanCuti[];
 };
 
 export default function ApprovalShow() {
-    const { approval, canAct } = usePage<PageProps>().props;
+    const { approval, canAct, saldoKaryawan, rekanCutiBersamaan } =
+        usePage<PageProps>().props;
     const pengajuan = approval.pengajuan_cuti;
-    const { data, setData, post, processing, errors } = useForm({
-        catatan: '',
-    });
+    const { data, setData, post, processing, errors, setError, clearErrors } =
+        useForm({
+            catatan: '',
+        });
+    const [aksiBerjalan, setAksiBerjalan] = useState<
+        'approve' | 'reject' | null
+    >(null);
 
-    const submit = (aksi: 'approve' | 'reject') => {
-        const action =
-            aksi === 'approve'
-                ? ApprovalController.approve
-                : ApprovalController.reject;
-        post(action.url(approval.id));
+    const submit = async (aksi: 'approve' | 'reject') => {
+        const tolak = aksi === 'reject';
+
+        if (tolak && data.catatan.trim() === '') {
+            setError(
+                'catatan',
+                'Catatan wajib diisi saat menolak, agar karyawan tahu alasannya.',
+            );
+
+            return;
+        }
+
+        clearErrors();
+
+        const yakin = await konfirmasi({
+            title: tolak
+                ? 'Tolak pengajuan cuti ini?'
+                : 'Setujui pengajuan cuti ini?',
+            description: tolak
+                ? `Pengajuan ${pengajuan?.karyawan?.nama} akan ditolak dan alur approval berhenti. Keputusan tidak bisa diubah.`
+                : `Pengajuan ${pengajuan?.karyawan?.nama} (${pengajuan?.jumlah_hari} hari) akan disetujui dan diteruskan ke level berikutnya bila ada. Keputusan tidak bisa diubah.`,
+            confirmText: tolak ? 'Tolak' : 'Setujui',
+            destructive: tolak,
+        });
+
+        if (!yakin) {
+            return;
+        }
+
+        const action = tolak
+            ? ApprovalController.reject
+            : ApprovalController.approve;
+        setAksiBerjalan(aksi);
+        post(action.url(approval.id), {
+            onFinish: () => setAksiBerjalan(null),
+        });
     };
+
+    const sisaSetelahDisetujui =
+        saldoKaryawan?.sisa != null && pengajuan
+            ? saldoKaryawan.sisa - pengajuan.jumlah_hari
+            : null;
 
     return (
         <>
@@ -104,7 +164,9 @@ export default function ApprovalShow() {
                             </div>
                         </div>
                         <div className="col-span-2">
-                            <div className="text-muted-foreground">Alasan</div>
+                            <div className="text-muted-foreground">
+                                Keterangan
+                            </div>
                             <div>{pengajuan?.alasan}</div>
                         </div>
                         {pengajuan?.is_mendadak && (
@@ -134,6 +196,120 @@ export default function ApprovalShow() {
                     </CardContent>
                 </Card>
 
+                <div className="grid gap-4 md:grid-cols-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Wallet className="size-4 text-muted-foreground" />
+                                Saldo {pengajuan?.jenis_cuti?.nama_jenis}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-sm">
+                            {saldoKaryawan === null ? (
+                                <p className="text-muted-foreground">
+                                    Karyawan belum punya saldo aktif untuk jenis
+                                    cuti ini.
+                                </p>
+                            ) : saldoKaryawan.kuota === null ? (
+                                <p>Tanpa batas kuota.</p>
+                            ) : (
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <div className="text-muted-foreground">
+                                            Sisa saat ini
+                                        </div>
+                                        <div
+                                            className={cn(
+                                                'font-semibold',
+                                                saldoSeverity(
+                                                    saldoKaryawan.sisa,
+                                                    saldoKaryawan.kuota,
+                                                ).text,
+                                            )}
+                                        >
+                                            {saldoKaryawan.sisa} hari
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-muted-foreground">
+                                            Terpakai
+                                        </div>
+                                        <div>
+                                            {saldoKaryawan.terpakai}/
+                                            {saldoKaryawan.kuota} hari
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-muted-foreground">
+                                            Jika disetujui
+                                        </div>
+                                        <div
+                                            className={cn(
+                                                'font-semibold',
+                                                saldoSeverity(
+                                                    sisaSetelahDisetujui,
+                                                    saldoKaryawan.kuota,
+                                                ).text,
+                                            )}
+                                        >
+                                            {sisaSetelahDisetujui} hari
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Users className="size-4 text-muted-foreground" />
+                                Rekan Departemen yang Cuti di Tanggal Sama
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-sm">
+                            {rekanCutiBersamaan.length === 0 ? (
+                                <p className="text-muted-foreground">
+                                    Tidak ada rekan satu departemen yang cuti
+                                    pada rentang tanggal ini.
+                                </p>
+                            ) : (
+                                <ul className="divide-y">
+                                    {rekanCutiBersamaan.map((rekan) => (
+                                        <li
+                                            key={rekan.id}
+                                            className="flex items-center justify-between gap-2 py-2 first:pt-0 last:pb-0"
+                                        >
+                                            <div>
+                                                <div className="font-medium">
+                                                    {rekan.karyawan?.nama}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    {
+                                                        rekan.jenis_cuti
+                                                            ?.nama_jenis
+                                                    }{' '}
+                                                    &middot;{' '}
+                                                    {formatDate(
+                                                        rekan.tanggal_mulai,
+                                                    )}{' '}
+                                                    s/d{' '}
+                                                    {formatDate(
+                                                        rekan.tanggal_selesai,
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <StatusBadge
+                                                status={rekan.status}
+                                            />
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -142,24 +318,9 @@ export default function ApprovalShow() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="divide-y p-0">
-                        {(pengajuan?.approvals ?? []).map((item) => (
-                            <div
-                                key={item.id}
-                                className="flex flex-col gap-2 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
-                            >
-                                <div>
-                                    Level {item.level} (
-                                    {approvalLevelLabel(item.level)}) &middot;{' '}
-                                    {approverDisplayName(item)}
-                                    {item.catatan && (
-                                        <div className="text-muted-foreground">
-                                            Catatan: {item.catatan}
-                                        </div>
-                                    )}
-                                </div>
-                                <StatusBadge status={item.status} />
-                            </div>
-                        ))}
+                        <RiwayatApprovalList
+                            approvals={pengajuan?.approvals ?? []}
+                        />
                     </CardContent>
                 </Card>
 
@@ -176,8 +337,8 @@ export default function ApprovalShow() {
                                 <div className="grid gap-2">
                                     <Label htmlFor="catatan">
                                         {pengajuan?.is_mendadak
-                                            ? 'Catatan (wajib untuk pengajuan mendadak)'
-                                            : 'Catatan (opsional)'}
+                                            ? 'Catatan (wajib)'
+                                            : 'Catatan (wajib jika menolak)'}
                                     </Label>
                                     <Textarea
                                         id="catatan"
@@ -196,14 +357,21 @@ export default function ApprovalShow() {
                                         disabled={processing}
                                         onClick={() => submit('approve')}
                                     >
+                                        {aksiBerjalan === 'approve' && (
+                                            <Spinner />
+                                        )}
                                         Setujui
                                     </Button>
                                     <Button
                                         type="button"
-                                        variant="destructive"
+                                        variant="outline"
+                                        className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
                                         disabled={processing}
                                         onClick={() => submit('reject')}
                                     >
+                                        {aksiBerjalan === 'reject' && (
+                                            <Spinner />
+                                        )}
                                         Tolak
                                     </Button>
                                 </div>

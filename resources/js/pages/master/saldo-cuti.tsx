@@ -9,8 +9,9 @@ import {
     Trash2,
     X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import SaldoCutiController from '@/actions/App/Http/Controllers/Master/SaldoCutiController';
+import { konfirmasi } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
 import { MasterNav } from '@/components/master-nav';
 import { Pagination } from '@/components/pagination';
@@ -157,6 +158,7 @@ export default function MasterSaldoCuti() {
     );
 
     const adaDraft = jumlahDraft > 0;
+    const lewatiPenjagaDraft = useRef(false);
 
     useEffect(() => {
         if (!adaDraft) {
@@ -166,14 +168,32 @@ export default function MasterSaldoCuti() {
         return router.on('before', (event) => {
             const visit = (event as CustomEvent).detail?.visit;
 
-            if (
-                visit?.method === 'get' &&
-                !confirm(
-                    'Ada perubahan saldo yang belum disimpan. Tinggalkan tanpa menyimpan?',
-                )
-            ) {
-                event.preventDefault();
+            if (visit?.method !== 'get' || lewatiPenjagaDraft.current) {
+                return;
             }
+
+            event.preventDefault();
+
+            void konfirmasi({
+                title: 'Tinggalkan tanpa menyimpan?',
+                description: 'Ada perubahan saldo yang belum disimpan.',
+                confirmText: 'Tinggalkan',
+                cancelText: 'Tetap di sini',
+                destructive: true,
+            }).then((tinggalkan) => {
+                if (!tinggalkan) {
+                    return;
+                }
+
+                lewatiPenjagaDraft.current = true;
+                router.visit(visit.url, {
+                    preserveState: visit.preserveState,
+                    preserveScroll: visit.preserveScroll,
+                    onFinish: () => {
+                        lewatiPenjagaDraft.current = false;
+                    },
+                });
+            });
         });
     }, [adaDraft]);
 
@@ -362,15 +382,18 @@ export default function MasterSaldoCuti() {
         rows.filter((r) => grupTerbuka(r.karyawan_id)).map((r, i) => [r.id, i]),
     );
 
-    const hapusSatu = (saldo: SaldoCutiRow) => {
+    const hapusSatu = async (saldo: SaldoCutiRow) => {
         const label = saldo.periode_ke
             ? `periode ke-${saldo.periode_ke}`
             : `tahun ${saldo.tahun}`;
 
         if (
-            confirm(
-                `Hapus baris saldo cuti ${saldo.karyawan?.nama} · ${saldo.jenis_cuti?.nama_jenis} (${label})? Tindakan ini tidak bisa dibatalkan.`,
-            )
+            await konfirmasi({
+                title: 'Hapus baris saldo cuti?',
+                description: `${saldo.karyawan?.nama} · ${saldo.jenis_cuti?.nama_jenis} (${label}). Tindakan ini tidak bisa dibatalkan.`,
+                confirmText: 'Hapus',
+                destructive: true,
+            })
         ) {
             router.delete(SaldoCutiController.destroy.url(saldo.id), {
                 preserveScroll: true,

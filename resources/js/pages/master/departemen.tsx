@@ -1,6 +1,7 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import DepartemenController from '@/actions/App/Http/Controllers/Master/DepartemenController';
+import { konfirmasi } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
 import { MasterNav } from '@/components/master-nav';
 import { Pagination } from '@/components/pagination';
@@ -54,8 +55,15 @@ export default function MasterDepartemen() {
         }
     };
 
-    const destroy = (departemen: Departemen) => {
-        if (confirm(`Hapus departemen "${departemen.nama_departemen}"?`)) {
+    const destroy = async (departemen: Departemen) => {
+        if (
+            await konfirmasi({
+                title: `Hapus departemen "${departemen.nama_departemen}"?`,
+                description: 'Data yang dihapus tidak bisa dikembalikan.',
+                confirmText: 'Hapus',
+                destructive: true,
+            })
+        ) {
             router.delete(DepartemenController.destroy.url(departemen.id));
         }
     };

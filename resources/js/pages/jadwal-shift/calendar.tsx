@@ -2,6 +2,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import JadwalShiftController from '@/actions/App/Http/Controllers/JadwalShift/JadwalShiftController';
+import { konfirmasi } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -204,11 +205,14 @@ export default function JadwalShiftCalendar() {
         );
     };
 
-    const destroy = (jadwal: JadwalShift) => {
+    const destroy = async (jadwal: JadwalShift) => {
         if (
-            confirm(
-                `Hapus jadwal shift ${jadwal.karyawan?.nama} pada ${weekdayFormatter.format(parseTanggalLocal(jadwal.tanggal))}?`,
-            )
+            await konfirmasi({
+                title: `Hapus jadwal shift ${jadwal.karyawan?.nama}?`,
+                description: `Jadwal pada ${weekdayFormatter.format(parseTanggalLocal(jadwal.tanggal))} akan dihapus.`,
+                confirmText: 'Hapus',
+                destructive: true,
+            })
         ) {
             router.delete(JadwalShiftController.destroy.url(jadwal.id));
         }
@@ -372,7 +376,7 @@ export default function JadwalShiftCalendar() {
         setJadwalTerpilih(next);
     };
 
-    const hapusJadwalTerpilih = () => {
+    const hapusJadwalTerpilih = async () => {
         const ids = jadwalTanggalTerpilih
             .filter((j) => jadwalTerpilih[j.id])
             .map((j) => j.id);
@@ -382,9 +386,13 @@ export default function JadwalShiftCalendar() {
         }
 
         if (
-            !confirm(
-                `Hapus ${ids.length} jadwal shift terpilih pada tanggal ini? Tindakan ini tidak bisa dibatalkan.`,
-            )
+            !(await konfirmasi({
+                title: `Hapus ${ids.length} jadwal shift terpilih?`,
+                description:
+                    'Semua jadwal terpilih pada tanggal ini akan dihapus. Tindakan ini tidak bisa dibatalkan.',
+                confirmText: 'Hapus',
+                destructive: true,
+            }))
         ) {
             return;
         }

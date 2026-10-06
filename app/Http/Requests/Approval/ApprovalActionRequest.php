@@ -31,7 +31,8 @@ class ApprovalActionRequest extends FormRequest
     /**
      * Catatan wajib diisi untuk pengajuan mendadak, supaya approver
      * meninggalkan jejak pertimbangan eksplisit alih-alih persetujuan
-     * satu klik tanpa catatan untuk kondisi darurat.
+     * satu klik tanpa catatan untuk kondisi darurat. Penolakan juga selalu
+     * wajib bercatatan supaya karyawan tahu alasan pengajuannya ditolak.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -41,7 +42,19 @@ class ApprovalActionRequest extends FormRequest
         $approval = $this->route('approval');
 
         return [
-            'catatan' => [Rule::requiredIf(fn () => $approval->pengajuanCuti->is_mendadak), 'nullable', 'string', 'max:255'],
+            'catatan' => [Rule::requiredIf(fn () => $this->routeIs('approval.reject') || $approval->pengajuanCuti->is_mendadak), 'nullable', 'string', 'max:255'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'catatan.required' => $this->routeIs('approval.reject')
+                ? 'Catatan wajib diisi saat menolak, agar karyawan tahu alasannya.'
+                : 'Catatan wajib diisi untuk pengajuan mendadak.',
         ];
     }
 }

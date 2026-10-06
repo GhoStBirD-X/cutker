@@ -4,6 +4,7 @@ import {
     Building2,
     CalendarDays,
     CalendarRange,
+    CirclePlay,
     ClipboardCheck,
     FileBarChart,
     FilePlus2,
@@ -53,6 +54,14 @@ import { index as usersIndex } from '@/routes/users';
 import type { Auth, NavItem, Role } from '@/types';
 
 type NavGroup = { label: string; items: NavItem[] };
+
+const footerNavItems: NavItem[] = [
+    {
+        title: 'Panduan & Video Demo',
+        href: '/demo/index.html',
+        icon: CirclePlay,
+    },
+];
 
 function buildNavGroups(roles: Role[]): NavGroup[] {
     const isHrdAdmin = roles.includes('hrd') || roles.includes('admin');
@@ -199,7 +208,7 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={[]} className="mt-auto" />
+                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

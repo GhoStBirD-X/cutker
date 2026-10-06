@@ -8,12 +8,14 @@ use App\Exceptions\ApprovalSudahDiprosesException;
 use App\Models\Approval;
 use App\Models\Departemen;
 use App\Models\JenisCuti;
+use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
 use App\Models\User;
 use App\Services\ApprovalService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -80,6 +82,78 @@ class ApprovalFlowTest extends TestCase
         ]);
 
         return compact('pengajuan', 'approvalLevel2', 'saldo', 'hrd');
+    }
+
+    public function test_approval_detail_shows_saldo_and_only_overlapping_active_leave_of_same_departemen(): void
+    {
+        ['pengajuan' => $pengajuan, 'approvalLevel1' => $approvalLevel1, 'kepalaBagian' => $kepalaBagian] =
+            $this->buatPengajuanDenganApprovalLevel1(jumlahHari: 3, kuota: 12);
+        $pengajuan->update(['tanggal_mulai' => '2026-11-10', 'tanggal_selesai' => '2026-11-12']);
+        $departemenId = $pengajuan->karyawan->departemen_id;
+
+        $rekanBeririsan = PengajuanCuti::factory()->disetujui()->create([
+            'karyawan_id' => Karyawan::factory()->create(['departemen_id' => $departemenId])->id,
+            'jenis_cuti_id' => $pengajuan->jenis_cuti_id,
+            'tanggal_mulai' => '2026-11-12',
+            'tanggal_selesai' => '2026-11-14',
+        ]);
+        PengajuanCuti::factory()->create([
+            'karyawan_id' => Karyawan::factory()->create(['departemen_id' => $departemenId])->id,
+            'jenis_cuti_id' => $pengajuan->jenis_cuti_id,
+            'tanggal_mulai' => '2026-11-13',
+            'tanggal_selesai' => '2026-11-14',
+        ]);
+        PengajuanCuti::factory()->ditolak()->create([
+            'karyawan_id' => Karyawan::factory()->create(['departemen_id' => $departemenId])->id,
+            'jenis_cuti_id' => $pengajuan->jenis_cuti_id,
+            'tanggal_mulai' => '2026-11-10',
+            'tanggal_selesai' => '2026-11-10',
+        ]);
+        PengajuanCuti::factory()->create([
+            'karyawan_id' => Karyawan::factory()->create()->id,
+            'jenis_cuti_id' => $pengajuan->jenis_cuti_id,
+            'tanggal_mulai' => '2026-11-10',
+            'tanggal_selesai' => '2026-11-12',
+        ]);
+
+        $response = $this->actingAs($kepalaBagian->user)->get(route('approval.show', $approvalLevel1));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('approval/show')
+            ->where('saldoKaryawan', ['kuota' => 12, 'terpakai' => 0, 'sisa' => 12])
+            ->has('rekanCutiBersamaan', 1)
+            ->where('rekanCutiBersamaan.0.id', $rekanBeririsan->id));
+    }
+
+    public function test_approval_list_can_be_filtered_by_name_and_mendadak(): void
+    {
+        ['pengajuan' => $pengajuan, 'approvalLevel1' => $approvalLevel1, 'kepalaBagian' => $kepalaBagian] =
+            $this->buatPengajuanDenganApprovalLevel1();
+        $pengajuan->karyawan->update(['nama' => 'Budi Santoso']);
+        $pengajuan->update(['is_mendadak' => true, 'alasan_mendadak' => 'Darurat.']);
+
+        $pengajuanLain = PengajuanCuti::factory()->create([
+            'karyawan_id' => Karyawan::factory()->create(['departemen_id' => $pengajuan->karyawan->departemen_id, 'nama' => 'Budi Lain'])->id,
+            'jenis_cuti_id' => $pengajuan->jenis_cuti_id,
+        ]);
+        Approval::factory()->create([
+            'pengajuan_cuti_id' => $pengajuanLain->id,
+            'approver_id' => $kepalaBagian->id,
+            'level' => ApprovalService::LEVEL_KEPALA_BAGIAN,
+            'status' => StatusApproval::Pending,
+        ]);
+
+        $this->actingAs($kepalaBagian->user)
+            ->get(route('approval.index', ['search' => 'Budi', 'mendadak' => 1]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('approvals.data', 1)
+                ->where('approvals.data.0.id', $approvalLevel1->id));
+
+        $this->actingAs($kepalaBagian->user)
+            ->get(route('approval.index', ['search' => 'Santoso']))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('approvals.data', 1)
+                ->where('approvals.data.0.id', $approvalLevel1->id));
     }
 
     public function test_kepala_bagian_approval_forwards_request_to_hrd_without_touching_saldo(): void
@@ -239,6 +313,33 @@ class ApprovalFlowTest extends TestCase
             'pengajuan_cuti_id' => $pengajuan->id,
             'level' => ApprovalService::LEVEL_HRD,
         ]);
+    }
+
+    public function test_rejection_requires_a_catatan_so_the_karyawan_knows_why(): void
+    {
+        ['pengajuan' => $pengajuan, 'approvalLevel1' => $approvalLevel1, 'kepalaBagian' => $kepalaBagian] =
+            $this->buatPengajuanDenganApprovalLevel1();
+
+        $response = $this->actingAs($kepalaBagian->user)->post(route('approval.reject', $approvalLevel1), [
+            'catatan' => null,
+        ]);
+
+        $response->assertSessionHasErrors(['catatan' => 'Catatan wajib diisi saat menolak, agar karyawan tahu alasannya.']);
+        $this->assertSame(StatusApproval::Pending, $approvalLevel1->fresh()->status);
+        $this->assertSame(StatusPengajuan::Pending, $pengajuan->fresh()->status);
+    }
+
+    public function test_approving_a_regular_request_does_not_require_a_catatan(): void
+    {
+        ['approvalLevel1' => $approvalLevel1, 'kepalaBagian' => $kepalaBagian] = $this->buatPengajuanDenganApprovalLevel1();
+        $this->karyawanUser('hrd');
+
+        $response = $this->actingAs($kepalaBagian->user)->post(route('approval.approve', $approvalLevel1), [
+            'catatan' => null,
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertSame(StatusApproval::Disetujui, $approvalLevel1->fresh()->status);
     }
 
     public function test_hrd_can_reject_a_level_2_request(): void

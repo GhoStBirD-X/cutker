@@ -1,6 +1,7 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AlasanCutiController from '@/actions/App/Http/Controllers/Master/AlasanCutiController';
+import { konfirmasi } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
 import { MasterNav } from '@/components/master-nav';
 import { Pagination } from '@/components/pagination';
@@ -67,8 +68,15 @@ export default function MasterAlasanCuti() {
         }
     };
 
-    const destroy = (alasan: AlasanCuti) => {
-        if (confirm(`Hapus alasan cuti "${alasan.nama_alasan}"?`)) {
+    const destroy = async (alasan: AlasanCuti) => {
+        if (
+            await konfirmasi({
+                title: `Hapus alasan cuti "${alasan.nama_alasan}"?`,
+                description: 'Data yang dihapus tidak bisa dikembalikan.',
+                confirmText: 'Hapus',
+                destructive: true,
+            })
+        ) {
             router.delete(AlasanCutiController.destroy.url(alasan.id));
         }
     };

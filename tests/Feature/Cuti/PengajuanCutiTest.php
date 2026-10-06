@@ -16,6 +16,7 @@ use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Testing\TestResponse;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -40,6 +41,65 @@ class PengajuanCutiTest extends TestCase
         $response = $this->post(route('cuti.store'), []);
 
         $response->assertRedirect(route('login'));
+    }
+
+    public function test_validation_errors_use_indonesian_messages_and_field_names(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), []);
+
+        $response->assertSessionHasErrors([
+            'jenis_cuti_id' => 'Jenis cuti wajib diisi.',
+            'tanggal_mulai' => 'Tanggal mulai wajib diisi.',
+        ]);
+    }
+
+    public function test_past_start_date_and_end_before_start_are_rejected_with_clear_messages(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'tanggal_mulai' => now()->subDay()->toDateString(),
+            'tanggal_selesai' => now()->subDays(2)->toDateString(),
+        ]);
+
+        $response->assertSessionHasErrors([
+            'tanggal_mulai' => 'Tanggal mulai tidak boleh sebelum hari ini.',
+            'tanggal_selesai' => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
+        ]);
+    }
+
+    public function test_riwayat_cuti_can_be_filtered_by_status_and_year(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $jenisCuti = JenisCuti::factory()->create();
+        $cocok = PengajuanCuti::factory()->disetujui()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => '2025-03-10',
+            'tanggal_selesai' => '2025-03-11',
+        ]);
+        PengajuanCuti::factory()->ditolak()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => '2025-04-10',
+            'tanggal_selesai' => '2025-04-10',
+        ]);
+        PengajuanCuti::factory()->disetujui()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => '2026-03-10',
+            'tanggal_selesai' => '2026-03-10',
+        ]);
+
+        $response = $this->actingAs($karyawan->user)->get(route('cuti.index', ['status' => 'disetujui', 'tahun' => 2025]));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->has('pengajuans.data', 1)
+            ->where('pengajuans.data.0.id', $cocok->id)
+            ->where('filters', ['status' => 'disetujui', 'tahun' => 2025])
+            ->where('tahunTersedia', [2026, 2025]));
     }
 
     public function test_karyawan_can_submit_leave_request_when_balance_is_sufficient(): void

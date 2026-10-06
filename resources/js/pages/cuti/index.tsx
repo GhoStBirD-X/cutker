@@ -1,8 +1,9 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Pagination } from '@/components/pagination';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { NativeSelect } from '@/components/ui/native-select';
 import { formatDate } from '@/lib/format';
 import { dashboard } from '@/routes';
 import {
@@ -11,14 +12,37 @@ import {
     index as cutiIndex,
     show as cutiShow,
 } from '@/routes/cuti';
-import type { Paginated, PengajuanCuti } from '@/types';
+import type { Paginated, PengajuanCuti, StatusPengajuan } from '@/types';
 
 type PageProps = {
     pengajuans: Paginated<PengajuanCuti>;
+    filters: { status: StatusPengajuan | null; tahun: number | null };
+    tahunTersedia: number[];
 };
 
+const OPSI_STATUS: { value: StatusPengajuan; label: string }[] = [
+    { value: 'pending', label: 'Menunggu' },
+    { value: 'disetujui', label: 'Disetujui' },
+    { value: 'ditolak', label: 'Ditolak' },
+    { value: 'dibatalkan', label: 'Dibatalkan' },
+];
+
 export default function CutiIndex() {
-    const { pengajuans } = usePage<PageProps>().props;
+    const { pengajuans, filters, tahunTersedia } = usePage<PageProps>().props;
+    const adaFilter = filters.status !== null || filters.tahun !== null;
+
+    const terapkanFilter = (perubahan: Partial<PageProps['filters']>) => {
+        const berikut = { ...filters, ...perubahan };
+
+        router.get(
+            cutiIndex.url(),
+            {
+                status: berikut.status ?? undefined,
+                tahun: berikut.tahun ?? undefined,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
 
     return (
         <>
@@ -40,11 +64,63 @@ export default function CutiIndex() {
                     </div>
                 </div>
 
+                <div className="flex flex-wrap gap-3">
+                    <NativeSelect
+                        wrapperClassName="w-full sm:w-44"
+                        aria-label="Filter status"
+                        value={filters.status ?? ''}
+                        onChange={(e) =>
+                            terapkanFilter({
+                                status:
+                                    (e.target.value as StatusPengajuan) || null,
+                            })
+                        }
+                    >
+                        <option value="">Semua Status</option>
+                        {OPSI_STATUS.map((opsi) => (
+                            <option key={opsi.value} value={opsi.value}>
+                                {opsi.label}
+                            </option>
+                        ))}
+                    </NativeSelect>
+                    <NativeSelect
+                        wrapperClassName="w-full sm:w-36"
+                        aria-label="Filter tahun"
+                        value={filters.tahun ?? ''}
+                        onChange={(e) =>
+                            terapkanFilter({
+                                tahun: e.target.value
+                                    ? Number(e.target.value)
+                                    : null,
+                            })
+                        }
+                    >
+                        <option value="">Semua Tahun</option>
+                        {tahunTersedia.map((tahun) => (
+                            <option key={tahun} value={tahun}>
+                                {tahun}
+                            </option>
+                        ))}
+                    </NativeSelect>
+                    {adaFilter && (
+                        <Button
+                            variant="ghost"
+                            onClick={() =>
+                                terapkanFilter({ status: null, tahun: null })
+                            }
+                        >
+                            Hapus filter
+                        </Button>
+                    )}
+                </div>
+
                 <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="divide-y p-0">
                         {pengajuans.data.length === 0 && (
                             <p className="p-4 text-sm text-muted-foreground">
-                                Belum ada pengajuan cuti.
+                                {adaFilter
+                                    ? 'Tidak ada pengajuan yang cocok dengan filter.'
+                                    : 'Belum ada pengajuan cuti.'}
                             </p>
                         )}
                         {pengajuans.data.map((pengajuan) => (

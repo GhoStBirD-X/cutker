@@ -3,6 +3,7 @@
 namespace Tests\Feature\Cuti;
 
 use App\Enums\JenisKelamin;
+use App\Models\HariLibur;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\SaldoCuti;
@@ -36,6 +37,19 @@ class PengajuanCutiFormTest extends TestCase
         SaldoCuti::factory()->create(['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $cutiBesar->id, 'kuota' => 21, 'sisa' => 21]);
 
         return [$karyawan, $cutiBesar];
+    }
+
+    public function test_form_receives_upcoming_hari_libur_for_working_day_preview(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-05'));
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        HariLibur::factory()->create(['tanggal' => '2026-10-01']);
+        HariLibur::factory()->create(['tanggal' => '2026-12-25']);
+        HariLibur::factory()->create(['tanggal' => '2027-12-25']);
+
+        $response = $this->actingAs($karyawan->user)->get(route('cuti.create-mendadak'));
+
+        $response->assertInertia(fn (Assert $page) => $page->where('hariLibur', ['2026-12-25']));
     }
 
     public function test_cuti_besar_is_not_offered_while_cuti_tahunan_saldo_remains(): void

@@ -1,6 +1,7 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import JabatanController from '@/actions/App/Http/Controllers/Master/JabatanController';
+import { konfirmasi } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
 import { MasterNav } from '@/components/master-nav';
 import { Pagination } from '@/components/pagination';
@@ -48,8 +49,15 @@ export default function MasterJabatan() {
         }
     };
 
-    const destroy = (jabatan: Jabatan) => {
-        if (confirm(`Hapus jabatan "${jabatan.nama_jabatan}"?`)) {
+    const destroy = async (jabatan: Jabatan) => {
+        if (
+            await konfirmasi({
+                title: `Hapus jabatan "${jabatan.nama_jabatan}"?`,
+                description: 'Data yang dihapus tidak bisa dikembalikan.',
+                confirmText: 'Hapus',
+                destructive: true,
+            })
+        ) {
             router.delete(JabatanController.destroy.url(jabatan.id));
         }
     };

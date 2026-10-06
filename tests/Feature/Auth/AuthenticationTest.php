@@ -90,6 +90,18 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_failed_login_error_message_is_in_indonesian(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertSessionHasErrors(['email' => 'Email/NPK atau password salah.']);
+    }
+
     public function test_users_can_logout()
     {
         $user = User::factory()->create();

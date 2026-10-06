@@ -23,7 +23,7 @@ class EnsureKaryawanLinked
         if ($request->user() && ! $request->user()->karyawan) {
             Inertia::flash('toast', [
                 'type' => 'error',
-                'message' => 'Akun Anda belum terhubung ke data karyawan. Hubungi admin untuk menghubungkannya lewat menu Kelola User.',
+                'message' => 'Akun Anda belum terhubung ke data karyawan. Hubungi admin untuk menghubungkannya lewat menu User & Role.',
             ]);
 
             return redirect()->route('dashboard');

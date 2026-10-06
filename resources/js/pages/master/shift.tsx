@@ -1,6 +1,7 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import ShiftController from '@/actions/App/Http/Controllers/Master/ShiftController';
+import { konfirmasi } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
 import { MasterNav } from '@/components/master-nav';
 import { Pagination } from '@/components/pagination';
@@ -54,8 +55,15 @@ export default function MasterShift() {
         }
     };
 
-    const destroy = (shift: Shift) => {
-        if (confirm(`Hapus shift "${shift.nama_shift}"?`)) {
+    const destroy = async (shift: Shift) => {
+        if (
+            await konfirmasi({
+                title: `Hapus shift "${shift.nama_shift}"?`,
+                description: 'Data yang dihapus tidak bisa dikembalikan.',
+                confirmText: 'Hapus',
+                destructive: true,
+            })
+        ) {
             router.delete(ShiftController.destroy.url(shift.id));
         }
     };

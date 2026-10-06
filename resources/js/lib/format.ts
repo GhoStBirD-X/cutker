@@ -52,3 +52,17 @@ export function approverDisplayName(approval: {
 
     return approval.approver?.nama ?? 'Belum ditentukan';
 }
+
+const ROLE_LABELS: Record<string, string> = {
+    karyawan: 'Karyawan',
+    kepala_bagian: 'Kepala Bagian',
+    koordinator_shift: 'Koordinator Shift',
+    hrd: 'HRD',
+    manager: 'Manager',
+    admin: 'Admin',
+};
+
+/** Nama role yang ramah dibaca (mis. "kepala_bagian" → "Kepala Bagian"). */
+export function roleLabel(role: string): string {
+    return ROLE_LABELS[role] ?? role;
+}

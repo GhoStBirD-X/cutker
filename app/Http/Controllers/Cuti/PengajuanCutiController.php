@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Cuti;
 
+use App\Enums\StatusPengajuan;
 use App\Exceptions\SaldoCutiTidakCukupException;
 use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cuti\StorePengajuanCutiRequest;
 use App\Models\AlasanCuti;
+use App\Models\HariLibur;
 use App\Models\JenisCuti;
 use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
@@ -23,16 +25,30 @@ class PengajuanCutiController extends Controller
     public function index(Request $request): Response
     {
         $karyawan = $request->user()->karyawan;
+        $status = StatusPengajuan::tryFrom((string) $request->string('status'));
+        $tahun = $request->integer('tahun') ?: null;
 
         $pengajuans = PengajuanCuti::query()
             ->with('jenisCuti')
             ->where('karyawan_id', $karyawan->id)
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($tahun, fn ($query) => $query->whereYear('tanggal_mulai', $tahun))
             ->latest('tanggal_pengajuan')
             ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 
+        $tahunTersedia = PengajuanCuti::query()
+            ->where('karyawan_id', $karyawan->id)
+            ->pluck('tanggal_mulai')
+            ->map(fn ($tanggal) => $tanggal->year)
+            ->unique()
+            ->sortDesc()
+            ->values();
+
         return Inertia::render('cuti/index', [
             'pengajuans' => $pengajuans,
+            'filters' => ['status' => $status?->value, 'tahun' => $tahun],
+            'tahunTersedia' => $tahunTersedia,
         ]);
     }
 
@@ -47,6 +63,10 @@ class PengajuanCutiController extends Controller
     }
 
     /**
+     * `hariLibur` (tanggal libur terdaftar setahun ke depan) dipakai form
+     * untuk menampilkan pratinjau jumlah hari kerja sebelum dikirim, dengan
+     * aturan yang sama seperti HariLiburService::hitungHariLibur().
+     *
      * @return array<string, mixed>
      */
     private function dataUntukForm(Request $request): array
@@ -67,6 +87,11 @@ class PengajuanCutiController extends Controller
                 ->aktif()
                 ->whereHas('jenisCuti', fn ($query) => $query->sesuaiGender($karyawan->jenis_kelamin))
                 ->get(),
+            'hariLibur' => HariLibur::query()
+                ->whereBetween('tanggal', [today()->toDateString(), today()->addYear()->toDateString()])
+                ->orderBy('tanggal')
+                ->pluck('tanggal')
+                ->map(fn ($tanggal) => $tanggal->toDateString()),
         ];
     }
 

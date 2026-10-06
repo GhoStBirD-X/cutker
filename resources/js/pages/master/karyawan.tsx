@@ -1,7 +1,14 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { AlertTriangle, Download, KeyRound, XCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import {
+    AlertTriangle,
+    ChevronRight,
+    Download,
+    KeyRound,
+    XCircle,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import KaryawanController from '@/actions/App/Http/Controllers/Master/KaryawanController';
+import { konfirmasi } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
 import { MasterNav } from '@/components/master-nav';
 import { Pagination } from '@/components/pagination';
@@ -9,6 +16,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
     Dialog,
     DialogClose,
@@ -21,6 +33,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NativeSelect } from '@/components/ui/native-select';
+import { roleLabel } from '@/lib/format';
 import { dashboard } from '@/routes';
 import { index as karyawanIndex } from '@/routes/master/karyawan';
 import type { Auth, Departemen, Jabatan, Karyawan, Paginated } from '@/types';
@@ -105,6 +118,12 @@ export default function MasterKaryawan() {
         ImportKredensial[]
     >([]);
     const importForm = useForm<{ file: File | null }>({ file: null });
+    const [importTerbuka, setImportTerbuka] = useState(false);
+    const lewatiPenjagaKredensial = useRef(false);
+    const adaKredensial = importKredensial.length > 0;
+    const departemenTanpaKepalaBagian = kepalaBagianPerDepartemen.filter(
+        (item) => !item.kepala_bagian,
+    ).length;
 
     useEffect(() => {
         return router.on('flash', (event) => {
@@ -117,18 +136,73 @@ export default function MasterKaryawan() {
 
             if (flash?.importFailures) {
                 setImportFailures(flash.importFailures);
+                setImportTerbuka(true);
             }
 
             if (flash?.importKredensial) {
                 setImportKredensial(flash.importKredensial);
+                setImportTerbuka(true);
             }
         });
     }, []);
 
+    // Password hasil import hanya dikirim sekali; cegah daftar hilang tanpa
+    // sengaja saat pindah halaman atau menutup tab sebelum diunduh/dicatat.
+    useEffect(() => {
+        if (!adaKredensial) {
+            return;
+        }
+
+        const cegahTutupTab = (event: BeforeUnloadEvent) => {
+            event.preventDefault();
+        };
+        window.addEventListener('beforeunload', cegahTutupTab);
+
+        const hapusPenjaga = router.on('before', (event) => {
+            const visit = (event as CustomEvent).detail?.visit;
+
+            if (!visit || lewatiPenjagaKredensial.current) {
+                return;
+            }
+
+            event.preventDefault();
+
+            void konfirmasi({
+                title: 'Tinggalkan daftar password?',
+                description:
+                    'Daftar akun login hasil import akan hilang permanen. Pastikan sudah diunduh atau dicatat.',
+                confirmText: 'Tinggalkan',
+                cancelText: 'Tetap di sini',
+                destructive: true,
+            }).then((tinggalkan) => {
+                if (!tinggalkan) {
+                    return;
+                }
+
+                lewatiPenjagaKredensial.current = true;
+                setImportKredensial([]);
+                router.visit(visit.url, {
+                    method: visit.method,
+                    data: visit.data,
+                    preserveState: visit.preserveState,
+                    preserveScroll: visit.preserveScroll,
+                    onFinish: () => {
+                        lewatiPenjagaKredensial.current = false;
+                    },
+                });
+            });
+        });
+
+        return () => {
+            window.removeEventListener('beforeunload', cegahTutupTab);
+            hapusPenjaga();
+        };
+    }, [adaKredensial]);
+
     const unduhKredensial = () => {
         const header = 'NPK,Nama,Email,Password,Role';
         const baris = importKredensial.map((k) =>
-            [k.nip, k.nama, k.email, k.password, k.role]
+            [k.nip, k.nama, k.email, k.password, roleLabel(k.role)]
                 .map((nilai) => `"${nilai.replace(/"/g, '""')}"`)
                 .join(','),
         );
@@ -195,8 +269,15 @@ export default function MasterKaryawan() {
         }
     };
 
-    const destroy = (karyawan: KaryawanRow) => {
-        if (confirm(`Hapus karyawan "${karyawan.nama}"?`)) {
+    const destroy = async (karyawan: KaryawanRow) => {
+        if (
+            await konfirmasi({
+                title: `Hapus karyawan "${karyawan.nama}"?`,
+                description: 'Data yang dihapus tidak bisa dikembalikan.',
+                confirmText: 'Hapus',
+                destructive: true,
+            })
+        ) {
             router.delete(KaryawanController.destroy.url(karyawan.id));
         }
     };
@@ -231,192 +312,226 @@ export default function MasterKaryawan() {
 
                 <MasterNav />
 
-                <Card>
-                    <CardContent>
-                        <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
+                <Collapsible defaultOpen={departemenTanpaKepalaBagian > 0}>
+                    <Card className="py-0">
+                        <CollapsibleTrigger className="group/kb flex w-full items-center gap-2 px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
+                            <ChevronRight className="size-4 transition-transform group-data-[state=open]/kb:rotate-90" />
                             Kepala Bagian per Departemen
-                        </h2>
-                        <p className="mb-3 text-xs text-muted-foreground">
-                            Pengajuan cuti karyawan otomatis dirutekan ke Kepala
-                            Bagian departemen tempat mereka ditempatkan
-                            (approval level 1) sebelum diteruskan ke HRD lalu
-                            Manager. Pastikan setiap departemen punya satu
-                            karyawan dengan role &quot;kepala_bagian&quot; (atur
-                            lewat Kelola User).
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                            {kepalaBagianPerDepartemen.map((item) => (
+                            {departemenTanpaKepalaBagian > 0 && (
                                 <Badge
-                                    key={item.departemen}
-                                    variant={
-                                        item.kepala_bagian
-                                            ? 'secondary'
-                                            : 'destructive'
-                                    }
+                                    variant="destructive"
+                                    className="ml-auto"
                                 >
-                                    {item.departemen}:{' '}
-                                    {item.kepala_bagian ??
-                                        'belum ada kepala bagian'}
+                                    {departemenTanpaKepalaBagian} departemen
+                                    belum ada
                                 </Badge>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardContent>
-                        <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
-                            Import Data Karyawan (Excel/CSV)
-                        </h2>
-                        <p className="mb-3 text-xs text-muted-foreground">
-                            Untuk memasukkan data karyawan pabrik dalam jumlah
-                            besar. Departemen dan jabatan pada file harus sudah
-                            ada di Master Departemen/Jabatan. Karyawan yang
-                            gagal diimpor tidak akan menghentikan baris lain
-                            yang valid.
-                        </p>
-                        <form
-                            onSubmit={submitImport}
-                            className="flex flex-wrap items-end gap-2"
-                        >
-                            <a
-                                href={KaryawanController.importTemplate.url()}
-                                className="text-sm text-primary underline underline-offset-4"
-                            >
-                                Unduh Template
-                            </a>
-                            <Input
-                                type="file"
-                                accept=".xlsx,.xls,.csv"
-                                onChange={(e) =>
-                                    importForm.setData(
-                                        'file',
-                                        e.target.files?.[0] ?? null,
-                                    )
-                                }
-                                className="max-w-xs"
-                            />
-                            <Button
-                                type="submit"
-                                disabled={
-                                    importForm.processing ||
-                                    !importForm.data.file
-                                }
-                            >
-                                Import
-                            </Button>
-                            <InputError message={importForm.errors.file} />
-                        </form>
-
-                        {importFailures.length > 0 && (
-                            <div className="mt-4 overflow-hidden rounded-md border border-destructive/50">
-                                <div className="flex items-center gap-2 border-b border-destructive/30 bg-destructive/10 px-3 py-2">
-                                    <XCircle className="size-4 shrink-0 text-destructive" />
-                                    <h3 className="text-sm font-semibold text-destructive">
-                                        {importFailures.length} baris gagal
-                                        diimpor
-                                    </h3>
-                                </div>
-                                <ul className="divide-y text-xs">
-                                    {importFailures.map((failure) => (
-                                        <li
-                                            key={failure.row}
-                                            className="flex gap-2 px-3 py-2"
-                                        >
-                                            <Badge
-                                                variant="outline"
-                                                className="shrink-0 border-destructive/40 text-destructive"
-                                            >
-                                                Baris {failure.row}
-                                            </Badge>
-                                            <span className="text-muted-foreground">
-                                                {failure.errors.join(' ')}
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
-                        {importKredensial.length > 0 && (
-                            <div className="mt-4 overflow-hidden rounded-md border border-blue-200 dark:border-blue-900">
-                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-900 dark:bg-blue-950/40">
-                                    <h3 className="flex items-center gap-2 text-sm font-semibold text-blue-900 dark:text-blue-200">
-                                        <KeyRound className="size-4" />
-                                        Akun login untuk{' '}
-                                        {importKredensial.length} karyawan baru
-                                    </h3>
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="outline"
-                                        className="gap-1.5"
-                                        onClick={unduhKredensial}
-                                    >
-                                        <Download className="size-4" />
-                                        Unduh sebagai CSV
-                                    </Button>
-                                </div>
-                                <p className="border-b bg-blue-50/50 px-3 py-2 text-xs text-blue-900/80 dark:border-blue-900 dark:bg-blue-950/20 dark:text-blue-300/80">
-                                    Password hanya ditampilkan sekali di sini —
-                                    segera unduh/catat dan bagikan ke
-                                    masing-masing karyawan. Meninggalkan halaman
-                                    ini akan menghilangkan daftar ini secara
-                                    permanen.
+                            )}
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                            <CardContent className="pb-4">
+                                <p className="mb-3 text-xs text-muted-foreground">
+                                    Pengajuan cuti karyawan otomatis dirutekan
+                                    ke Kepala Bagian departemen tempat mereka
+                                    ditempatkan (approval level 1) sebelum
+                                    diteruskan ke HRD lalu Manager. Pastikan
+                                    setiap departemen punya satu karyawan dengan
+                                    role &quot;Kepala Bagian&quot; (atur lewat
+                                    menu User &amp; Role).
                                 </p>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-xs">
-                                        <thead>
-                                            <tr className="bg-muted/40 text-muted-foreground">
-                                                <th className="px-3 py-2 font-medium">
-                                                    NPK
-                                                </th>
-                                                <th className="px-3 py-2 font-medium">
-                                                    Nama
-                                                </th>
-                                                <th className="px-3 py-2 font-medium">
-                                                    Email
-                                                </th>
-                                                <th className="px-3 py-2 font-medium">
-                                                    Password
-                                                </th>
-                                                <th className="px-3 py-2 font-medium">
-                                                    Role
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y">
-                                            {importKredensial.map((k) => (
-                                                <tr
-                                                    key={k.email}
-                                                    className="transition-colors hover:bg-muted/30"
-                                                >
-                                                    <td className="px-3 py-2 text-muted-foreground">
-                                                        {k.nip}
-                                                    </td>
-                                                    <td className="px-3 py-2 font-medium">
-                                                        {k.nama}
-                                                    </td>
-                                                    <td className="px-3 py-2 text-muted-foreground">
-                                                        {k.email}
-                                                    </td>
-                                                    <td className="px-3 py-2 font-mono text-foreground">
-                                                        {k.password}
-                                                    </td>
-                                                    <td className="px-3 py-2">
-                                                        <Badge variant="secondary">
-                                                            {k.role}
-                                                        </Badge>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                <div className="flex flex-wrap gap-2">
+                                    {kepalaBagianPerDepartemen.map((item) => (
+                                        <Badge
+                                            key={item.departemen}
+                                            variant={
+                                                item.kepala_bagian
+                                                    ? 'secondary'
+                                                    : 'destructive'
+                                            }
+                                        >
+                                            {item.departemen}:{' '}
+                                            {item.kepala_bagian ??
+                                                'belum ada kepala bagian'}
+                                        </Badge>
+                                    ))}
                                 </div>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                            </CardContent>
+                        </CollapsibleContent>
+                    </Card>
+                </Collapsible>
+
+                <Collapsible
+                    open={importTerbuka}
+                    onOpenChange={setImportTerbuka}
+                >
+                    <Card className="py-0">
+                        <CollapsibleTrigger className="group/imp flex w-full items-center gap-2 px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
+                            <ChevronRight className="size-4 transition-transform group-data-[state=open]/imp:rotate-90" />
+                            Import Data Karyawan (Excel/CSV)
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                            <CardContent className="pb-4">
+                                <p className="mb-3 text-xs text-muted-foreground">
+                                    Untuk memasukkan data karyawan pabrik dalam
+                                    jumlah besar. Departemen dan jabatan pada
+                                    file harus sudah ada di Master
+                                    Departemen/Jabatan. Karyawan yang gagal
+                                    diimpor tidak akan menghentikan baris lain
+                                    yang valid.
+                                </p>
+                                <form
+                                    onSubmit={submitImport}
+                                    className="flex flex-wrap items-end gap-2"
+                                >
+                                    <a
+                                        href={KaryawanController.importTemplate.url()}
+                                        className="text-sm text-primary underline underline-offset-4"
+                                    >
+                                        Unduh Template
+                                    </a>
+                                    <Input
+                                        type="file"
+                                        accept=".xlsx,.xls,.csv"
+                                        onChange={(e) =>
+                                            importForm.setData(
+                                                'file',
+                                                e.target.files?.[0] ?? null,
+                                            )
+                                        }
+                                        className="max-w-xs"
+                                    />
+                                    <Button
+                                        type="submit"
+                                        disabled={
+                                            importForm.processing ||
+                                            !importForm.data.file
+                                        }
+                                    >
+                                        Import
+                                    </Button>
+                                    <InputError
+                                        message={importForm.errors.file}
+                                    />
+                                </form>
+
+                                {importFailures.length > 0 && (
+                                    <div className="mt-4 overflow-hidden rounded-md border border-destructive/50">
+                                        <div className="flex items-center gap-2 border-b border-destructive/30 bg-destructive/10 px-3 py-2">
+                                            <XCircle className="size-4 shrink-0 text-destructive" />
+                                            <h3 className="text-sm font-semibold text-destructive">
+                                                {importFailures.length} baris
+                                                gagal diimpor
+                                            </h3>
+                                        </div>
+                                        <ul className="divide-y text-xs">
+                                            {importFailures.map((failure) => (
+                                                <li
+                                                    key={failure.row}
+                                                    className="flex gap-2 px-3 py-2"
+                                                >
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="shrink-0 border-destructive/40 text-destructive"
+                                                    >
+                                                        Baris {failure.row}
+                                                    </Badge>
+                                                    <span className="text-muted-foreground">
+                                                        {failure.errors.join(
+                                                            ' ',
+                                                        )}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                {importKredensial.length > 0 && (
+                                    <div className="mt-4 overflow-hidden rounded-md border border-blue-200 dark:border-blue-900">
+                                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-900 dark:bg-blue-950/40">
+                                            <h3 className="flex items-center gap-2 text-sm font-semibold text-blue-900 dark:text-blue-200">
+                                                <KeyRound className="size-4" />
+                                                Akun login untuk{' '}
+                                                {importKredensial.length}{' '}
+                                                karyawan baru
+                                            </h3>
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                className="gap-1.5"
+                                                onClick={unduhKredensial}
+                                            >
+                                                <Download className="size-4" />
+                                                Unduh sebagai CSV
+                                            </Button>
+                                        </div>
+                                        <p className="border-b bg-blue-50/50 px-3 py-2 text-xs text-blue-900/80 dark:border-blue-900 dark:bg-blue-950/20 dark:text-blue-300/80">
+                                            Password hanya ditampilkan sekali di
+                                            sini — segera unduh/catat dan
+                                            bagikan ke masing-masing karyawan.
+                                            Meninggalkan halaman ini akan
+                                            menghilangkan daftar ini secara
+                                            permanen.
+                                        </p>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left text-xs">
+                                                <thead>
+                                                    <tr className="bg-muted/40 text-muted-foreground">
+                                                        <th className="px-3 py-2 font-medium">
+                                                            NPK
+                                                        </th>
+                                                        <th className="px-3 py-2 font-medium">
+                                                            Nama
+                                                        </th>
+                                                        <th className="px-3 py-2 font-medium">
+                                                            Email
+                                                        </th>
+                                                        <th className="px-3 py-2 font-medium">
+                                                            Password
+                                                        </th>
+                                                        <th className="px-3 py-2 font-medium">
+                                                            Role
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y">
+                                                    {importKredensial.map(
+                                                        (k) => (
+                                                            <tr
+                                                                key={k.email}
+                                                                className="transition-colors hover:bg-muted/30"
+                                                            >
+                                                                <td className="px-3 py-2 text-muted-foreground">
+                                                                    {k.nip}
+                                                                </td>
+                                                                <td className="px-3 py-2 font-medium">
+                                                                    {k.nama}
+                                                                </td>
+                                                                <td className="px-3 py-2 text-muted-foreground">
+                                                                    {k.email}
+                                                                </td>
+                                                                <td className="px-3 py-2 font-mono text-foreground">
+                                                                    {k.password}
+                                                                </td>
+                                                                <td className="px-3 py-2">
+                                                                    <Badge variant="secondary">
+                                                                        {roleLabel(
+                                                                            k.role,
+                                                                        )}
+                                                                    </Badge>
+                                                                </td>
+                                                            </tr>
+                                                        ),
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </CollapsibleContent>
+                    </Card>
+                </Collapsible>
 
                 <Card>
                     <CardContent>
@@ -655,7 +770,7 @@ export default function MasterKaryawan() {
                                                             key={role}
                                                             value={role}
                                                         >
-                                                            {role}
+                                                            {roleLabel(role)}
                                                         </option>
                                                     ))}
                                                 </NativeSelect>
@@ -724,7 +839,7 @@ export default function MasterKaryawan() {
                                                 key={role.name}
                                                 variant="outline"
                                             >
-                                                {role.name}
+                                                {roleLabel(role.name)}
                                             </Badge>
                                         ))}
                                         {karyawan.status === 'nonaktif' && (
@@ -774,101 +889,114 @@ export default function MasterKaryawan() {
                 />
 
                 {auth.roles.includes('admin') && (
-                    <Card className="border-red-200 dark:border-red-900">
-                        <CardContent className="space-y-3">
-                            <div className="flex items-start gap-3 text-red-700 dark:text-red-400">
-                                <AlertTriangle className="mt-0.5 size-5 shrink-0" />
-                                <div>
-                                    <p className="font-medium">
-                                        Zona Berbahaya
-                                    </p>
-                                    <p className="text-sm text-red-700/80 dark:text-red-400/80">
-                                        Hapus SEMUA karyawan beserta akun login,
-                                        riwayat cuti, saldo, dan jadwal shift
-                                        mereka secara permanen — biasanya
-                                        dipakai sebelum import data karyawan
-                                        yang asli. Data Master (Departemen,
-                                        Jabatan, Jenis Cuti, dll.) tidak ikut
-                                        terhapus. Akun kamu sendiri tidak akan
-                                        ikut terhapus.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button variant="destructive">
-                                        Reset Semua Data Karyawan
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogTitle>
-                                        Reset semua data karyawan?
-                                    </DialogTitle>
-                                    <DialogDescription>
-                                        Tindakan ini permanen dan tidak bisa
-                                        dibatalkan. Untuk melanjutkan, ketik
-                                        persis frasa berikut:{' '}
-                                        <span className="font-mono font-semibold text-foreground">
-                                            {FRASA_KONFIRMASI_RESET}
-                                        </span>
-                                    </DialogDescription>
-
-                                    <form
-                                        onSubmit={submitResetData}
-                                        className="space-y-4"
-                                    >
-                                        <div className="grid gap-2">
-                                            <Label
-                                                htmlFor="konfirmasi_reset"
-                                                className="sr-only"
-                                            >
-                                                Frasa konfirmasi
-                                            </Label>
-                                            <Input
-                                                id="konfirmasi_reset"
-                                                value={konfirmasiReset}
-                                                onChange={(e) =>
-                                                    setKonfirmasiReset(
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder={
-                                                    FRASA_KONFIRMASI_RESET
-                                                }
-                                                autoComplete="off"
-                                            />
+                    <Collapsible>
+                        <Card className="border-red-200 py-0 dark:border-red-900">
+                            <CollapsibleTrigger className="group/bahaya flex w-full items-center gap-2 px-6 py-4 text-left text-sm font-medium text-red-700 dark:text-red-400">
+                                <ChevronRight className="size-4 transition-transform group-data-[state=open]/bahaya:rotate-90" />
+                                Zona Berbahaya (khusus admin)
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <CardContent className="space-y-3 pb-4">
+                                    <div className="flex items-start gap-3 text-red-700 dark:text-red-400">
+                                        <AlertTriangle className="mt-0.5 size-5 shrink-0" />
+                                        <div>
+                                            <p className="font-medium">
+                                                Zona Berbahaya
+                                            </p>
+                                            <p className="text-sm text-red-700/80 dark:text-red-400/80">
+                                                Hapus SEMUA karyawan beserta
+                                                akun login, riwayat cuti, saldo,
+                                                dan jadwal shift mereka secara
+                                                permanen — biasanya dipakai
+                                                sebelum import data karyawan
+                                                yang asli. Data Master
+                                                (Departemen, Jabatan, Jenis
+                                                Cuti, dll.) tidak ikut terhapus.
+                                                Akun kamu sendiri tidak akan
+                                                ikut terhapus.
+                                            </p>
                                         </div>
+                                    </div>
 
-                                        <DialogFooter className="gap-2">
-                                            <DialogClose asChild>
-                                                <Button
-                                                    type="button"
-                                                    variant="secondary"
-                                                    onClick={() =>
-                                                        setKonfirmasiReset('')
-                                                    }
-                                                >
-                                                    Batal
-                                                </Button>
-                                            </DialogClose>
-                                            <Button
-                                                type="submit"
-                                                variant="destructive"
-                                                disabled={
-                                                    resetProcessing ||
-                                                    konfirmasiReset !==
-                                                        FRASA_KONFIRMASI_RESET
-                                                }
-                                            >
-                                                Hapus Semua Karyawan
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="destructive">
+                                                Reset Semua Data Karyawan
                                             </Button>
-                                        </DialogFooter>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
-                        </CardContent>
-                    </Card>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogTitle>
+                                                Reset semua data karyawan?
+                                            </DialogTitle>
+                                            <DialogDescription>
+                                                Tindakan ini permanen dan tidak
+                                                bisa dibatalkan. Untuk
+                                                melanjutkan, ketik persis frasa
+                                                berikut:{' '}
+                                                <span className="font-mono font-semibold text-foreground">
+                                                    {FRASA_KONFIRMASI_RESET}
+                                                </span>
+                                            </DialogDescription>
+
+                                            <form
+                                                onSubmit={submitResetData}
+                                                className="space-y-4"
+                                            >
+                                                <div className="grid gap-2">
+                                                    <Label
+                                                        htmlFor="konfirmasi_reset"
+                                                        className="sr-only"
+                                                    >
+                                                        Frasa konfirmasi
+                                                    </Label>
+                                                    <Input
+                                                        id="konfirmasi_reset"
+                                                        value={konfirmasiReset}
+                                                        onChange={(e) =>
+                                                            setKonfirmasiReset(
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        placeholder={
+                                                            FRASA_KONFIRMASI_RESET
+                                                        }
+                                                        autoComplete="off"
+                                                    />
+                                                </div>
+
+                                                <DialogFooter className="gap-2">
+                                                    <DialogClose asChild>
+                                                        <Button
+                                                            type="button"
+                                                            variant="secondary"
+                                                            onClick={() =>
+                                                                setKonfirmasiReset(
+                                                                    '',
+                                                                )
+                                                            }
+                                                        >
+                                                            Batal
+                                                        </Button>
+                                                    </DialogClose>
+                                                    <Button
+                                                        type="submit"
+                                                        variant="destructive"
+                                                        disabled={
+                                                            resetProcessing ||
+                                                            konfirmasiReset !==
+                                                                FRASA_KONFIRMASI_RESET
+                                                        }
+                                                    >
+                                                        Hapus Semua Karyawan
+                                                    </Button>
+                                                </DialogFooter>
+                                            </form>
+                                        </DialogContent>
+                                    </Dialog>
+                                </CardContent>
+                            </CollapsibleContent>
+                        </Card>
+                    </Collapsible>
                 )}
             </div>
         </>

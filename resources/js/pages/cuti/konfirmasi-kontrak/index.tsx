@@ -2,6 +2,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { CalendarClock, CalendarPlus } from 'lucide-react';
 import { useState } from 'react';
 import KonfirmasiKontrakController from '@/actions/App/Http/Controllers/Cuti/KonfirmasiKontrakController';
+import { konfirmasi } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
@@ -249,11 +250,14 @@ export default function KonfirmasiKontrakIndex() {
         );
     };
 
-    const perpanjangMassal = () => {
+    const perpanjangMassal = async () => {
         if (
-            !confirm(
-                `Perpanjang kontrak ${jumlahDipilih} karyawan masing-masing 1 tahun dari tanggal berakhir periodenya?`,
-            )
+            !(await konfirmasi({
+                title: `Perpanjang kontrak ${jumlahDipilih} karyawan?`,
+                description:
+                    'Masing-masing diperpanjang 1 tahun dari tanggal berakhir periodenya.',
+                confirmText: 'Perpanjang',
+            }))
         ) {
             return;
         }

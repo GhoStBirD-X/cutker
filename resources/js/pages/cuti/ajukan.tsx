@@ -3,6 +3,7 @@ import { CalendarPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import PengajuanCutiController from '@/actions/App/Http/Controllers/Cuti/PengajuanCutiController';
 import InputError from '@/components/input-error';
+import { PratinjauHariCuti } from '@/components/pratinjau-hari-cuti';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { tanggalHariIni } from '@/lib/hari-kerja';
 import { saldoSeverity } from '@/lib/saldo-severity';
 import { dashboard } from '@/routes';
 import {
@@ -29,15 +32,22 @@ type PageProps = {
     alasanCutis: AlasanCuti[];
     saldoCuti: SaldoCuti[];
     cutiBesarTerkunci: boolean;
+    hariLibur: string[];
 };
 
 export default function CutiAjukan() {
-    const { jenisCutis, alasanCutis, saldoCuti, cutiBesarTerkunci } =
+    const { jenisCutis, alasanCutis, saldoCuti, cutiBesarTerkunci, hariLibur } =
         usePage<PageProps>().props;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = tanggalHariIni();
 
     const [jenisCutiId, setJenisCutiId] = useState('');
     const [alasanCutiId, setAlasanCutiId] = useState('');
+    const [tanggalMulai, setTanggalMulai] = useState('');
+    const [tanggalSelesai, setTanggalSelesai] = useState('');
+
+    const saldoTerpilih = saldoCuti.find(
+        (saldo) => String(saldo.jenis_cuti_id) === jenisCutiId,
+    );
 
     const alasanUntukJenisTerpilih = useMemo(
         () =>
@@ -120,7 +130,7 @@ export default function CutiAjukan() {
                                                                 >
                                                                     {saldo.kuota ===
                                                                     null
-                                                                        ? '(hari ∞)'
+                                                                        ? '(tanpa batas)'
                                                                         : `(sisa ${saldo.sisa} hari)`}
                                                                 </span>
                                                             )}
@@ -144,7 +154,7 @@ export default function CutiAjukan() {
                                     {alasanUntukJenisTerpilih.length > 0 && (
                                         <div className="grid gap-2">
                                             <Label htmlFor="alasan_cuti_id">
-                                                Alasan
+                                                Alasan Cuti
                                             </Label>
                                             <Select
                                                 name="alasan_cuti_id"
@@ -172,7 +182,7 @@ export default function CutiAjukan() {
                                                                 }{' '}
                                                                 {alasan.jumlah_hari ===
                                                                 null
-                                                                    ? '(hari ∞)'
+                                                                    ? '(tanpa batas)'
                                                                     : `(maks ${alasan.jumlah_hari} hari)`}
                                                             </SelectItem>
                                                         ),
@@ -195,6 +205,12 @@ export default function CutiAjukan() {
                                                 type="date"
                                                 name="tanggal_mulai"
                                                 min={today}
+                                                value={tanggalMulai}
+                                                onChange={(e) =>
+                                                    setTanggalMulai(
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 required
                                             />
                                             <InputError
@@ -209,7 +225,13 @@ export default function CutiAjukan() {
                                                 id="tanggal_selesai"
                                                 type="date"
                                                 name="tanggal_selesai"
-                                                min={today}
+                                                min={tanggalMulai || today}
+                                                value={tanggalSelesai}
+                                                onChange={(e) =>
+                                                    setTanggalSelesai(
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 required
                                             />
                                             <InputError
@@ -221,11 +243,12 @@ export default function CutiAjukan() {
                                     {jenisCutiTerpilih?.minimal_hari_pengajuan && (
                                         <p className="-mt-3 text-xs text-muted-foreground">
                                             {jenisCutiTerpilih.nama_jenis} harus
-                                            diajukan minimal H-
+                                            diajukan minimal{' '}
                                             {
                                                 jenisCutiTerpilih.minimal_hari_pengajuan
-                                            }
-                                            . Butuh cuti mendadak?{' '}
+                                            }{' '}
+                                            hari sebelum tanggal mulai. Butuh
+                                            cuti mendadak?{' '}
                                             <Link
                                                 href={cutiCreateMendadak()}
                                                 className="text-primary underline"
@@ -236,11 +259,21 @@ export default function CutiAjukan() {
                                         </p>
                                     )}
 
+                                    <PratinjauHariCuti
+                                        tanggalMulai={tanggalMulai}
+                                        tanggalSelesai={tanggalSelesai}
+                                        hariLibur={hariLibur}
+                                        saldo={saldoTerpilih}
+                                    />
+
                                     <div className="grid gap-2">
-                                        <Label htmlFor="alasan">Alasan</Label>
+                                        <Label htmlFor="alasan">
+                                            Keterangan
+                                        </Label>
                                         <Textarea
                                             id="alasan"
                                             name="alasan"
+                                            placeholder="Ceritakan singkat keperluan cuti Anda."
                                             maxLength={255}
                                             required
                                         />
@@ -249,8 +282,8 @@ export default function CutiAjukan() {
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="lampiran">
-                                            Lampiran (opsional, surat dokter
-                                            dll.)
+                                            Lampiran (opsional: surat dokter
+                                            dll. — PDF/JPG/PNG, maks. 2 MB)
                                         </Label>
                                         <Input
                                             id="lampiran"
@@ -262,6 +295,7 @@ export default function CutiAjukan() {
                                     </div>
 
                                     <Button disabled={processing}>
+                                        {processing && <Spinner />}
                                         Ajukan Cuti
                                     </Button>
                                 </>

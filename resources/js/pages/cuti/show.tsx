@@ -1,16 +1,15 @@
-import { Form, Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { FileText, History, Paperclip } from 'lucide-react';
+import { useState } from 'react';
 import PengajuanCutiController from '@/actions/App/Http/Controllers/Cuti/PengajuanCutiController';
+import { konfirmasi } from '@/components/confirm-dialog';
+import { RiwayatApprovalList } from '@/components/riwayat-approval-list';
 import { StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    approvalLevelLabel,
-    approverDisplayName,
-    formatDate,
-    formatDateTime,
-} from '@/lib/format';
+import { Spinner } from '@/components/ui/spinner';
+import { formatDate, formatDateTime } from '@/lib/format';
 import { dashboard } from '@/routes';
 import { index as cutiIndex } from '@/routes/cuti';
 import type { Auth, PengajuanCuti } from '@/types';
@@ -26,6 +25,26 @@ export default function CutiShow() {
     const bisaBatalkan =
         pengajuan.status === 'pending' &&
         pengajuan.karyawan_id === auth.user.karyawan_id;
+    const [membatalkan, setMembatalkan] = useState(false);
+
+    const batalkan = async () => {
+        const yakin = await konfirmasi({
+            title: 'Batalkan pengajuan cuti ini?',
+            description: `${pengajuan.jenis_cuti?.nama_jenis}, ${formatDate(pengajuan.tanggal_mulai)} s/d ${formatDate(pengajuan.tanggal_selesai)}. Pengajuan yang dibatalkan tidak bisa diaktifkan kembali — Anda perlu mengajukan ulang.`,
+            confirmText: 'Batalkan Pengajuan',
+            cancelText: 'Kembali',
+            destructive: true,
+        });
+
+        if (!yakin) {
+            return;
+        }
+
+        router.visit(PengajuanCutiController.batalkan(pengajuan.id), {
+            onStart: () => setMembatalkan(true),
+            onFinish: () => setMembatalkan(false),
+        });
+    };
 
     return (
         <>
@@ -103,7 +122,9 @@ export default function CutiShow() {
                             </div>
                         </div>
                         <div className="col-span-2">
-                            <div className="text-muted-foreground">Alasan</div>
+                            <div className="text-muted-foreground">
+                                Keterangan
+                            </div>
                             <div>{pengajuan.alasan}</div>
                         </div>
                         {pengajuan.is_mendadak && (
@@ -141,44 +162,23 @@ export default function CutiShow() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="divide-y p-0">
-                        {(pengajuan.approvals ?? []).map((approval) => (
-                            <div
-                                key={approval.id}
-                                className="flex flex-col gap-2 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
-                            >
-                                <div>
-                                    <div className="font-medium">
-                                        Level {approval.level} (
-                                        {approvalLevelLabel(approval.level)})
-                                        &middot; {approverDisplayName(approval)}
-                                    </div>
-                                    {approval.catatan && (
-                                        <div className="text-muted-foreground">
-                                            Catatan: {approval.catatan}
-                                        </div>
-                                    )}
-                                </div>
-                                <StatusBadge status={approval.status} />
-                            </div>
-                        ))}
+                        <RiwayatApprovalList
+                            approvals={pengajuan.approvals ?? []}
+                        />
                     </CardContent>
                 </Card>
 
                 {bisaBatalkan && (
-                    <Form
-                        {...PengajuanCutiController.batalkan.form(pengajuan.id)}
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={membatalkan}
+                        className="w-fit"
+                        onClick={batalkan}
                     >
-                        {({ processing }) => (
-                            <Button
-                                type="submit"
-                                variant="destructive"
-                                disabled={processing}
-                                className="w-fit"
-                            >
-                                Batalkan Pengajuan
-                            </Button>
-                        )}
-                    </Form>
+                        {membatalkan && <Spinner />}
+                        Batalkan Pengajuan
+                    </Button>
                 )}
             </div>
         </>

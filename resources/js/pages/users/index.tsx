@@ -2,6 +2,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import UserController from '@/actions/App/Http/Controllers/UserManagement/UserController';
+import { konfirmasi } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NativeSelect } from '@/components/ui/native-select';
+import { roleLabel } from '@/lib/format';
 import { dashboard } from '@/routes';
 import { index as usersIndex } from '@/routes/users';
 import type { Paginated, Role, User } from '@/types';
@@ -82,8 +84,15 @@ export default function UsersIndex() {
         }
     };
 
-    const destroy = (user: UserRow) => {
-        if (confirm(`Hapus user "${user.name}"?`)) {
+    const destroy = async (user: UserRow) => {
+        if (
+            await konfirmasi({
+                title: `Hapus user "${user.name}"?`,
+                description: 'Data yang dihapus tidak bisa dikembalikan.',
+                confirmText: 'Hapus',
+                destructive: true,
+            })
+        ) {
             router.delete(UserController.destroy.url(user.id));
         }
     };
@@ -95,7 +104,7 @@ export default function UsersIndex() {
 
     return (
         <>
-            <Head title="Kelola User" />
+            <Head title="User & Role" />
             <div className="flex flex-1 flex-col gap-4 p-4">
                 <h1 className="flex items-center gap-2 text-xl font-semibold">
                     <ShieldCheck className="size-5 text-primary" />
@@ -162,7 +171,7 @@ export default function UsersIndex() {
                                                     toggleRole(role)
                                                 }
                                             />
-                                            {role}
+                                            {roleLabel(role)}
                                         </label>
                                     ))}
                                 </div>
@@ -230,7 +239,7 @@ export default function UsersIndex() {
                                                 key={role.name}
                                                 variant="secondary"
                                             >
-                                                {role.name}
+                                                {roleLabel(role.name)}
                                             </Badge>
                                         ))}
                                     </div>
@@ -272,6 +281,6 @@ export default function UsersIndex() {
 UsersIndex.layout = {
     breadcrumbs: [
         { title: 'Dashboard', href: dashboard() },
-        { title: 'Kelola User', href: usersIndex() },
+        { title: 'User & Role', href: usersIndex() },
     ],
 };

@@ -2,6 +2,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { FileClock } from 'lucide-react';
 import { useState } from 'react';
 import KompensasiCutiController from '@/actions/App/Http/Controllers/Cuti/KompensasiCutiController';
+import { konfirmasi } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
 import { Pagination } from '@/components/pagination';
 import { Button } from '@/components/ui/button';
@@ -184,16 +185,18 @@ export default function KompensasiCutiIndex() {
             ?.focus();
     };
 
-    const proses = () => {
+    const proses = async () => {
         const items = siapDiproses.map((r) => ({
             id: r.id,
             rate_per_hari: rates[r.id],
         }));
 
         if (
-            !confirm(
-                `Proses ${items.length} kompensasi dengan total ${formatRupiah(totalRupiah)}?`,
-            )
+            !(await konfirmasi({
+                title: `Proses ${items.length} kompensasi?`,
+                description: `Total yang dibayarkan ${formatRupiah(totalRupiah)}.`,
+                confirmText: 'Proses',
+            }))
         ) {
             return;
         }
