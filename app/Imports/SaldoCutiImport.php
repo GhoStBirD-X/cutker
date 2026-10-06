@@ -16,7 +16,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
  * validasi akhirnya tetap satu pintu.
  *
  * Hanya mengoreksi baris yang sudah ada (dicocokkan lewat kolom `id`);
- * kolom NIP ikut dicek supaya baris yang tergeser/tertukar di Excel tidak
+ * kolom NPK ikut dicek supaya baris yang tergeser/tertukar di Excel tidak
  * diam-diam mengubah saldo orang lain.
  */
 class SaldoCutiImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
@@ -63,8 +63,8 @@ class SaldoCutiImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
 
             $sudahDibaca[$id] = $baris;
 
-            if (trim((string) ($row['nip'] ?? '')) !== $saldo->karyawan->nip) {
-                $errors[] = "NIP tidak cocok dengan id saldo ini (seharusnya {$saldo->karyawan->nip}).";
+            if (trim((string) ($row['npk'] ?? $row['nip'] ?? '')) !== $saldo->karyawan->nip) {
+                $errors[] = "NPK tidak cocok dengan id saldo ini (seharusnya {$saldo->karyawan->nip}).";
             }
 
             [$kuota, $galatKuota] = $this->angka($row['kuota'] ?? null, 'Kuota', boleKosong: true, maksimal: 365);

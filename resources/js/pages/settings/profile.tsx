@@ -56,7 +56,7 @@ export default function Profile({
                     <div className="grid gap-4 rounded-lg border bg-muted/20 p-4 sm:grid-cols-2">
                         <ProfileField
                             icon={IdCard}
-                            label="NIP"
+                            label="NPK"
                             value={auth.user.karyawan.nip}
                         />
                         <ProfileField

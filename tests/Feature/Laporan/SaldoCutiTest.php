@@ -81,6 +81,17 @@ class SaldoCutiTest extends TestCase
         );
     }
 
+    public function test_report_is_sorted_by_npk_by_default(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        Karyawan::factory()->create(['nama' => 'Andi', 'nip' => 'NPK-900']);
+        $zaki = Karyawan::factory()->create(['nama' => 'Zaki', 'nip' => 'NPK-100']);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti', ['search' => 'NPK-']));
+
+        $response->assertInertia(fn ($page) => $page->where('karyawans.data.0.id', $zaki->id));
+    }
+
     public function test_karyawan_without_active_saldo_still_lists_with_empty_children(): void
     {
         $hrd = $this->karyawanUser('hrd');

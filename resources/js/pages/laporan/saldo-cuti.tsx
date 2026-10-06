@@ -95,10 +95,10 @@ export default function LaporanSaldoCuti() {
                             className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto]"
                         >
                             <div className="grid gap-2">
-                                <Label htmlFor="search">Cari Nama/NIP</Label>
+                                <Label htmlFor="search">Cari Nama/NPK</Label>
                                 <Input
                                     id="search"
-                                    placeholder="Cari nama/NIP karyawan..."
+                                    placeholder="Cari nama/NPK karyawan..."
                                     value={form.search}
                                     onChange={(e) =>
                                         setForm({
@@ -177,7 +177,7 @@ export default function LaporanSaldoCuti() {
                                         rowSpan={2}
                                         className="border-r px-3 py-2 text-left align-bottom"
                                     >
-                                        NIP
+                                        NPK
                                     </th>
                                     <th
                                         rowSpan={2}

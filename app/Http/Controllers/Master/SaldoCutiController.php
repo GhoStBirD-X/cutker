@@ -36,12 +36,12 @@ class SaldoCutiController extends Controller
 
         $saldoTersaring = $this->queryTersaring($filters);
 
-        // Dipaginasi per karyawan (bukan per baris saldo) supaya semua jenis
+        // Diurutkan per NPK dan dipaginasi per karyawan (bukan per baris saldo) supaya semua jenis
         // cuti milik satu orang selalu tampil utuh dalam satu grup.
         $grupKaryawan = Karyawan::query()
             ->whereIn('id', (clone $saldoTersaring)->reorder()->select('karyawan_id'))
             ->with('departemen')
-            ->orderBy('nama')
+            ->orderBy('nip')
             ->orderBy('id')
             ->paginate($this->resolvePerPage($request, 20), ['id', 'nama', 'nip', 'departemen_id'])
             ->withQueryString();
@@ -295,7 +295,7 @@ class SaldoCutiController extends Controller
             ->when($filters['jenis_cuti_id'], fn (Builder $query, int $id) => $query->where('jenis_cuti_id', $id))
             ->when($filters['departemen_id'], fn (Builder $query, int $id) => $query->whereHas('karyawan', fn (Builder $q) => $q->where('departemen_id', $id)))
             ->when($filters['tahun'], fn (Builder $query, int $tahun) => $query->where('tahun', $tahun))
-            ->orderBy(Karyawan::query()->select('nama')->whereColumn('karyawans.id', 'saldo_cutis.karyawan_id'))
+            ->orderBy(Karyawan::query()->select('nip')->whereColumn('karyawans.id', 'saldo_cutis.karyawan_id'))
             ->orderBy('jenis_cuti_id')
             ->orderBy('id');
     }

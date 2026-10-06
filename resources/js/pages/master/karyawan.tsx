@@ -126,7 +126,7 @@ export default function MasterKaryawan() {
     }, []);
 
     const unduhKredensial = () => {
-        const header = 'NIP,Nama,Email,Password,Role';
+        const header = 'NPK,Nama,Email,Password,Role';
         const baris = importKredensial.map((k) =>
             [k.nip, k.nama, k.email, k.password, k.role]
                 .map((nilai) => `"${nilai.replace(/"/g, '""')}"`)
@@ -369,7 +369,7 @@ export default function MasterKaryawan() {
                                         <thead>
                                             <tr className="bg-muted/40 text-muted-foreground">
                                                 <th className="px-3 py-2 font-medium">
-                                                    NIP
+                                                    NPK
                                                 </th>
                                                 <th className="px-3 py-2 font-medium">
                                                     Nama
@@ -425,7 +425,7 @@ export default function MasterKaryawan() {
                             className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4"
                         >
                             <div className="grid gap-2">
-                                <Label htmlFor="nip">NIP</Label>
+                                <Label htmlFor="nip">NPK</Label>
                                 <Input
                                     id="nip"
                                     value={data.nip}
@@ -687,7 +687,7 @@ export default function MasterKaryawan() {
 
                 <form onSubmit={runFilter} className="flex flex-wrap gap-3">
                     <Input
-                        placeholder="Cari nama/NIP..."
+                        placeholder="Cari nama/NPK..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="max-w-sm"

@@ -41,7 +41,7 @@ class SaldoCutiController extends Controller
         $karyawans = $this->filteredKaryawanQuery($request)
             ->with(['departemen', 'jabatan'])
             ->with(['saldoCutis' => fn ($query) => $query->aktif()->with('jenisCuti')->orderBy('jenis_cuti_id')])
-            ->orderBy('nama')
+            ->orderBy('nip')
             ->paginate($this->resolvePerPage($request, 20))
             ->withQueryString();
 
@@ -65,7 +65,7 @@ class SaldoCutiController extends Controller
             ->with(['karyawan.departemen', 'karyawan.jabatan', 'jenisCuti'])
             ->whereIn('karyawan_id', $karyawanIds)
             ->aktif()
-            ->orderBy('karyawan_id')
+            ->orderBy(Karyawan::query()->select('nip')->whereColumn('karyawans.id', 'saldo_cutis.karyawan_id'))
             ->orderBy('jenis_cuti_id');
 
         $nama = 'saldo-cuti-'.now()->format('Y-m-d').'.xlsx';
@@ -85,7 +85,7 @@ class SaldoCutiController extends Controller
 
         $karyawans = $this->filteredKaryawanQuery($request)
             ->with(['saldoCutis' => fn ($query) => $query->aktif()->with('jenisCuti')->orderBy('jenis_cuti_id')])
-            ->orderBy('nama')
+            ->orderBy('nip')
             ->get()
             ->map(fn (Karyawan $karyawan) => $this->barisLaporanPdf($karyawan));
 

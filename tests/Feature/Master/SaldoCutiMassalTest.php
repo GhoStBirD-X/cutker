@@ -70,11 +70,26 @@ class SaldoCutiMassalTest extends TestCase
             ->where('grupKaryawan.data.0.saldo_cutis.0.id', $milikPerempuan->id));
     }
 
+    public function test_index_lists_karyawan_groups_by_npk(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $andi = Karyawan::factory()->create(['nama' => 'Andi', 'nip' => 'NPK-900']);
+        $zaki = Karyawan::factory()->create(['nama' => 'Zaki', 'nip' => 'NPK-100']);
+        SaldoCuti::factory()->create(['karyawan_id' => $andi->id]);
+        SaldoCuti::factory()->create(['karyawan_id' => $zaki->id]);
+
+        $response = $this->actingAs($hrd)->get(route('master.saldo-cuti.index', ['search' => 'NPK-']));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->where('grupKaryawan.data.0.id', $zaki->id)
+            ->where('grupKaryawan.data.1.id', $andi->id));
+    }
+
     public function test_index_groups_every_saldo_of_a_karyawan_on_the_same_page(): void
     {
         $hrd = $this->karyawanUser('hrd');
-        $andi = Karyawan::factory()->create(['nama' => 'Andi']);
-        $budi = Karyawan::factory()->create(['nama' => 'Budi']);
+        $andi = Karyawan::factory()->create(['nama' => 'Andi', 'nip' => 'NPK-001']);
+        $budi = Karyawan::factory()->create(['nama' => 'Budi', 'nip' => 'NPK-002']);
         $jenisCutis = JenisCuti::factory()->count(4)->create();
         $jenisCutis->each(fn (JenisCuti $jenisCuti) => SaldoCuti::factory()->create(['karyawan_id' => $andi->id, 'jenis_cuti_id' => $jenisCuti->id]));
         SaldoCuti::factory()->create(['karyawan_id' => $budi->id, 'jenis_cuti_id' => $jenisCutis->first()->id]);

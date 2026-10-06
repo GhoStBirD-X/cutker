@@ -244,7 +244,7 @@ export function SaldoCutiTambahDialog({
                         </div>
                         <div className="flex flex-col gap-2 sm:flex-row">
                             <Input
-                                placeholder="Cari nama/NIP..."
+                                placeholder="Cari nama/NPK..."
                                 value={cari}
                                 onChange={(e) => setCari(e.target.value)}
                             />

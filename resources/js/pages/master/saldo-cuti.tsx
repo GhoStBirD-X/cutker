@@ -592,7 +592,7 @@ export default function MasterSaldoCuti() {
                         >
                             <Input
                                 type="search"
-                                placeholder="Cari nama/NIP..."
+                                placeholder="Cari nama/NPK..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />

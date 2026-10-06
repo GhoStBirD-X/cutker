@@ -36,7 +36,7 @@ class KaryawanController extends Controller
             ->with(['departemen', 'jabatan', 'user.roles'])
             ->when($search, fn ($query) => $query->where('nama', 'like', "%{$search}%")->orWhere('nip', 'like', "%{$search}%"))
             ->when($departemenId, fn ($query) => $query->where('departemen_id', $departemenId))
-            ->orderBy('nama')
+            ->orderBy('nip')
             ->paginate($this->resolvePerPage($request))
             ->withQueryString();
 

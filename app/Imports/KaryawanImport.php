@@ -62,7 +62,7 @@ class KaryawanImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
             $baris = $index + 2;
 
             $data = [
-                'nip' => trim((string) ($row['nip'] ?? '')),
+                'nip' => trim((string) ($row['npk'] ?? $row['nip'] ?? '')),
                 'nama' => trim((string) ($row['nama'] ?? '')),
                 'email' => trim((string) ($row['email'] ?? '')),
                 'no_hp' => $this->nullableString($row['no_hp'] ?? null),
@@ -145,11 +145,11 @@ class KaryawanImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
         $errors = [];
 
         if ($data['nip'] === '') {
-            $errors[] = 'NIP wajib diisi.';
+            $errors[] = 'NPK wajib diisi.';
         } elseif (isset($seenNip[$data['nip']])) {
-            $errors[] = "NIP '{$data['nip']}' duplikat dengan baris {$seenNip[$data['nip']]} di file ini.";
+            $errors[] = "NPK '{$data['nip']}' duplikat dengan baris {$seenNip[$data['nip']]} di file ini.";
         } elseif (Karyawan::query()->where('nip', $data['nip'])->exists()) {
-            $errors[] = "NIP '{$data['nip']}' sudah dipakai karyawan lain.";
+            $errors[] = "NPK '{$data['nip']}' sudah dipakai karyawan lain.";
         }
 
         if ($data['nama'] === '') {

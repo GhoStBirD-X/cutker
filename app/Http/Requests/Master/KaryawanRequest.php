@@ -67,4 +67,14 @@ class KaryawanRequest extends FormRequest
             ],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'nip' => 'NPK',
+        ];
+    }
 }

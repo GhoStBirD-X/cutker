@@ -273,7 +273,7 @@ export default function KompensasiCutiIndex() {
                         className="w-full sm:w-56"
                     >
                         <Input
-                            placeholder="Cari nama/NIP..."
+                            placeholder="Cari nama/NPK..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />

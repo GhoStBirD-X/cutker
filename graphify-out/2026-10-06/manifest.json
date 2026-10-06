@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "app/Http/Controllers/Cuti/PengajuanCutiController.php": {
-    "mtime": 1790222339.4089522,
-    "seen": 1791168094.4568672,
-    "ast_hash": "190d1c33cde019fba5073f7f5c95ebf8",
+    "mtime": 1791272909.5911498,
+    "seen": 1791273498.1587915,
+    "ast_hash": "7ab681c930f96a339ed90629237d2efd",
     "semantic_hash": ""
   },
   "app/Http/Controllers/DashboardController.php": {
@@ -318,9 +318,9 @@
     "semantic_hash": ""
   },
   "app/Http/Requests/Cuti/StorePengajuanCutiRequest.php": {
-    "mtime": 1789351953.2777898,
-    "seen": 1791168094.4569278,
-    "ast_hash": "d37be1d100afe016888f9a8e841dcbbd",
+    "mtime": 1791272909.5909975,
+    "seen": 1791273498.1588166,
+    "ast_hash": "6f5735ff12ea807fe4a71da2258247ba",
     "semantic_hash": ""
   },
   "app/Http/Requests/Cuti/TambahKaryawanBaruCutiMassalRequest.php": {
@@ -480,15 +480,15 @@
     "semantic_hash": ""
   },
   "app/Models/JenisCuti.php": {
-    "mtime": 1790222329.5221128,
-    "seen": 1791168094.4569998,
-    "ast_hash": "f483f55427ae7d4753e5db2a356ef6bc",
+    "mtime": 1791272909.590371,
+    "seen": 1791273498.1588552,
+    "ast_hash": "acd27a4523dafbbc99c60096eeffba33",
     "semantic_hash": ""
   },
   "app/Models/Karyawan.php": {
-    "mtime": 1791261078.6529865,
-    "seen": 1791261188.3801973,
-    "ast_hash": "0425056ab20da79b2431443ec6804525",
+    "mtime": 1791272909.5905695,
+    "seen": 1791273498.1588564,
+    "ast_hash": "3243ba3d4c00d84fb893d7962ed7d3b0",
     "semantic_hash": ""
   },
   "app/Models/KompensasiCuti.php": {
@@ -1764,15 +1764,15 @@
     "semantic_hash": ""
   },
   "resources/js/pages/cuti/ajukan-mendadak.tsx": {
-    "mtime": 1789438433.4997296,
-    "seen": 1791168094.4575691,
-    "ast_hash": "c3e9789055277c6c9ded25510f3e383b",
+    "mtime": 1791272979.1995296,
+    "seen": 1791273498.1590886,
+    "ast_hash": "7cd8c10e1197a76345eeb978213f4173",
     "semantic_hash": ""
   },
   "resources/js/pages/cuti/ajukan.tsx": {
-    "mtime": 1789438196.9447174,
-    "seen": 1791168094.4575715,
-    "ast_hash": "d9cbd2862d384f66dd5df88a4e3e61e8",
+    "mtime": 1791272979.1505303,
+    "seen": 1791273498.1590903,
+    "ast_hash": "53089948e353e88cf489109a8d275685",
     "semantic_hash": ""
   },
   "resources/js/pages/cuti/index.tsx": {
@@ -2136,15 +2136,15 @@
     "semantic_hash": ""
   },
   "tests/Feature/Cuti/PengajuanCutiFormTest.php": {
-    "mtime": 1790222442.2952814,
-    "seen": 1791168094.4577348,
-    "ast_hash": "5dcc128e70cb7debb52e9cd88184e69c",
+    "mtime": 1791273295.7880821,
+    "seen": 1791273498.1591554,
+    "ast_hash": "d2c2dffc0394e7758dc2cba32dd1b31a",
     "semantic_hash": ""
   },
   "tests/Feature/Cuti/PengajuanCutiTest.php": {
-    "mtime": 1791261163.4577494,
-    "seen": 1791261188.3804953,
-    "ast_hash": "8487f9571c2a210dacc452d149998d1c",
+    "mtime": 1791273374.6987314,
+    "seen": 1791273498.1591566,
+    "ast_hash": "6962c41a7eec69b1cbf58466c488bc17",
     "semantic_hash": ""
   },
   "tests/Feature/Cuti/PeriodeCutiSiklusTest.php": {
@@ -2493,6 +2493,12 @@
     "mtime": 1791259060.5683854,
     "seen": 1791259785.3657794,
     "ast_hash": "0c1e32188ae32bae8fcddc0d8fa4af1c",
+    "semantic_hash": ""
+  },
+  "app/Rules/CutiBesarSetelahCutiTahunanHabis.php": {
+    "mtime": 1791272909.5907853,
+    "seen": 1791273498.1588774,
+    "ast_hash": "25dfb4a5210f5e79f707a8bfd53bca5b",
     "semantic_hash": ""
   }
 }

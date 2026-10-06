@@ -31,7 +31,7 @@
         <thead>
             <tr>
                 <th rowspan="2">Nama</th>
-                <th rowspan="2">NIP</th>
+                <th rowspan="2">NPK</th>
                 <th rowspan="2">Status</th>
                 @foreach ($kolomJenisCuti as $nama)
                     <th colspan="2">{{ $nama }}</th>

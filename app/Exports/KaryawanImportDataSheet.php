@@ -28,7 +28,7 @@ class KaryawanImportDataSheet implements FromArray, ShouldAutoSize, WithHeadings
      */
     public function headings(): array
     {
-        return ['nip', 'nama', 'email', 'no_hp', 'jenis_kelamin', 'departemen', 'jabatan', 'tanggal_masuk', 'status', 'tipe_karyawan', 'tanggal_akhir_kontrak'];
+        return ['npk', 'nama', 'email', 'no_hp', 'jenis_kelamin', 'departemen', 'jabatan', 'tanggal_masuk', 'status', 'tipe_karyawan', 'tanggal_akhir_kontrak'];
     }
 
     public function title(): string

@@ -45,7 +45,7 @@ class SaldoCutiMasterExport implements FromQuery, ShouldAutoSize, WithHeadings, 
      */
     public function headings(): array
     {
-        return ['id', 'nip', 'nama', 'departemen', 'jenis_cuti', 'periode', 'kuota', 'terpakai', 'sisa'];
+        return ['id', 'npk', 'nama', 'departemen', 'jenis_cuti', 'periode', 'kuota', 'terpakai', 'sisa'];
     }
 
     /**

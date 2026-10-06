@@ -39,7 +39,7 @@ class KompensasiCutiController extends Controller
             ->when($filters['jenis_cuti_id'], fn (Builder $query, int $id) => $query->where('jenis_cuti_id', $id))
             ->when(
                 $status === StatusKompensasiCuti::MenungguDiproses,
-                fn (Builder $query) => $query->orderBy(Karyawan::query()->select('nama')->whereColumn('karyawans.id', 'kompensasi_cutis.karyawan_id')),
+                fn (Builder $query) => $query->orderBy(Karyawan::query()->select('nip')->whereColumn('karyawans.id', 'kompensasi_cutis.karyawan_id')),
                 fn (Builder $query) => $query->latest('diproses_pada'),
             )
             ->orderBy('id')

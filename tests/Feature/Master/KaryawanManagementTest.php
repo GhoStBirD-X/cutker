@@ -39,6 +39,19 @@ class KaryawanManagementTest extends TestCase
         );
     }
 
+    public function test_index_is_sorted_by_npk_by_default(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        Karyawan::factory()->create(['nama' => 'Andi', 'nip' => 'NPK-900']);
+        Karyawan::factory()->create(['nama' => 'Zaki', 'nip' => 'NPK-100']);
+
+        $response = $this->actingAs($hrd)->get(route('master.karyawan.index', ['search' => 'NPK-']));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('karyawans.data.0.nama', 'Zaki')
+            ->where('karyawans.data.1.nama', 'Andi'));
+    }
+
     public function test_index_ignores_a_per_page_value_outside_allowed_options(): void
     {
         $hrd = $this->karyawanUser('hrd');
