@@ -12,6 +12,7 @@ use App\Models\SaldoCuti;
 use App\Models\User;
 use App\Notifications\PengajuanCutiDiajukan;
 use App\Notifications\PengajuanCutiDisetujui;
+use App\Notifications\PengajuanCutiDiteruskan;
 use App\Notifications\PengajuanCutiDitolak;
 use Illuminate\Support\Facades\DB;
 
@@ -25,6 +26,20 @@ class ApprovalService
      * Level approval final (Manager) yang memotong saldo cuti secara atomik.
      */
     public const LEVEL_MANAGER = 3;
+
+    /**
+     * Label level approval untuk pesan notifikasi — samakan dengan
+     * APPROVAL_LEVEL_LABELS di resources/js/lib/format.ts.
+     */
+    public static function namaLevel(int $level): string
+    {
+        return match ($level) {
+            self::LEVEL_KEPALA_BAGIAN => 'Kepala Bagian',
+            self::LEVEL_HRD => 'HRD',
+            self::LEVEL_MANAGER => 'Manager',
+            default => "Level {$level}",
+        };
+    }
 
     /**
      * Mulai alur approval untuk pengajuan baru, disesuaikan dengan wewenang
@@ -92,7 +107,8 @@ class ApprovalService
      * dua kali (mis. memotong saldo dua kali).
      *
      * Level 1 (Kepala Bagian) & Level 2 (HRD): meneruskan pengajuan ke level
-     * berikutnya. Level 3 (Manager, final): memotong saldo cuti & mengubah
+     * berikutnya dan mengabari pengaju bahwa level ini sudah menyetujui.
+     * Level 3 (Manager, final): memotong saldo cuti & mengubah
      * status pengajuan dalam satu DB transaction agar saldo dan status
      * selalu konsisten.
      */
@@ -121,6 +137,12 @@ class ApprovalService
                 default => null,
             };
 
+            if (in_array($approval->level, [self::LEVEL_KEPALA_BAGIAN, self::LEVEL_HRD], true)) {
+                $pengajuan->karyawan->user?->notify(
+                    new PengajuanCutiDiteruskan($pengajuan, $approver, $approval->level, $catatan)
+                );
+            }
+
             return $approval;
         });
     }
@@ -144,7 +166,7 @@ class ApprovalService
             $pengajuan = $approval->pengajuanCuti;
             $pengajuan->update(['status' => StatusPengajuan::Ditolak]);
 
-            $pengajuan->karyawan->user?->notify(new PengajuanCutiDitolak($pengajuan, $catatan));
+            $pengajuan->karyawan->user?->notify(new PengajuanCutiDitolak($pengajuan, $catatan, $approval->level));
 
             return $approval;
         });

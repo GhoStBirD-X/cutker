@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Notifications\Channels\WhatsAppChannel;
 use App\Services\ApprovalService;
@@ -9,15 +10,20 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
+ * Dikirim ke pengaju setiap kali satu level (Kepala Bagian/HRD) menyetujui
+ * dan pengajuan diteruskan ke level berikutnya. Persetujuan final memakai
+ * PengajuanCutiDisetujui.
+ *
  * Sengaja tidak ShouldQueue — dikirim sinkron supaya tidak diam-diam hilang
  * kalau queue worker tidak berjalan (lihat .ai/rules untuk detail).
  */
-class PengajuanCutiDitolak extends Notification
+class PengajuanCutiDiteruskan extends Notification
 {
     public function __construct(
         public PengajuanCuti $pengajuanCuti,
+        public Karyawan $approver,
+        public int $levelDisetujui,
         public ?string $catatan = null,
-        public ?int $levelDitolak = null,
     ) {}
 
     /**
@@ -33,9 +39,10 @@ class PengajuanCutiDitolak extends Notification
         $pengajuan = $this->pengajuanCuti;
 
         $mail = (new MailMessage)
-            ->subject('Pengajuan Cuti Anda Ditolak')
-            ->line("Pengajuan {$pengajuan->jenisCuti->nama_jenis} Anda selama {$pengajuan->jumlah_hari} hari ditolak.")
-            ->line("Tanggal: {$pengajuan->tanggal_mulai->toDateString()} s/d {$pengajuan->tanggal_selesai->toDateString()}");
+            ->subject('Pengajuan Cuti Anda Disetujui '.$this->namaLevelDisetujui())
+            ->line("Pengajuan {$pengajuan->jenisCuti->nama_jenis} Anda selama {$pengajuan->jumlah_hari} hari telah disetujui {$this->namaLevelDisetujui()} ({$this->approver->nama}).")
+            ->line("Tanggal: {$pengajuan->tanggal_mulai->toDateString()} s/d {$pengajuan->tanggal_selesai->toDateString()}")
+            ->line("Saat ini menunggu persetujuan {$this->namaLevelBerikutnya()}.");
 
         if ($this->catatan) {
             $mail->line("Catatan: {$this->catatan}");
@@ -47,11 +54,11 @@ class PengajuanCutiDitolak extends Notification
     public function toWhatsApp(object $notifiable): string
     {
         $pengajuan = $this->pengajuanCuti;
-        $olehLevel = $this->levelDitolak ? ' oleh '.ApprovalService::namaLevel($this->levelDitolak) : '';
 
-        $pesan = "Pengajuan Cuti Ditolak\n\n".
+        $pesan = "Update Pengajuan Cuti\n\n".
             "Pengajuan {$pengajuan->jenisCuti->nama_jenis} Anda ({$pengajuan->tanggal_mulai->toDateString()} s/d {$pengajuan->tanggal_selesai->toDateString()}) ".
-            "*ditolak{$olehLevel}*.\n";
+            "telah *disetujui {$this->namaLevelDisetujui()}* ({$this->approver->nama}).\n".
+            "Saat ini menunggu persetujuan *{$this->namaLevelBerikutnya()}*.\n";
 
         if ($this->catatan) {
             $pesan .= "Catatan: {$this->catatan}\n";
@@ -70,8 +77,19 @@ class PengajuanCutiDitolak extends Notification
         return [
             'pengajuan_cuti_id' => $pengajuan->id,
             'jenis_cuti' => $pengajuan->jenisCuti->nama_jenis,
+            'level_disetujui' => $this->levelDisetujui,
             'catatan' => $this->catatan,
-            'message' => "Pengajuan cuti {$pengajuan->jenisCuti->nama_jenis} Anda ditolak.",
+            'message' => "Pengajuan cuti {$pengajuan->jenisCuti->nama_jenis} Anda disetujui {$this->namaLevelDisetujui()}, menunggu persetujuan {$this->namaLevelBerikutnya()}.",
         ];
+    }
+
+    protected function namaLevelDisetujui(): string
+    {
+        return ApprovalService::namaLevel($this->levelDisetujui);
+    }
+
+    protected function namaLevelBerikutnya(): string
+    {
+        return ApprovalService::namaLevel($this->levelDisetujui + 1);
     }
 }

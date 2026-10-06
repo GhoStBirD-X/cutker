@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\PengajuanCuti;
+use App\Notifications\Channels\WhatsAppChannel;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -21,7 +22,7 @@ class PengajuanCutiDisetujui extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return ['database', 'mail', WhatsAppChannel::class];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -33,6 +34,16 @@ class PengajuanCutiDisetujui extends Notification
             ->line("Pengajuan {$pengajuan->jenisCuti->nama_jenis} Anda selama {$pengajuan->jumlah_hari} hari telah disetujui.")
             ->line("Tanggal: {$pengajuan->tanggal_mulai->toDateString()} s/d {$pengajuan->tanggal_selesai->toDateString()}")
             ->action('Lihat Detail', url('/cuti/'.$pengajuan->id));
+    }
+
+    public function toWhatsApp(object $notifiable): string
+    {
+        $pengajuan = $this->pengajuanCuti;
+
+        return "Pengajuan Cuti Disetujui\n\n".
+            "Pengajuan {$pengajuan->jenisCuti->nama_jenis} Anda selama {$pengajuan->jumlah_hari} hari telah *disetujui final*.\n".
+            "Cuti dapat digunakan pada tanggal *{$pengajuan->tanggal_mulai->toDateString()} s/d {$pengajuan->tanggal_selesai->toDateString()}*.\n\n".
+            'Lihat detail: '.url('/cuti/'.$pengajuan->id);
     }
 
     /**
