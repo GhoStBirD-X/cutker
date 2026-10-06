@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Enums\AksiMassalSaldoCuti;
 use App\Enums\StatusKaryawan;
+use App\Enums\TipeKaryawan;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\SaldoCuti;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +48,7 @@ class SaldoCutiService
 
         Karyawan::query()
             ->where('status', StatusKaryawan::Aktif)
-            ->sesuaiGenderJenisCuti($jenisCuti)
+            ->berhakJenisCuti($jenisCuti)
             ->chunkById(100, function ($karyawans) use ($jenisCuti, $tahun, &$dibuat) {
                 foreach ($karyawans as $karyawan) {
                     $sudahAda = SaldoCuti::query()
@@ -99,7 +101,7 @@ class SaldoCutiService
 
         Karyawan::query()
             ->where('status', StatusKaryawan::Aktif)
-            ->sesuaiGenderJenisCuti($jenisCuti)
+            ->berhakJenisCuti($jenisCuti)
             ->chunkById(100, function ($karyawans) use ($jenisCuti, &$dibuat) {
                 foreach ($karyawans as $karyawan) {
                     $mulai = $karyawan->tanggal_masuk->copy();
@@ -135,11 +137,12 @@ class SaldoCutiService
      * Periode ke-1 adalah masa kerja minimal yang harus dipenuhi dulu
      * sebelum karyawan berhak cuti (sesuai UU Ketenagakerjaan), jadi
      * kuota/sisa-nya 0 sampai periode ini ditutup dan lanjut ke periode
-     * ke-2 (lihat PeriodeCutiService::lanjutkanPeriode()).
+     * ke-2 (lihat PeriodeCutiService::lanjutkanPeriode()). Karyawan kontrak
+     * tidak dibuatkan saldo Cuti Besar.
      */
     public function bootstrapUntukKaryawanBaru(Karyawan $karyawan): void
     {
-        foreach (JenisCuti::query()->sesuaiGender($karyawan->jenis_kelamin)->get() as $jenisCuti) {
+        foreach (JenisCuti::query()->sesuaiGender($karyawan->jenis_kelamin)->berlakuUntukTipe($karyawan->tipe_karyawan)->get() as $jenisCuti) {
             if ($jenisCuti->masa_kerja_minimal_bulan !== null) {
                 $mulai = $karyawan->tanggal_masuk->copy();
                 $selesai = $mulai->copy()->addMonths($jenisCuti->masa_kerja_minimal_bulan)->subDay();
@@ -163,6 +166,52 @@ class SaldoCutiService
                 ['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $jenisCuti->id, 'tahun' => (int) now()->year],
                 ['kuota' => $jenisCuti->kuota_default, 'terpakai' => 0, 'sisa' => $jenisCuti->kuota_default],
             );
+        }
+    }
+
+    /**
+     * Saat karyawan kontrak diangkat menjadi tetap, jenis cuti khusus
+     * karyawan tetap (Cuti Besar) baru mulai dihitung sejak tanggal
+     * pengangkatan — masa kontrak tidak ikut dihitung. Periode ke-1-nya
+     * adalah masa kerja minimal dengan kuota 0, sama seperti karyawan baru.
+     * Karyawan yang sudah punya baris aktif untuk jenis cuti itu dilewati.
+     */
+    public function mulaiSaldoKhususKaryawanTetap(Karyawan $karyawan, CarbonInterface $tanggalPengangkatan): void
+    {
+        $jenisCutis = JenisCuti::query()
+            ->sesuaiGender($karyawan->jenis_kelamin)
+            ->whereNotNull('masa_kerja_minimal_bulan')
+            ->get()
+            ->filter(fn (JenisCuti $jenisCuti) => $jenisCuti->khususKaryawanTetap());
+
+        foreach ($jenisCutis as $jenisCuti) {
+            $sudahAktif = SaldoCuti::query()
+                ->where('karyawan_id', $karyawan->id)
+                ->where('jenis_cuti_id', $jenisCuti->id)
+                ->aktif()
+                ->exists();
+
+            if ($sudahAktif) {
+                continue;
+            }
+
+            $mulai = Carbon::parse($tanggalPengangkatan)->startOfDay();
+            $periodeKe = (int) SaldoCuti::query()
+                ->where('karyawan_id', $karyawan->id)
+                ->where('jenis_cuti_id', $jenisCuti->id)
+                ->max('periode_ke') + 1;
+
+            SaldoCuti::query()->create([
+                'karyawan_id' => $karyawan->id,
+                'jenis_cuti_id' => $jenisCuti->id,
+                'tahun' => $mulai->year,
+                'periode_ke' => $periodeKe,
+                'periode_mulai' => $mulai,
+                'periode_selesai' => $mulai->copy()->addMonths($jenisCuti->masa_kerja_minimal_bulan)->subDay(),
+                'kuota' => 0,
+                'terpakai' => 0,
+                'sisa' => 0,
+            ]);
         }
     }
 
@@ -295,6 +344,12 @@ class SaldoCutiService
 
                 if ($jenisCuti->khusus_gender !== null && $jenisCuti->khusus_gender !== $karyawan->jenis_kelamin) {
                     $dilewati[] = "{$karyawan->nama} (khusus karyawan {$jenisCuti->khusus_gender->label()})";
+
+                    continue;
+                }
+
+                if ($jenisCuti->khususKaryawanTetap() && $karyawan->tipe_karyawan === TipeKaryawan::Kontrak) {
+                    $dilewati[] = "{$karyawan->nama} ({$jenisCuti->nama_jenis} khusus karyawan tetap)";
 
                     continue;
                 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cuti;
 
 use App\Enums\StatusPengajuan;
+use App\Enums\TipeKaryawan;
 use App\Exceptions\SaldoCutiTidakCukupException;
 use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
@@ -72,11 +73,15 @@ class PengajuanCutiController extends Controller
     private function dataUntukForm(Request $request): array
     {
         $karyawan = $request->user()->karyawan;
-        $cutiBesarTerkunci = $karyawan->masihPunyaSaldoCutiTahunan();
+        // Kontrak tidak pernah mendapat Cuti Besar, jadi petunjuk "terkunci"
+        // hanya relevan untuk karyawan tetap.
+        $cutiBesarTerkunci = $karyawan->tipe_karyawan === TipeKaryawan::Tetap
+            && $karyawan->masihPunyaSaldoCutiTahunan();
 
         return [
             'jenisCutis' => JenisCuti::query()
                 ->sesuaiGender($karyawan->jenis_kelamin)
+                ->berlakuUntukTipe($karyawan->tipe_karyawan)
                 ->when($cutiBesarTerkunci, fn ($query) => $query->where('nama_jenis', '!=', JenisCuti::NAMA_CUTI_BESAR))
                 ->get(),
             'cutiBesarTerkunci' => $cutiBesarTerkunci,
@@ -85,7 +90,7 @@ class PengajuanCutiController extends Controller
                 ->with('jenisCuti')
                 ->where('karyawan_id', $karyawan->id)
                 ->aktif()
-                ->whereHas('jenisCuti', fn ($query) => $query->sesuaiGender($karyawan->jenis_kelamin))
+                ->whereHas('jenisCuti', fn ($query) => $query->sesuaiGender($karyawan->jenis_kelamin)->berlakuUntukTipe($karyawan->tipe_karyawan))
                 ->get(),
             'hariLibur' => HariLibur::query()
                 ->whereBetween('tanggal', [today()->toDateString(), today()->addYear()->toDateString()])

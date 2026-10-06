@@ -229,4 +229,65 @@ class PeriodeCutiSiklusTest extends TestCase
             'ditutup_pada' => null,
         ]);
     }
+
+    /**
+     * @return array{karyawan: Karyawan, saldo: SaldoCuti}
+     */
+    private function perpanjangKontrakDariPeriode(int $periodeKe, TipeKaryawan $tipe = TipeKaryawan::Kontrak): array
+    {
+        $karyawan = Karyawan::factory()->create(['tipe_karyawan' => $tipe]);
+        $jenisCuti = JenisCuti::factory()->create(['kuota_default' => 12, 'masa_kerja_minimal_bulan' => 12]);
+
+        $saldoLama = SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'periode_ke' => $periodeKe,
+            'periode_mulai' => now()->subYear(),
+            'periode_selesai' => now()->subDay(),
+            'kuota' => 12,
+            'terpakai' => 12,
+            'sisa' => 0,
+        ]);
+
+        $periodeCutiService = app(PeriodeCutiService::class);
+        $periodeCutiService->tutupPeriode($saldoLama->fresh());
+
+        if ($tipe === TipeKaryawan::Kontrak) {
+            $konfirmasi = KonfirmasiKontrakCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail();
+            $periodeCutiService->konfirmasiPerpanjangan($konfirmasi, Karyawan::factory()->create(), true, null);
+        }
+
+        $saldoBaru = SaldoCuti::query()
+            ->where('karyawan_id', $karyawan->id)
+            ->where('periode_ke', $periodeKe + 1)
+            ->firstOrFail();
+
+        return ['karyawan' => $karyawan, 'saldo' => $saldoBaru];
+    }
+
+    public function test_kontrak_k5_yang_diperpanjang_kembali_ke_k1_dengan_saldo_nol(): void
+    {
+        ['saldo' => $saldo] = $this->perpanjangKontrakDariPeriode(5);
+
+        $this->assertSame(1, $saldo->urutanKontrak());
+        $this->assertSame(0, $saldo->kuota);
+        $this->assertSame(0, $saldo->sisa);
+    }
+
+    public function test_kontrak_k4_yang_diperpanjang_menjadi_k5_dengan_kuota_penuh(): void
+    {
+        ['saldo' => $saldo] = $this->perpanjangKontrakDariPeriode(4);
+
+        $this->assertSame(5, $saldo->urutanKontrak());
+        $this->assertSame(12, $saldo->kuota);
+        $this->assertSame(12, $saldo->sisa);
+    }
+
+    public function test_karyawan_tetap_tidak_ikut_siklus_kontrak_dan_tetap_dapat_kuota_penuh_setelah_periode_kelima(): void
+    {
+        ['saldo' => $saldo] = $this->perpanjangKontrakDariPeriode(5, TipeKaryawan::Tetap);
+
+        $this->assertSame(12, $saldo->kuota);
+        $this->assertSame(12, $saldo->sisa);
+    }
 }

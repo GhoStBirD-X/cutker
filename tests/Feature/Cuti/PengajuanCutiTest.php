@@ -798,4 +798,20 @@ class PengajuanCutiTest extends TestCase
         $response->assertSessionHasErrors('alasan_mendadak');
         $this->assertDatabaseCount('pengajuan_cutis', 0);
     }
+
+    public function test_kontrak_karyawan_cannot_submit_cuti_besar(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan', ['tipe_karyawan' => 'kontrak', 'tanggal_akhir_kontrak' => now()->addYear()])->karyawan;
+        $cutiBesar = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_BESAR, 'masa_kerja_minimal_bulan' => null]);
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $cutiBesar->id,
+            'tanggal_mulai' => now()->addDays(7)->toDateString(),
+            'tanggal_selesai' => now()->addDays(8)->toDateString(),
+            'alasan' => 'Istirahat',
+        ]);
+
+        $response->assertSessionHasErrors(['jenis_cuti_id' => 'Cuti Besar hanya berlaku untuk karyawan tetap.']);
+        $this->assertDatabaseMissing('pengajuan_cutis', ['karyawan_id' => $karyawan->id]);
+    }
 }

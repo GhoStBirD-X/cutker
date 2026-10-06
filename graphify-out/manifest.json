@@ -78,9 +78,9 @@
     "semantic_hash": ""
   },
   "app/Enums/StatusKonfirmasiKontrak.php": {
-    "mtime": 1788603605.671292,
-    "seen": 1791168094.4568174,
-    "ast_hash": "ca3d5fd6ec9edfcb391ce8c936f3e5ef",
+    "mtime": 1791309440.9768875,
+    "seen": 1791309668.4316902,
+    "ast_hash": "3f457ce2043a94cfcff0fb66f883d639",
     "semantic_hash": ""
   },
   "app/Enums/StatusPengajuan.php": {
@@ -180,15 +180,15 @@
     "semantic_hash": ""
   },
   "app/Http/Controllers/Cuti/KonfirmasiKontrakController.php": {
-    "mtime": 1791173843.215089,
-    "seen": 1791174179.5748317,
-    "ast_hash": "4dbd089168539756ac1e74fbefb3b504",
+    "mtime": 1791309483.406056,
+    "seen": 1791309668.4317234,
+    "ast_hash": "b2245224f062138a1fb9f49e6390ec3b",
     "semantic_hash": ""
   },
   "app/Http/Controllers/Cuti/PengajuanCutiController.php": {
-    "mtime": 1791306401.0875287,
-    "seen": 1791306690.2019007,
-    "ast_hash": "c56e4108ef9eea56a88fb9c02dba5175",
+    "mtime": 1791309042.7205539,
+    "seen": 1791309175.8963437,
+    "ast_hash": "24ff31adb4d310c231b77c9ceb03ae0f",
     "semantic_hash": ""
   },
   "app/Http/Controllers/DashboardController.php": {
@@ -210,9 +210,9 @@
     "semantic_hash": ""
   },
   "app/Http/Controllers/Laporan/SaldoCutiController.php": {
-    "mtime": 1791275603.3135448,
-    "seen": 1791275666.5641541,
-    "ast_hash": "71e1849bf6f4b78e64d873db7934cb95",
+    "mtime": 1791309014.0565395,
+    "seen": 1791309175.8963492,
+    "ast_hash": "46866972277f288488779bb17d943282",
     "semantic_hash": ""
   },
   "app/Http/Controllers/Master/AlasanCutiController.php": {
@@ -246,9 +246,9 @@
     "semantic_hash": ""
   },
   "app/Http/Controllers/Master/KaryawanController.php": {
-    "mtime": 1791275588.6947765,
-    "seen": 1791275666.5641584,
-    "ast_hash": "080969bfd5a7447f34fbbba719fb92df",
+    "mtime": 1791309483.407105,
+    "seen": 1791309668.431735,
+    "ast_hash": "338229e78340760a48c1ea7f1d572120",
     "semantic_hash": ""
   },
   "app/Http/Controllers/Master/SaldoCutiController.php": {
@@ -318,9 +318,9 @@
     "semantic_hash": ""
   },
   "app/Http/Requests/Cuti/StorePengajuanCutiRequest.php": {
-    "mtime": 1791272909.5909975,
-    "seen": 1791273498.1588166,
-    "ast_hash": "6f5735ff12ea807fe4a71da2258247ba",
+    "mtime": 1791309035.594606,
+    "seen": 1791309175.8963711,
+    "ast_hash": "ad762ab21e62954bc33eefdc0e36c17a",
     "semantic_hash": ""
   },
   "app/Http/Requests/Cuti/TambahKaryawanBaruCutiMassalRequest.php": {
@@ -390,9 +390,9 @@
     "semantic_hash": ""
   },
   "app/Http/Requests/Master/SaldoCutiRequest.php": {
-    "mtime": 1791261078.6540446,
-    "seen": 1791261188.380178,
-    "ast_hash": "cf62bf1a017dc58b29a95a07167cb534",
+    "mtime": 1791309035.5948381,
+    "seen": 1791309175.8963919,
+    "ast_hash": "a24b90ca7e47328651f4667d6fa1ef31",
     "semantic_hash": ""
   },
   "app/Http/Requests/Master/ShiftRequest.php": {
@@ -480,15 +480,15 @@
     "semantic_hash": ""
   },
   "app/Models/JenisCuti.php": {
-    "mtime": 1791272909.590371,
-    "seen": 1791273498.1588552,
-    "ast_hash": "acd27a4523dafbbc99c60096eeffba33",
+    "mtime": 1791308994.7262812,
+    "seen": 1791309175.896414,
+    "ast_hash": "d015ac9fb71476aa214d8792c0ee40e3",
     "semantic_hash": ""
   },
   "app/Models/Karyawan.php": {
-    "mtime": 1791272909.5905695,
-    "seen": 1791273498.1588564,
-    "ast_hash": "3243ba3d4c00d84fb893d7962ed7d3b0",
+    "mtime": 1791308994.7265239,
+    "seen": 1791309175.896415,
+    "ast_hash": "d6bba5280fefcd61ea190e2ce9d5e117",
     "semantic_hash": ""
   },
   "app/Models/KompensasiCuti.php": {
@@ -498,9 +498,9 @@
     "semantic_hash": ""
   },
   "app/Models/KonfirmasiKontrakCuti.php": {
-    "mtime": 1789541039.77956,
-    "seen": 1791168094.4570081,
-    "ast_hash": "528d770e4e1f11f65b9876808c379820",
+    "mtime": 1791309440.977091,
+    "seen": 1791309668.4317865,
+    "ast_hash": "728cdc5a3a00c15cedde8b792080b42e",
     "semantic_hash": ""
   },
   "app/Models/PengajuanCuti.php": {
@@ -516,9 +516,9 @@
     "semantic_hash": ""
   },
   "app/Models/SaldoCuti.php": {
-    "mtime": 1789541207.951146,
-    "seen": 1791168094.4570193,
-    "ast_hash": "b360cc279b8c91cdd1f6d46cc95bbbb5",
+    "mtime": 1791308983.894053,
+    "seen": 1791309175.896422,
+    "ast_hash": "900eb625b93831d6b29a0caa9a4aba9a",
     "semantic_hash": ""
   },
   "app/Models/Shift.php": {
@@ -630,9 +630,9 @@
     "semantic_hash": ""
   },
   "app/Services/CutiMassalService.php": {
-    "mtime": 1789537289.1159232,
-    "seen": 1791168094.4570682,
-    "ast_hash": "f09f080ea41056d24f1860fc41c1f773",
+    "mtime": 1791309019.0102577,
+    "seen": 1791309175.896452,
+    "ast_hash": "c08effcbee436ae90b4b8bd9b3afff70",
     "semantic_hash": ""
   },
   "app/Services/HariLiburService.php": {
@@ -648,9 +648,9 @@
     "semantic_hash": ""
   },
   "app/Services/PeriodeCutiService.php": {
-    "mtime": 1791173843.196389,
-    "seen": 1791174179.5750673,
-    "ast_hash": "0c89e424599cdb469008ea88882f8d60",
+    "mtime": 1791309464.1439595,
+    "seen": 1791309668.4318156,
+    "ast_hash": "de9dc1d317f120aa6c3e8eda11a77c85",
     "semantic_hash": ""
   },
   "app/Services/ResetDataService.php": {
@@ -660,9 +660,9 @@
     "semantic_hash": ""
   },
   "app/Services/SaldoCutiService.php": {
-    "mtime": 1791261060.7253332,
-    "seen": 1791261188.3802292,
-    "ast_hash": "53c48a27333ca92962e0b01e620232f9",
+    "mtime": 1791309498.5359433,
+    "seen": 1791309668.4318175,
+    "ast_hash": "92f07962b83ed9106dcf9b75d9859214",
     "semantic_hash": ""
   },
   "app/Support/ExcelStyler.php": {
@@ -1788,9 +1788,9 @@
     "semantic_hash": ""
   },
   "resources/js/pages/cuti/konfirmasi-kontrak/index.tsx": {
-    "mtime": 1791305930.361973,
-    "seen": 1791306690.202224,
-    "ast_hash": "793ee90707ad0bf837562557f16c40eb",
+    "mtime": 1791309613.0876403,
+    "seen": 1791309668.4320188,
+    "ast_hash": "dc37d03a9d5d21700706e511b56db0f3",
     "semantic_hash": ""
   },
   "resources/js/pages/cuti/massal/create.tsx": {
@@ -1932,9 +1932,9 @@
     "semantic_hash": ""
   },
   "resources/js/types/domain.ts": {
-    "mtime": 1791166936.6970768,
-    "seen": 1791168094.45764,
-    "ast_hash": "0fb8a3fad4ed78b6cfd455bc6536f3f1",
+    "mtime": 1791309596.749524,
+    "seen": 1791309668.4320436,
+    "ast_hash": "9d6aacc4e7a119f14cb5cb413711ff98",
     "semantic_hash": ""
   },
   "resources/js/types/global.d.ts": {
@@ -2118,9 +2118,9 @@
     "semantic_hash": ""
   },
   "tests/Feature/Cuti/CutiMassalTest.php": {
-    "mtime": 1789537298.7127838,
-    "seen": 1791168094.4577274,
-    "ast_hash": "dfdf3acd0144268b099bb2571a6added",
+    "mtime": 1791309133.6205604,
+    "seen": 1791309175.8967535,
+    "ast_hash": "744dc8035ba09d50bd8b018e130ca827",
     "semantic_hash": ""
   },
   "tests/Feature/Cuti/KompensasiCutiTest.php": {
@@ -2130,27 +2130,27 @@
     "semantic_hash": ""
   },
   "tests/Feature/Cuti/KonfirmasiKontrakTest.php": {
-    "mtime": 1791173905.6563373,
-    "seen": 1791174179.5757992,
-    "ast_hash": "476a9e55a7b50a41c4ca252018b7ebcf",
+    "mtime": 1791309526.8119197,
+    "seen": 1791309668.4320803,
+    "ast_hash": "296474e469a29f60f425914838c1cea5",
     "semantic_hash": ""
   },
   "tests/Feature/Cuti/PengajuanCutiFormTest.php": {
-    "mtime": 1791306222.2873642,
-    "seen": 1791306690.2022889,
-    "ast_hash": "09fee0b21ca52d8a9d94bd3dd435dfa4",
+    "mtime": 1791309133.620477,
+    "seen": 1791309175.8967564,
+    "ast_hash": "db139147aaaef7ac74b54285b2495c08",
     "semantic_hash": ""
   },
   "tests/Feature/Cuti/PengajuanCutiTest.php": {
-    "mtime": 1791306416.1055152,
-    "seen": 1791306690.2022898,
-    "ast_hash": "604481a067874dbce5c66dce0d87cc60",
+    "mtime": 1791309133.620349,
+    "seen": 1791309175.8967576,
+    "ast_hash": "f44a89809707c6df1c02bc59ff2ba9bf",
     "semantic_hash": ""
   },
   "tests/Feature/Cuti/PeriodeCutiSiklusTest.php": {
-    "mtime": 1789521011.0164187,
-    "seen": 1791168094.4577405,
-    "ast_hash": "cdd1b4d0e8fe5be72207853df975f5e8",
+    "mtime": 1791309133.6198611,
+    "seen": 1791309175.8967586,
+    "ast_hash": "e6377d7456d71f6239dd01d7879e5ee3",
     "semantic_hash": ""
   },
   "tests/Feature/DashboardTest.php": {
@@ -2184,9 +2184,9 @@
     "semantic_hash": ""
   },
   "tests/Feature/Laporan/SaldoCutiTest.php": {
-    "mtime": 1791275655.2965004,
-    "seen": 1791275666.5643806,
-    "ast_hash": "2bb7526fbf9954c46b177bb4db9c79b1",
+    "mtime": 1791309146.5098612,
+    "seen": 1791309175.8967667,
+    "ast_hash": "cea4f729971b16abbd5e4e1875059688",
     "semantic_hash": ""
   },
   "tests/Feature/Master/AlasanCutiManagementTest.php": {
@@ -2214,9 +2214,9 @@
     "semantic_hash": ""
   },
   "tests/Feature/Master/KaryawanManagementTest.php": {
-    "mtime": 1791275655.2958791,
-    "seen": 1791275666.5643842,
-    "ast_hash": "b431ed59bef20f6e9da643ac2414d615",
+    "mtime": 1791309552.7361972,
+    "seen": 1791309668.4321008,
+    "ast_hash": "5edb3a099716a3495bde6a237674e12b",
     "semantic_hash": ""
   },
   "tests/Feature/Master/ResetDataKaryawanTest.php": {
@@ -2226,9 +2226,9 @@
     "semantic_hash": ""
   },
   "tests/Feature/Master/SaldoCutiManagementTest.php": {
-    "mtime": 1791261119.2961652,
-    "seen": 1791261188.3805094,
-    "ast_hash": "995b44bb8e5d5f744ccccd479051411f",
+    "mtime": 1791309133.6200442,
+    "seen": 1791309175.8967733,
+    "ast_hash": "32b81b5ea096f230e8895a18d3c7ef76",
     "semantic_hash": ""
   },
   "tests/Feature/Notifications/PengajuanCutiWhatsAppTest.php": {
@@ -2538,9 +2538,9 @@
     "semantic_hash": ""
   },
   "resources/js/components/confirm-dialog.tsx": {
-    "mtime": 1791305936.6072223,
-    "seen": 1791306690.2021267,
-    "ast_hash": "b5767bc8be51d1cebdbc06a261904d40",
+    "mtime": 1791309613.0671146,
+    "seen": 1791309668.4319253,
+    "ast_hash": "2d7cac30d3945ddf476c571d82cc5f84",
     "semantic_hash": ""
   },
   "resources/js/components/pratinjau-hari-cuti.tsx": {
@@ -2571,6 +2571,24 @@
     "mtime": 1791306503.4956582,
     "seen": 1791306690.2022948,
     "ast_hash": "0e1cac3d381fb7e7d99300730fb350c7",
+    "semantic_hash": ""
+  },
+  "app/Rules/CutiBesarKhususKaryawanTetap.php": {
+    "mtime": 1791309035.577749,
+    "seen": 1791309175.8964417,
+    "ast_hash": "a73afb05e5d508f340c1ce61b10c662b",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_10_06_175043_hapus_saldo_cuti_besar_karyawan_kontrak.php": {
+    "mtime": 1791309050.8716366,
+    "seen": 1791309175.8965507,
+    "ast_hash": "0e2a83317cbd66234a579aea667a065a",
+    "semantic_hash": ""
+  },
+  "tests/Feature/HapusSaldoCutiBesarKontrakMigrationTest.php": {
+    "mtime": 1791309144.901376,
+    "seen": 1791309175.8967638,
+    "ast_hash": "0d5700251b2c6872033bcda9b8c73c01",
     "semantic_hash": ""
   }
 }

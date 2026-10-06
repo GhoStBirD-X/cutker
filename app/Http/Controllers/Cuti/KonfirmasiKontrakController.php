@@ -17,6 +17,12 @@ class KonfirmasiKontrakController extends Controller
 {
     use HasPerPage;
 
+    private const KEPUTUSAN_PERPANJANG = 'perpanjang';
+
+    private const KEPUTUSAN_ANGKAT_TETAP = 'angkat_tetap';
+
+    private const KEPUTUSAN_TIDAK_DIPERPANJANG = 'tidak_diperpanjang';
+
     public function index(Request $request): Response
     {
         $konfirmasiKontraks = KonfirmasiKontrakCuti::query()
@@ -39,11 +45,15 @@ class KonfirmasiKontrakController extends Controller
             return back();
         }
 
-        $diperpanjang = $request->boolean('diperpanjang');
+        $keputusan = (string) $request->string('keputusan');
+        $diperpanjang = $keputusan === self::KEPUTUSAN_PERPANJANG;
+        $kontrakUlangKeK1 = $diperpanjang && $konfirmasi_kontrak->diAkhirSiklusKontrak();
 
         $data = $request->validate([
-            'diperpanjang' => ['required', 'boolean'],
-            'catatan' => ['nullable', 'string', 'max:500'],
+            'keputusan' => ['required', Rule::in([self::KEPUTUSAN_PERPANJANG, self::KEPUTUSAN_ANGKAT_TETAP, self::KEPUTUSAN_TIDAK_DIPERPANJANG])],
+            // Kontrak ulang ke K1 setelah K5 adalah keadaan khusus — wajib
+            // beralasan supaya tercatat kenapa karyawan tidak diangkat tetap.
+            'catatan' => [$kontrakUlangKeK1 ? 'required' : 'nullable', 'string', 'max:500'],
             // "after:tanggal_batas" (bukan "after:today") supaya konfirmasi
             // yang telat diproses (mis. karyawan yang periodenya sudah
             // menunggak beberapa siklus) tetap bisa diisi dengan tanggal
@@ -54,7 +64,17 @@ class KonfirmasiKontrakController extends Controller
                 'date',
                 'after:'.$konfirmasi_kontrak->tanggal_batas->toDateString(),
             ],
+        ], [
+            'catatan.required' => 'Alasan wajib diisi untuk kontrak ulang ke K1 setelah K5.',
         ]);
+
+        if ($keputusan === self::KEPUTUSAN_ANGKAT_TETAP) {
+            $periodeCutiService->angkatKaryawanTetap($konfirmasi_kontrak, $request->user()->karyawan, $data['catatan'] ?? null);
+
+            Inertia::flash('toast', ['type' => 'success', 'message' => 'Karyawan berhasil diangkat menjadi karyawan tetap.']);
+
+            return back();
+        }
 
         $periodeCutiService->konfirmasiPerpanjangan(
             $konfirmasi_kontrak,
@@ -97,8 +117,13 @@ class KonfirmasiKontrakController extends Controller
         }
 
         $jumlah = $periodeCutiService->perpanjangSatuTahunMassal($konfirmasis, $request->user()->karyawan, $data['catatan'] ?? null);
+        $dilewatiAkhirK5 = $konfirmasis->filter(fn (KonfirmasiKontrakCuti $konfirmasi) => $konfirmasi->diAkhirSiklusKontrak())->count();
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => "Kontrak {$jumlah} karyawan berhasil diperpanjang 1 tahun."]);
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => "Kontrak {$jumlah} karyawan berhasil diperpanjang 1 tahun."
+                .($dilewatiAkhirK5 > 0 ? " {$dilewatiAkhirK5} karyawan di akhir K5 dilewati — putuskan satu per satu (angkat tetap atau kontrak ulang ke K1)." : ''),
+        ]);
 
         return back();
     }

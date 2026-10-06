@@ -164,7 +164,7 @@ export type KompensasiCuti = {
 };
 
 export type StatusKonfirmasiKontrak =
-    'menunggu' | 'diperpanjang' | 'tidak_diperpanjang';
+    'menunggu' | 'diperpanjang' | 'tidak_diperpanjang' | 'diangkat_tetap';
 
 export type KonfirmasiKontrakCuti = {
     id: number;
@@ -172,6 +172,8 @@ export type KonfirmasiKontrakCuti = {
     saldo_cuti_id: number;
     periode_ke: number;
     tanggal_batas: string;
+    /** Posisi kontrak yang berakhir dalam siklus K1–K5. */
+    urutan_kontrak: number;
     status: StatusKonfirmasiKontrak;
     dikonfirmasi_oleh_id: number | null;
     dikonfirmasi_pada: string | null;

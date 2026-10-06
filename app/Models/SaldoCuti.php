@@ -47,6 +47,12 @@ class SaldoCuti extends Model
     use HasFactory;
 
     /**
+     * Kontrak berjalan dalam siklus K1–K5: setelah kontrak ke-5 diperpanjang,
+     * hitungan kembali ke K1 (lihat urutanKontrak()).
+     */
+    public const PANJANG_SIKLUS_KONTRAK = 5;
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
@@ -93,5 +99,20 @@ class SaldoCuti extends Model
     public function scopeAktif(Builder $query): Builder
     {
         return $query->whereNull('ditutup_pada');
+    }
+
+    /**
+     * Posisi periode ini dalam siklus kontrak K1–K5. `periode_ke` tetap
+     * naik terus (6, 7, …) supaya arsip riwayat per periode tidak bentrok;
+     * yang berulang hanya urutan kontraknya: periode ke-6 = K1, ke-7 = K2, dst.
+     */
+    public function urutanKontrak(): int
+    {
+        return self::urutanKontrakDariPeriode($this->periode_ke ?? 1);
+    }
+
+    public static function urutanKontrakDariPeriode(int $periodeKe): int
+    {
+        return (($periodeKe - 1) % self::PANJANG_SIKLUS_KONTRAK) + 1;
     }
 }

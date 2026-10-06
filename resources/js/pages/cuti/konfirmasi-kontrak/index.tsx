@@ -1,8 +1,9 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { CalendarClock, CalendarPlus } from 'lucide-react';
+import { CalendarClock, CalendarPlus, UserCheck } from 'lucide-react';
 import { useState } from 'react';
 import KonfirmasiKontrakController from '@/actions/App/Http/Controllers/Cuti/KonfirmasiKontrakController';
-import { konfirmasi } from '@/components/confirm-dialog';
+import { konfirmasi as tampilkanKonfirmasi } from '@/components/confirm-dialog';
+import type { KonfirmasiOptions } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,7 @@ const STATUS_LABEL: Record<KonfirmasiKontrakCuti['status'], string> = {
     menunggu: 'Menunggu Konfirmasi',
     diperpanjang: 'Diperpanjang',
     tidak_diperpanjang: 'Tidak Diperpanjang',
+    diangkat_tetap: 'Diangkat Karyawan Tetap',
 };
 
 /** Tanggal setelah "YYYY-MM-DD" yang diberikan, sesuai batas minimal validasi backend ("after:tanggal_batas"). */
@@ -43,6 +45,11 @@ function tambahSatuTahun(tanggal: string): string {
     return `${tahun + 1}-${String(bulan).padStart(2, '0')}-${String(hari).padStart(2, '0')}`;
 }
 
+type Keputusan = 'perpanjang' | 'angkat_tetap' | 'tidak_diperpanjang';
+
+/** Urutan kontrak terakhir dalam siklus; setelahnya karyawan diangkat tetap atau kontrak ulang ke K1. */
+const AKHIR_SIKLUS_KONTRAK = 5;
+
 function KonfirmasiRow({
     konfirmasi,
     dipilih,
@@ -57,16 +64,53 @@ function KonfirmasiRow({
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const submit = (diperpanjang: boolean) => {
+    const nama = konfirmasi.karyawan?.nama;
+    const akhirK5 = konfirmasi.urutan_kontrak === AKHIR_SIKLUS_KONTRAK;
+    const menunggu = konfirmasi.status === 'menunggu';
+
+    const DIALOG: Record<Keputusan, KonfirmasiOptions> = {
+        angkat_tetap: {
+            title: `Angkat ${nama} menjadi karyawan tetap?`,
+            description:
+                'Cuti Tahunan berikutnya langsung penuh. Cuti Besar mulai dihitung 5 tahun sejak tanggal pengangkatan.',
+            confirmText: 'Angkat Tetap',
+        },
+        perpanjang: akhirK5
+            ? {
+                  title: `Kontrak ulang ${nama} ke K1?`,
+                  description:
+                      'Keadaan khusus: hitungan kontrak kembali ke K1 dan saldo Cuti Tahunan dimulai dari 0 seperti karyawan baru.',
+                  confirmText: 'Kontrak Ulang ke K1',
+              }
+            : {
+                  title: `Perpanjang kontrak ${nama}?`,
+                  description: `Kontrak baru berlaku hingga ${tanggalAkhirKontrakBaru ? formatDate(tanggalAkhirKontrakBaru) : '-'}.`,
+                  confirmText: 'Perpanjang',
+              },
+        tidak_diperpanjang: {
+            title: `Kontrak ${nama} tidak diperpanjang?`,
+            description:
+                'Karyawan akan dinonaktifkan dan sisa cutinya dibuatkan kompensasi. Keputusan tidak bisa diubah.',
+            confirmText: 'Tidak Diperpanjang',
+            destructive: true,
+        },
+    };
+
+    const submit = async (keputusan: Keputusan) => {
+        if (!(await tampilkanKonfirmasi(DIALOG[keputusan]))) {
+            return;
+        }
+
         setProcessing(true);
         router.post(
             KonfirmasiKontrakController.konfirmasi.url(konfirmasi.id),
             {
-                diperpanjang,
+                keputusan,
                 catatan,
-                tanggal_akhir_kontrak_baru: diperpanjang
-                    ? tanggalAkhirKontrakBaru
-                    : undefined,
+                tanggal_akhir_kontrak_baru:
+                    keputusan === 'perpanjang'
+                        ? tanggalAkhirKontrakBaru
+                        : undefined,
             },
             {
                 onError: (err) => setErrors(err),
@@ -74,8 +118,6 @@ function KonfirmasiRow({
             },
         );
     };
-
-    const menunggu = konfirmasi.status === 'menunggu';
 
     return (
         <div
@@ -90,15 +132,24 @@ function KonfirmasiRow({
                 {menunggu && (
                     <Checkbox
                         className="mt-0.5"
-                        aria-label={`Pilih ${konfirmasi.karyawan?.nama}`}
-                        checked={dipilih}
+                        aria-label={`Pilih ${nama}`}
+                        checked={dipilih && !akhirK5}
+                        disabled={akhirK5}
+                        title={
+                            akhirK5
+                                ? 'Akhir K5 harus diputuskan satu per satu'
+                                : undefined
+                        }
                         onCheckedChange={(v) => onPilih(v === true)}
                     />
                 )}
                 <div>
-                    <div className="font-medium">
-                        {konfirmasi.karyawan?.nama} &middot;{' '}
+                    <div className="flex flex-wrap items-center gap-2 font-medium">
+                        {nama} &middot;{' '}
                         {konfirmasi.saldo_cuti?.jenis_cuti?.nama_jenis}
+                        <Badge variant="outline">
+                            K{konfirmasi.urutan_kontrak}
+                        </Badge>
                     </div>
                     <div className="text-muted-foreground">
                         Periode ke-{konfirmasi.periode_ke} berakhir{' '}
@@ -112,17 +163,37 @@ function KonfirmasiRow({
                             )}
                         </div>
                     )}
+                    {menunggu && akhirK5 && (
+                        <p className="mt-1 text-xs font-medium text-amber-800 dark:text-amber-300">
+                            Akhir K5: angkat menjadi karyawan tetap, atau
+                            kontrak ulang ke K1 (keadaan khusus, wajib isi
+                            alasan).
+                        </p>
+                    )}
                 </div>
             </div>
-            {konfirmasi.status === 'menunggu' ? (
+            {menunggu ? (
                 <div className="flex flex-col gap-2 md:items-end">
+                    {akhirK5 && (
+                        <Button
+                            size="sm"
+                            className="gap-1.5"
+                            disabled={processing}
+                            onClick={() => submit('angkat_tetap')}
+                        >
+                            <UserCheck className="size-4" />
+                            Angkat Karyawan Tetap
+                        </Button>
+                    )}
                     <div className="flex flex-col gap-2 md:flex-row md:items-start">
                         <div className="grid gap-1">
                             <Label
                                 htmlFor={`tanggal-akhir-${konfirmasi.id}`}
                                 className="text-xs text-muted-foreground"
                             >
-                                Kontrak baru berlaku hingga
+                                {akhirK5
+                                    ? 'Kontrak ulang (K1) berlaku hingga'
+                                    : 'Kontrak baru berlaku hingga'}
                             </Label>
                             <div className="flex gap-1">
                                 <Input
@@ -163,7 +234,9 @@ function KonfirmasiRow({
                                 htmlFor={`catatan-${konfirmasi.id}`}
                                 className="text-xs text-muted-foreground"
                             >
-                                Catatan (opsional)
+                                {akhirK5
+                                    ? 'Alasan kontrak ulang (wajib)'
+                                    : 'Catatan (opsional)'}
                             </Label>
                             <Input
                                 id={`catatan-${konfirmasi.id}`}
@@ -171,21 +244,28 @@ function KonfirmasiRow({
                                 onChange={(e) => setCatatan(e.target.value)}
                                 className="md:w-64"
                             />
+                            <InputError message={errors.catatan} />
                         </div>
                     </div>
                     <div className="flex gap-2">
                         <Button
                             size="sm"
-                            disabled={processing || !tanggalAkhirKontrakBaru}
-                            onClick={() => submit(true)}
+                            variant={akhirK5 ? 'outline' : 'default'}
+                            disabled={
+                                processing ||
+                                !tanggalAkhirKontrakBaru ||
+                                (akhirK5 && catatan.trim() === '')
+                            }
+                            onClick={() => submit('perpanjang')}
                         >
-                            Perpanjang
+                            {akhirK5 ? 'Kontrak Ulang ke K1' : 'Perpanjang'}
                         </Button>
                         <Button
                             size="sm"
-                            variant="destructive"
+                            variant="outline"
+                            className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
                             disabled={processing}
-                            onClick={() => submit(false)}
+                            onClick={() => submit('tidak_diperpanjang')}
                         >
                             Tidak Diperpanjang
                         </Button>
@@ -194,9 +274,9 @@ function KonfirmasiRow({
             ) : (
                 <Badge
                     variant={
-                        konfirmasi.status === 'diperpanjang'
-                            ? 'secondary'
-                            : 'destructive'
+                        konfirmasi.status === 'tidak_diperpanjang'
+                            ? 'destructive'
+                            : 'secondary'
                     }
                 >
                     {STATUS_LABEL[konfirmasi.status]}
@@ -209,8 +289,11 @@ function KonfirmasiRow({
 export default function KonfirmasiKontrakIndex() {
     const { konfirmasiKontraks, jumlahMenunggu } = usePage<PageProps>().props;
 
+    // Akhir K5 tidak bisa ikut perpanjangan massal — wajib diputuskan per orang.
     const menungguDiHalaman = konfirmasiKontraks.data.filter(
-        (k) => k.status === 'menunggu',
+        (k) =>
+            k.status === 'menunggu' &&
+            k.urutan_kontrak !== AKHIR_SIKLUS_KONTRAK,
     );
     const [dipilih, setDipilih] = useState<Set<number>>(new Set());
     const [semua, setSemua] = useState(false);
@@ -252,7 +335,7 @@ export default function KonfirmasiKontrakIndex() {
 
     const perpanjangMassal = async () => {
         if (
-            !(await konfirmasi({
+            !(await tampilkanKonfirmasi({
                 title: `Perpanjang kontrak ${jumlahDipilih} karyawan?`,
                 description:
                     'Masing-masing diperpanjang 1 tahun dari tanggal berakhir periodenya.',
@@ -295,7 +378,9 @@ export default function KonfirmasiKontrakIndex() {
                 <p className="text-sm text-muted-foreground">
                     Karyawan kontrak yang periode cuti tahunannya sudah berakhir
                     tertahan di sini sampai HRD mengonfirmasi status
-                    perpanjangan kontraknya.
+                    perpanjangan kontraknya. Kontrak berjalan dari K1 sampai K5;
+                    setelah K5 karyawan diangkat tetap atau, dalam keadaan
+                    khusus, kontrak ulang ke K1.
                 </p>
 
                 {jumlahMenunggu > 0 && (
@@ -358,7 +443,8 @@ export default function KonfirmasiKontrakIndex() {
                                 1 tahun setelah periodenya berakhir. Untuk
                                 tanggal lain atau &quot;Tidak
                                 Diperpanjang&quot;, gunakan form di
-                                masing-masing baris.
+                                masing-masing baris. Karyawan di akhir K5 selalu
+                                dilewati dan harus diputuskan satu per satu.
                             </p>
                         </CardContent>
                     </Card>

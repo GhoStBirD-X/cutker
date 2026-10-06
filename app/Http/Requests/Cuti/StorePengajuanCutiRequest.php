@@ -5,6 +5,7 @@ namespace App\Http\Requests\Cuti;
 use App\Models\JenisCuti;
 use App\Models\PengajuanCuti;
 use App\Rules\BatasWaktuPengajuanCuti;
+use App\Rules\CutiBesarKhususKaryawanTetap;
 use App\Rules\CutiBesarSetelahCutiTahunanHabis;
 use App\Rules\MasaKerjaMencukupi;
 use App\Rules\SesuaiDurasiAlasanCuti;
@@ -46,6 +47,7 @@ class StorePengajuanCutiRequest extends FormRequest
                 'exists:jenis_cutis,id',
                 new MasaKerjaMencukupi($karyawan),
                 new SesuaiGenderJenisCuti($karyawan),
+                new CutiBesarKhususKaryawanTetap($karyawan),
                 new CutiBesarSetelahCutiTahunanHabis($karyawan),
             ],
             'alasan_cuti_id' => [

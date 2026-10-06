@@ -238,4 +238,63 @@ class SaldoCutiManagementTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    public function test_new_kontrak_karyawan_gets_no_cuti_besar_saldo_but_tetap_does(): void
+    {
+        $cutiTahunan = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_TAHUNAN, 'masa_kerja_minimal_bulan' => 12]);
+        $cutiBesar = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_BESAR, 'masa_kerja_minimal_bulan' => 60]);
+        $kontrak = Karyawan::factory()->kontrak()->create();
+        $tetap = Karyawan::factory()->create();
+
+        app(SaldoCutiService::class)->bootstrapUntukKaryawanBaru($kontrak);
+        app(SaldoCutiService::class)->bootstrapUntukKaryawanBaru($tetap);
+
+        $this->assertDatabaseHas('saldo_cutis', ['karyawan_id' => $kontrak->id, 'jenis_cuti_id' => $cutiTahunan->id]);
+        $this->assertDatabaseMissing('saldo_cutis', ['karyawan_id' => $kontrak->id, 'jenis_cuti_id' => $cutiBesar->id]);
+        $this->assertDatabaseHas('saldo_cutis', ['karyawan_id' => $tetap->id, 'jenis_cuti_id' => $cutiBesar->id]);
+    }
+
+    public function test_generated_cuti_besar_saldo_skips_kontrak_karyawan(): void
+    {
+        $cutiBesar = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_BESAR, 'masa_kerja_minimal_bulan' => 60]);
+        $kontrak = Karyawan::factory()->kontrak()->create();
+        $tetap = Karyawan::factory()->create();
+
+        app(SaldoCutiService::class)->generatePeriodeAwalUntukJenisCuti($cutiBesar);
+
+        $this->assertDatabaseHas('saldo_cutis', ['karyawan_id' => $tetap->id, 'jenis_cuti_id' => $cutiBesar->id]);
+        $this->assertDatabaseMissing('saldo_cutis', ['karyawan_id' => $kontrak->id, 'jenis_cuti_id' => $cutiBesar->id]);
+    }
+
+    public function test_manual_cuti_besar_saldo_is_rejected_for_kontrak_karyawan(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $kontrak = Karyawan::factory()->kontrak()->create();
+        $cutiBesar = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_BESAR, 'masa_kerja_minimal_bulan' => 60]);
+
+        $response = $this->actingAs($hrd)->post(route('master.saldo-cuti.store'), [
+            'karyawan_id' => $kontrak->id,
+            'jenis_cuti_id' => $cutiBesar->id,
+            'periode_ke' => 1,
+            'kuota' => 21,
+            'terpakai' => 0,
+        ]);
+
+        $response->assertSessionHasErrors(['jenis_cuti_id' => 'Cuti Besar hanya berlaku untuk karyawan tetap.']);
+        $this->assertDatabaseMissing('saldo_cutis', ['karyawan_id' => $kontrak->id]);
+    }
+
+    public function test_bulk_cuti_besar_saldo_skips_kontrak_karyawan_with_reason(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $kontrak = Karyawan::factory()->kontrak()->create(['nama' => 'Andi Kontrak']);
+        $tetap = Karyawan::factory()->create();
+        $cutiBesar = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_BESAR, 'masa_kerja_minimal_bulan' => 60]);
+
+        $hasil = app(SaldoCutiService::class)->buatMassal([$kontrak->id, $tetap->id], $cutiBesar, null, 21, 0, 'Migrasi', $hrd->karyawan);
+
+        $this->assertSame(1, $hasil['dibuat']);
+        $this->assertSame(['Andi Kontrak (Cuti Besar khusus karyawan tetap)'], $hasil['dilewati']);
+        $this->assertDatabaseMissing('saldo_cutis', ['karyawan_id' => $kontrak->id, 'jenis_cuti_id' => $cutiBesar->id]);
+    }
 }

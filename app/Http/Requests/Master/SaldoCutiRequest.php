@@ -5,6 +5,7 @@ namespace App\Http\Requests\Master;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\SaldoCuti;
+use App\Rules\CutiBesarKhususKaryawanTetap;
 use App\Rules\SesuaiGenderJenisCuti;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -37,6 +38,7 @@ class SaldoCutiRequest extends FormRequest
                 'integer',
                 'exists:jenis_cutis,id',
                 $karyawan ? new SesuaiGenderJenisCuti($karyawan) : null,
+                $karyawan ? new CutiBesarKhususKaryawanTetap($karyawan) : null,
             ]),
             'tahun' => [Rule::requiredIf(fn () => ! $isUpdate && ! $bertipePeriode()), 'nullable', 'integer', 'min:2000', 'max:2100'],
             'periode_ke' => [

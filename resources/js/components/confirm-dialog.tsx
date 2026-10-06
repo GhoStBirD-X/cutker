@@ -9,7 +9,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 
-type KonfirmasiOptions = {
+export type KonfirmasiOptions = {
     title: string;
     description?: React.ReactNode;
     confirmText?: string;

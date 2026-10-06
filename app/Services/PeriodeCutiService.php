@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\DB;
 
 class PeriodeCutiService
 {
+    public function __construct(
+        protected SaldoCutiService $saldoCutiService,
+    ) {}
+
     /**
      * Proses semua baris SaldoCuti bertipe periode yang periodenya sudah
      * lewat: arsipkan ke riwayat, lalu lanjutkan otomatis (karyawan tetap)
@@ -120,16 +124,52 @@ class PeriodeCutiService
     }
 
     /**
+     * Akhir kontrak (biasanya di akhir K5): karyawan diangkat menjadi
+     * karyawan tetap. Cuti Tahunan langsung lanjut ke periode berikutnya
+     * dengan kuota penuh (masa kerjanya sudah terpenuhi), sedangkan Cuti
+     * Besar baru mulai dihitung sejak tanggal pengangkatan — yaitu hari
+     * setelah periode kontrak terakhir berakhir.
+     */
+    public function angkatKaryawanTetap(KonfirmasiKontrakCuti $konfirmasi, Karyawan $olehSiapa, ?string $catatan): void
+    {
+        DB::transaction(function () use ($konfirmasi, $olehSiapa, $catatan) {
+            $konfirmasi->update([
+                'status' => StatusKonfirmasiKontrak::DiangkatTetap,
+                'dikonfirmasi_oleh_id' => $olehSiapa->id,
+                'dikonfirmasi_pada' => now(),
+                'catatan' => $catatan,
+            ]);
+
+            $karyawan = $konfirmasi->karyawan;
+            $karyawan->update([
+                'tipe_karyawan' => TipeKaryawan::Tetap,
+                'tanggal_akhir_kontrak' => null,
+            ]);
+
+            $saldo = $konfirmasi->saldoCuti;
+            $saldo->setRelation('karyawan', $karyawan);
+
+            $this->lanjutkanPeriode($saldo, $this->riwayatUntuk($saldo));
+
+            $this->saldoCutiService->mulaiSaldoKhususKaryawanTetap($karyawan, $saldo->periode_selesai->copy()->addDay());
+        });
+    }
+
+    /**
      * Perpanjang kontrak banyak karyawan sekaligus, masing-masing tepat 1
      * tahun dari tanggal_batas konfirmasinya sendiri (sama dengan tombol
-     * "1 Tahun" di form per orang). Konfirmasi yang sudah diproses dilewati.
+     * "1 Tahun" di form per orang). Konfirmasi yang sudah diproses dilewati,
+     * begitu juga konfirmasi di akhir K5 yang wajib diputuskan satu per satu
+     * (angkat tetap, atau kontrak ulang ke K1 dengan alasan).
      * Satu transaksi supaya tidak ada yang setengah jadi bila satu gagal.
      *
      * @param  Collection<int, KonfirmasiKontrakCuti>  $konfirmasis
      */
     public function perpanjangSatuTahunMassal(Collection $konfirmasis, Karyawan $olehSiapa, ?string $catatan): int
     {
-        $menunggu = $konfirmasis->filter(fn (KonfirmasiKontrakCuti $k): bool => $k->status === StatusKonfirmasiKontrak::Menunggu);
+        $menunggu = $konfirmasis->filter(
+            fn (KonfirmasiKontrakCuti $k): bool => $k->status === StatusKonfirmasiKontrak::Menunggu && ! $k->diAkhirSiklusKontrak(),
+        );
 
         DB::transaction(function () use ($menunggu, $olehSiapa, $catatan): void {
             foreach ($menunggu as $konfirmasi) {
@@ -176,6 +216,10 @@ class PeriodeCutiService
     /**
      * Tutup baris lama (bila belum), buat periode berikutnya, dan
      * konversi sisa cuti jadi record kompensasi bila masih ada sisa.
+     *
+     * Karyawan kontrak berjalan dalam siklus K1–K5: periode yang jatuh
+     * kembali ke K1 (setelah K5 diperpanjang) diperlakukan seperti masa
+     * kerja minimal karyawan baru, jadi kuota/sisa-nya 0.
      */
     protected function lanjutkanPeriode(SaldoCuti $saldoLama, ?RiwayatSaldoCuti $riwayat): void
     {
@@ -190,17 +234,21 @@ class PeriodeCutiService
         $jenisCuti = $saldoLama->jenisCuti;
         $periodeMulaiBaru = $saldoLama->periode_selesai->copy()->addDay();
         $periodeSelesaiBaru = $periodeMulaiBaru->copy()->addMonths($jenisCuti->masa_kerja_minimal_bulan)->subDay();
+        $periodeKeBaru = $saldoLama->periode_ke + 1;
+        $kembaliKeK1 = $saldoLama->karyawan->tipe_karyawan === TipeKaryawan::Kontrak
+            && SaldoCuti::urutanKontrakDariPeriode($periodeKeBaru) === 1;
+        $kuotaBaru = $kembaliKeK1 ? 0 : $jenisCuti->kuota_default;
 
         SaldoCuti::query()->create([
             'karyawan_id' => $saldoLama->karyawan_id,
             'jenis_cuti_id' => $saldoLama->jenis_cuti_id,
             'tahun' => $periodeMulaiBaru->year,
-            'periode_ke' => $saldoLama->periode_ke + 1,
+            'periode_ke' => $periodeKeBaru,
             'periode_mulai' => $periodeMulaiBaru,
             'periode_selesai' => $periodeSelesaiBaru,
-            'kuota' => $jenisCuti->kuota_default,
+            'kuota' => $kuotaBaru,
             'terpakai' => 0,
-            'sisa' => $jenisCuti->kuota_default,
+            'sisa' => $kuotaBaru,
         ]);
     }
 

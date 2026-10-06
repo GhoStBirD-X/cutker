@@ -186,10 +186,10 @@ class SaldoCutiController extends Controller
     }
 
     /**
-     * "K1"/"K2"/"K3" dst. untuk karyawan kontrak (dihitung dari periode_ke
-     * saldo Cuti Tahunan yang aktif — setiap pergantian periode adalah
-     * titik konfirmasi perpanjangan kontrak), atau "KT" untuk karyawan
-     * tetap.
+     * "K1"–"K5" untuk karyawan kontrak (dihitung dari periode_ke saldo Cuti
+     * Tahunan yang aktif — setiap pergantian periode adalah titik konfirmasi
+     * perpanjangan kontrak; setelah K5 kembali ke K1), atau "KT" untuk
+     * karyawan tetap.
      */
     private function statusKontrak(Karyawan $karyawan): string
     {
@@ -200,6 +200,6 @@ class SaldoCutiController extends Controller
         $cutiTahunan = $karyawan->saldoCutis
             ->first(fn (SaldoCuti $saldo) => $saldo->jenisCuti?->nama_jenis === 'Cuti Tahunan');
 
-        return 'K'.($cutiTahunan->periode_ke ?? 1);
+        return 'K'.($cutiTahunan?->urutanKontrak() ?? 1);
     }
 }

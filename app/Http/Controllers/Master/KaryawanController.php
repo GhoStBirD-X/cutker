@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\Enums\TipeKaryawan;
 use App\Exports\KaryawanImportTemplateExport;
 use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
@@ -83,9 +84,20 @@ class KaryawanController extends Controller
         return back();
     }
 
-    public function update(KaryawanRequest $request, Karyawan $karyawan): RedirectResponse
+    /**
+     * Karyawan kontrak yang diangkat menjadi tetap lewat form edit langsung
+     * dibuatkan saldo yang sebelumnya tidak berlaku baginya (Cuti Besar),
+     * dihitung sejak hari pengangkatan — masa kontrak tidak ikut dihitung.
+     */
+    public function update(KaryawanRequest $request, Karyawan $karyawan, SaldoCutiService $saldoCutiService): RedirectResponse
     {
+        $sebelumnyaKontrak = $karyawan->tipe_karyawan === TipeKaryawan::Kontrak;
+
         $karyawan->update($request->validated());
+
+        if ($sebelumnyaKontrak && $karyawan->tipe_karyawan === TipeKaryawan::Tetap) {
+            $saldoCutiService->mulaiSaldoKhususKaryawanTetap($karyawan, today());
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Karyawan berhasil diperbarui.']);
 

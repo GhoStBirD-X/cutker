@@ -790,4 +790,36 @@ class CutiMassalTest extends TestCase
         $this->actingAs($karyawan->user)->get(route('cuti.index'))->assertOk();
         $this->actingAs($karyawan->user)->get(route('cuti.show', $pengajuan))->assertOk();
     }
+
+    public function test_kontrak_returning_to_k1_after_k5_gets_bonus_kuota_again(): void
+    {
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+        $jenisCuti = JenisCuti::factory()->create();
+        $karyawan = Karyawan::factory()->create(['tipe_karyawan' => TipeKaryawan::Kontrak]);
+
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'periode_ke' => 6,
+            'kuota' => 0,
+            'terpakai' => 0,
+            'sisa' => 0,
+        ]);
+
+        $this->actingAs($hrd->user)->post(route('cuti.massal.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(10)->toDateString(),
+            'tanggal_selesai' => now()->addDays(12)->toDateString(),
+            'alasan' => 'Cuti bersama',
+            'karyawan_ids' => [$karyawan->id],
+        ]);
+
+        $this->assertDatabaseHas('saldo_cutis', [
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'periode_ke' => 6,
+            'kuota' => 3,
+            'sisa' => 0,
+        ]);
+    }
 }

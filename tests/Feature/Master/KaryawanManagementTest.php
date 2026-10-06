@@ -6,6 +6,7 @@ use App\Models\Departemen;
 use App\Models\Jabatan;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
+use App\Models\SaldoCuti;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -272,5 +273,31 @@ class KaryawanManagementTest extends TestCase
 
         $response->assertRedirect();
         $this->assertDatabaseHas('karyawans', ['id' => $karyawanDenganAkun->karyawan->id]);
+    }
+
+    public function test_kontrak_karyawan_promoted_to_tetap_starts_cuti_besar_from_promotion_date(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $cutiBesar = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_BESAR, 'masa_kerja_minimal_bulan' => 60]);
+        $karyawan = Karyawan::factory()->kontrak()->create(['tanggal_masuk' => now()->subYears(2)]);
+
+        $response = $this->actingAs($hrd)->put(route('master.karyawan.update', $karyawan), [
+            'nip' => $karyawan->nip,
+            'nama' => $karyawan->nama,
+            'email' => $karyawan->email,
+            'no_hp' => $karyawan->no_hp,
+            'jenis_kelamin' => $karyawan->jenis_kelamin->value,
+            'departemen_id' => $karyawan->departemen_id,
+            'jabatan_id' => $karyawan->jabatan_id,
+            'tanggal_masuk' => $karyawan->tanggal_masuk->toDateString(),
+            'status' => 'aktif',
+            'tipe_karyawan' => 'tetap',
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $saldoCutiBesar = SaldoCuti::query()->where('karyawan_id', $karyawan->id)->where('jenis_cuti_id', $cutiBesar->id)->firstOrFail();
+        $this->assertSame(1, $saldoCutiBesar->periode_ke);
+        $this->assertSame(today()->toDateString(), $saldoCutiBesar->periode_mulai->toDateString());
+        $this->assertSame(0, $saldoCutiBesar->kuota);
     }
 }

@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Enums\StatusKonfirmasiKontrak;
 use Database\Factories\KonfirmasiKontrakCutiFactory;
+use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,6 +33,7 @@ use Illuminate\Support\Carbon;
     'dikonfirmasi_pada',
     'catatan',
 ])]
+#[Appends(['urutan_kontrak'])]
 class KonfirmasiKontrakCuti extends Model
 {
     /** @use HasFactory<KonfirmasiKontrakCutiFactory> */
@@ -73,5 +76,26 @@ class KonfirmasiKontrakCuti extends Model
     public function dikonfirmasiOleh(): BelongsTo
     {
         return $this->belongsTo(Karyawan::class, 'dikonfirmasi_oleh_id');
+    }
+
+    /**
+     * Posisi kontrak yang berakhir (K1–K5), dipakai frontend untuk
+     * menampilkan pilihan khusus di akhir K5.
+     *
+     * @return Attribute<int, never>
+     */
+    protected function urutanKontrak(): Attribute
+    {
+        return Attribute::get(fn (): int => SaldoCuti::urutanKontrakDariPeriode($this->periode_ke));
+    }
+
+    /**
+     * Akhir K5: HRD harus memilih antara mengangkat karyawan menjadi tetap
+     * atau kontrak ulang ke K1 (keadaan khusus, wajib beralasan) — tidak
+     * bisa ikut perpanjangan massal.
+     */
+    public function diAkhirSiklusKontrak(): bool
+    {
+        return $this->urutan_kontrak === SaldoCuti::PANJANG_SIKLUS_KONTRAK;
     }
 }

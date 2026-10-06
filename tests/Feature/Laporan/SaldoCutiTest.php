@@ -14,6 +14,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -317,5 +318,30 @@ class SaldoCutiTest extends TestCase
         $karyawan = $this->karyawanUser('karyawan');
 
         $this->actingAs($karyawan)->get(route('laporan.saldo-cuti.export.pdf'))->assertForbidden();
+    }
+
+    #[TestWith([5, 'K5'])]
+    #[TestWith([6, 'K1'])]
+    #[TestWith([10, 'K5'])]
+    #[TestWith([11, 'K1'])]
+    public function test_status_kontrak_cycles_back_to_k1_after_k5(int $periodeKe, string $statusKontrak): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawan = Karyawan::factory()->kontrak()->create();
+        $cutiTahunan = JenisCuti::factory()->create(['nama_jenis' => 'Cuti Tahunan']);
+
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $cutiTahunan->id,
+            'periode_ke' => $periodeKe,
+        ]);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti', [
+            'search' => $karyawan->nip,
+        ]));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('karyawans.data.0.status_kontrak', $statusKontrak)
+        );
     }
 }

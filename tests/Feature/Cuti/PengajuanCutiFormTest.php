@@ -142,4 +142,19 @@ class PengajuanCutiFormTest extends TestCase
             $this->assertTrue($saldoIds->contains($saldo->id));
         });
     }
+
+    public function test_kontrak_karyawan_is_never_offered_cuti_besar(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan', ['tipe_karyawan' => 'kontrak', 'tanggal_akhir_kontrak' => now()->addYear()])->karyawan;
+        $cutiTahunan = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_TAHUNAN]);
+        $cutiBesar = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_BESAR]);
+        SaldoCuti::factory()->create(['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $cutiTahunan->id, 'kuota' => 12, 'sisa' => 0]);
+
+        $response = $this->actingAs($karyawan->user)->get(route('cuti.create'));
+
+        $response->assertInertia(fn (Assert $page) => $page->where('cutiBesarTerkunci', false));
+        $jenisCutiIds = collect($response->viewData('page')['props']['jenisCutis'])->pluck('id');
+        $this->assertTrue($jenisCutiIds->contains($cutiTahunan->id));
+        $this->assertFalse($jenisCutiIds->contains($cutiBesar->id));
+    }
 }

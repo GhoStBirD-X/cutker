@@ -159,6 +159,23 @@ class Karyawan extends Model
     }
 
     /**
+     * Karyawan yang berhak atas jenis cuti tertentu: sesuai gender, dan
+     * khusus karyawan tetap untuk jenis cuti seperti Cuti Besar.
+     *
+     * @param  Builder<Karyawan>  $query
+     * @return Builder<Karyawan>
+     */
+    public function scopeBerhakJenisCuti(Builder $query, JenisCuti $jenisCuti): Builder
+    {
+        return $query
+            ->sesuaiGenderJenisCuti($jenisCuti)
+            ->when(
+                $jenisCuti->khususKaryawanTetap(),
+                fn (Builder $query) => $query->where('tipe_karyawan', TipeKaryawan::Tetap),
+            );
+    }
+
+    /**
      * Masih punya saldo Cuti Tahunan aktif yang bisa dipakai (sisa > 0 atau
      * tanpa batas). Selama masih ada, Cuti Besar tidak boleh dipakai.
      */
