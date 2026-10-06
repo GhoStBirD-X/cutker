@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panduan Cuti Kerja Pabrik</title>
+<style>
+  :root {
+    --bg: #f6f5fb; --panel: #ffffff; --ink: #17142b; --muted: #6b6785; --line: #e6e3f2;
+    --accent: #6d28d9; --accent-soft: #ede9fe; --accent-ink: #4c1d95; --done: #059669; --chip: #f1eff9;
+    --shadow: 0 1px 2px rgba(23,20,43,.06), 0 8px 24px rgba(23,20,43,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f0d1a; --panel: #18152a; --ink: #f1eff9; --muted: #a39fbd; --line: #2b2742;
+      --accent: #a78bfa; --accent-soft: #2a2148; --accent-ink: #ddd6fe; --done: #34d399; --chip: #221e37;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f0d1a; --panel: #18152a; --ink: #f1eff9; --muted: #a39fbd; --line: #2b2742;
+    --accent: #a78bfa; --accent-soft: #2a2148; --accent-ink: #ddd6fe; --done: #34d399; --chip: #221e37;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 Inter, "Segoe UI", system-ui, sans-serif; }
+  .wrap { max-width: 1440px; margin: 0 auto; padding: 24px 16px 40px; }
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  .back { display: inline-block; margin-bottom: 6px; font-size: 13px; color: var(--accent); text-decoration: none; }
+  .back:hover { text-decoration: underline; }
+  .back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  header h1 { margin: 0; font-size: 24px; letter-spacing: -.01em; }
+  header p { margin: 2px 0 0; color: var(--muted); }
+  .progress-sum { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 10px; }
+  .progress-sum .bar { width: 140px; height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .progress-sum .bar i { display: block; height: 100%; width: 0; background: var(--done); transition: width .4s; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
+  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+  .player { overflow: hidden; }
+  video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; }
+  .strip { display: flex; gap: 3px; padding: 12px 14px 4px; }
+  .seg { position: relative; height: 10px; border-radius: 4px; background: var(--line); cursor: pointer; overflow: hidden; border: 0; padding: 0; }
+  .seg i { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--accent); }
+  .seg.done { background: color-mix(in srgb, var(--done) 35%, var(--line)); }
+  .seg.dim { opacity: .35; }
+  .seg:hover { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .seg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .now { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 14px 14px; flex-wrap: wrap; }
+  .now .title { font-weight: 650; }
+  .now .title small { color: var(--muted); font-weight: 500; margin-right: 6px; }
+  .ctrls { display: flex; gap: 6px; flex-wrap: wrap; }
+  button.btn { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--chip); color: var(--ink);
+    border-radius: 9px; padding: 6px 11px; cursor: pointer; }
+  button.btn:hover { border-color: var(--accent); }
+  button.btn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-ink); border-color: var(--accent); }
+  button.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .side { padding: 16px; position: sticky; top: 16px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; }
+  @media (max-width: 980px) { .side { position: static; max-height: none; } }
+  .side h2 { margin: 0 0 4px; font-size: 15px; }
+  .side .hint { margin: 0 0 12px; font-size: 13px; color: var(--muted); }
+  .roles { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .roles button { font: inherit; font-size: 12.5px; border-radius: 99px; padding: 4px 11px; border: 1px solid var(--line);
+    background: var(--chip); color: var(--ink); cursor: pointer; }
+  .roles button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  :root[data-theme="dark"] .roles button[aria-pressed="true"] { color: #1a1033; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .roles button[aria-pressed="true"] { color: #1a1033; } }
+  .roles button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  ol.chapters { list-style: none; margin: 0; padding: 0; overflow: auto; display: flex; flex-direction: column; gap: 4px; }
+  ol.chapters li button { width: 100%; text-align: left; display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center;
+    font: inherit; color: var(--ink); background: transparent; border: 1px solid transparent; border-radius: 12px; padding: 9px 10px; cursor: pointer; }
+  ol.chapters li button:hover { background: var(--chip); }
+  ol.chapters li button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  ol.chapters li.active button { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+  ol.chapters li.dim { display: none; }
+  .num { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px;
+    background: var(--chip); color: var(--muted); border: 1px solid var(--line); }
+  li.active .num { background: var(--accent); color: #fff; border-color: var(--accent); }
+  li.done .num { background: var(--done); color: #fff; border-color: var(--done); }
+  .ct { font-weight: 600; line-height: 1.3; }
+  .cr { display: block; font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+  .dur { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .keys { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); line-height: 1.8; }
+  kbd { font: 600 11.5px/1 ui-monospace, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 2px 5px; background: var(--chip); color: var(--ink); }
+  .reset { margin-top: 8px; font-size: 12.5px; background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; text-decoration: underline; font: inherit; }
+  video::cue { font-size: 1.05em; background: rgba(17,15,38,.82); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <a class="back" href="/">‹ Kembali ke beranda</a>
+      <h1>Panduan Cuti Kerja Pabrik</h1>
+      <p id="meta">Video panduan untuk karyawan, atasan, dan HRD</p>
+    </div>
+    <div class="progress-sum" aria-live="polite"><span id="doneText">0 dari 0 bab ditonton</span><span class="bar"><i id="doneBar"></i></span></div>
+  </header>
+
+  <div class="grid">
+    <section class="card player" aria-label="Pemutar video">
+      <video id="v" controls preload="metadata" playsinline src="Panduan-Cuti-Kerja-Pabrik.mp4"></video>
+      <div class="strip" id="strip" role="group" aria-label="Lompat ke bab"></div>
+      <div class="now">
+        <div class="title" id="nowTitle" aria-live="polite"></div>
+        <div class="ctrls">
+          <button class="btn" id="prev" title="Bab sebelumnya (P)">‹ Sebelumnya</button>
+          <button class="btn" id="next" title="Bab berikutnya (N)">Berikutnya ›</button>
+          <button class="btn" id="cc" aria-pressed="false" title="Subtitle (C)">Subtitle</button>
+          <button class="btn" id="speed" title="Kecepatan putar">1×</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="card side" aria-label="Daftar bab">
+      <h2>Daftar bab</h2>
+      <p class="hint">Pilih peran Anda untuk menampilkan bab yang relevan saja. Bab lain akan dilewati otomatis.</p>
+      <div class="roles" id="roles" role="group" aria-label="Filter peran"></div>
+      <ol class="chapters" id="list"></ol>
+      <div class="keys">
+        <kbd>Spasi</kbd> putar/jeda · <kbd>N</kbd>/<kbd>P</kbd> bab berikut/sebelum · <kbd>1</kbd>–<kbd>9</kbd>, <kbd>0</kbd> lompat ke bab · <kbd>C</kbd> subtitle
+        <br><button class="reset" id="reset">Atur ulang tanda "sudah ditonton"</button>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+const DATA = {"duration": 713.04, "chapters": [{"n": 1, "title": "Login & Dashboard", "roles": ["Karyawan"], "start": 0.0, "end": 67.12}, {"n": 2, "title": "Mengajukan Cuti", "roles": ["Karyawan"], "start": 67.12, "end": 136.73}, {"n": 3, "title": "Approval Berjenjang & Notifikasi WA", "roles": ["Kepala Bagian", "HRD", "Manager"], "start": 136.73, "end": 283.53}, {"n": 4, "title": "Cuti Mendadak & Penolakan", "roles": ["Karyawan", "Kepala Bagian"], "start": 283.53, "end": 358.64}, {"n": 5, "title": "Cuti Massal", "roles": ["HRD"], "start": 358.64, "end": 400.69}, {"n": 6, "title": "Kontrak & Kompensasi", "roles": ["HRD"], "start": 400.69, "end": 455.27}, {"n": 7, "title": "Master Data & Saldo Cuti", "roles": ["HRD", "Admin"], "start": 455.27, "end": 505.27}, {"n": 8, "title": "Laporan", "roles": ["HRD", "Manager"], "start": 505.27, "end": 531.17}, {"n": 9, "title": "Keamanan Akun", "roles": ["Semua"], "start": 531.17, "end": 673.46}, {"n": 10, "title": "Tema Tampilan", "roles": ["Semua"], "start": 673.46, "end": 713.04}], "subs": [{"start": 1.13, "end": 16.92, "text": "Selamat datang di video panduan aplikasi Cuti Kerja Pabrik. Video ini dibagi menjadi sepuluh bab. Kita akan mengikuti satu pengajuan cuti dari awal sampai disetujui, lalu melihat fitur untuk H R D, laporan, keamanan akun, dan tampilan."}, {"start": 18.75, "end": 22.68, "text": "Bab 1. Login & Dashboard."}, {"start": 24.0, "end": 29.3, "text": "Buka aplikasi lalu masuk dengan email atau NIP dan password yang diberikan HRD."}, {"start": 36.07, "end": 41.49, "text": "Setelah login, Dashboard langsung menampilkan sisa saldo setiap jenis cuti milik Anda."}, {"start": 42.0, "end": 48.65, "text": "Warnanya membantu membaca kondisi saldo: biru masih aman, kuning mulai menipis, merah hampir habis."}, {"start": 51.02, "end": 56.87, "text": "Di bawahnya ada riwayat pengajuan terbaru, jadi status cuti bisa dipantau tanpa membuka menu lain."}, {"start": 57.33, "end": 66.02, "text": "Menu di sebelah kiri menyesuaikan peran Anda. Karyawan melihat Dashboard, Jadwal Shift, Riwayat Cuti, dan Ajukan Cuti."}, {"start": 67.32, "end": 71.01, "text": "Bab 2. Mengajukan Cuti."}, {"start": 73.38, "end": 81.66, "text": "Klik menu Ajukan Cuti. Pertama, pilih jenis cuti. Setiap pilihan langsung menampilkan sisa saldonya."}, {"start": 82.21, "end": 88.69, "text": "Isi tanggal mulai dan selesai. Contoh ini sengaja memakai tanggal yang bentrok dengan jadwal shift."}, {"start": 91.13, "end": 101.59, "text": "Sistem langsung menolak dan menjelaskan alasannya: karyawan masih punya jadwal shift di tanggal itu. Hal yang sama berlaku untuk saldo yang kurang atau tanggal yang tumpang tindih dengan cuti lain."}, {"start": 102.96, "end": 111.75, "text": "Kita ganti ke tanggal yang benar, 9 sampai 11 November. Lampiran seperti surat dokter boleh ditambahkan, sifatnya opsional."}, {"start": 112.26, "end": 119.77, "text": "Pengajuan tersimpan dengan status Menunggu. Bagian Riwayat Approval menunjukkan pengajuan sedang menunggu Kepala Bagian."}, {"start": 121.73, "end": 128.07, "text": "Selama belum diproses, karyawan masih bisa membatalkan pengajuannya dari halaman ini atau dari Riwayat Cuti."}, {"start": 129.37, "end": 135.92, "text": "Saat itu juga, Kepala Bagian menerima WhatsApp otomatis berisi ringkasan pengajuan dan tautan untuk meninjaunya."}, {"start": 137.04, "end": 141.98, "text": "Bab 3. Approval Berjenjang & Notifikasi WA."}, {"start": 142.76, "end": 154.74, "text": "Pengajuan disetujui berjenjang: Kepala Bagian, lalu H R D, lalu Manager. Saldo baru dipotong pada persetujuan akhir, dan pengaju selalu dikabari lewat WhatsApp di setiap tahap."}, {"start": 156.3, "end": 159.32, "text": "Sekarang kita masuk sebagai Kepala Bagian."}, {"start": 165.48, "end": 170.88, "text": "Pengajuan baru juga muncul di lonceng notifikasi, lengkap dengan jumlah yang belum dibaca."}, {"start": 171.39, "end": 175.71, "text": "Menu Approval berisi semua pengajuan yang menunggu keputusan di level ini."}, {"start": 176.23, "end": 182.95, "text": "Buka pengajuan untuk melihat detailnya: jenis cuti, tanggal, jumlah hari, dan alasan."}, {"start": 183.43, "end": 193.22, "text": "Pengaju langsung dikabari bahwa Kepala Bagian sudah menyetujui dan pengajuan sekarang menunggu HRD. Semua user HRD juga menerima WA untuk meninjau."}, {"start": 194.26, "end": 197.24, "text": "Sekarang kita masuk sebagai HRD."}, {"start": 202.25, "end": 206.57, "text": "Menu Approval berisi semua pengajuan yang menunggu keputusan di level ini."}, {"start": 207.08, "end": 215.82, "text": "Halaman detail menampilkan jenis cuti, tanggal, jumlah hari, alasan, dan riwayat approval dari level sebelumnya beserta catatannya."}, {"start": 220.78, "end": 230.19, "text": "Pengaju menerima kabar disetujui HRD, menunggu Manager. HRD bekerja sebagai satu tim: siapa pun di role HRD boleh memproses."}, {"start": 231.3, "end": 234.06, "text": "Sekarang kita masuk sebagai Manager."}, {"start": 239.57, "end": 243.89, "text": "Menu Approval berisi semua pengajuan yang menunggu keputusan di level ini."}, {"start": 244.38, "end": 253.11, "text": "Halaman detail menampilkan jenis cuti, tanggal, jumlah hari, alasan, dan riwayat approval dari level sebelumnya beserta catatannya."}, {"start": 258.79, "end": 267.09, "text": "Ini persetujuan akhir. Pengaju menerima WA bahwa cuti dapat digunakan pada tanggal tersebut, dan saldonya langsung dipotong."}, {"start": 268.13, "end": 270.94, "text": "Sekarang kita masuk sebagai Karyawan."}, {"start": 276.04, "end": 282.42, "text": "Kembali ke akun karyawan: saldo Cuti Tahunan sudah berkurang tiga hari, dari 12 menjadi 9."}, {"start": 283.71, "end": 287.99, "text": "Bab 4. Cuti Mendadak & Penolakan."}, {"start": 290.33, "end": 297.7, "text": "Untuk keadaan darurat, gunakan Ajukan Cuti Mendadak. Batas minimal hari sebelum cuti tidak berlaku di sini."}, {"start": 298.19, "end": 303.95, "text": "Bedanya, karyawan wajib menjelaskan kondisi mendesak yang membuat cuti tidak bisa diajukan lebih awal."}, {"start": 309.44, "end": 312.47, "text": "Sekarang kita masuk sebagai Kepala Bagian."}, {"start": 319.78, "end": 325.7, "text": "Pengajuan mendadak diberi tanda khusus, dan alasan mendesaknya ditampilkan agar atasan bisa menilai."}, {"start": 327.07, "end": 334.05, "text": "Untuk pengajuan mendadak, atasan wajib menulis catatan. Coba kita klik Setujui tanpa catatan."}, {"start": 334.62, "end": 342.04, "text": "Sistem menolak dan meminta catatan diisi. Kali ini atasan memutuskan untuk menolak pengajuan dengan alasan yang jelas."}, {"start": 349.73, "end": 357.84, "text": "Pengaju langsung menerima WA bahwa pengajuannya ditolak oleh Kepala Bagian, lengkap dengan catatannya. Saldo tidak dipotong."}, {"start": 358.9, "end": 362.38, "text": "Bab 5. Cuti Massal."}, {"start": 363.09, "end": 366.07, "text": "Sekarang kita masuk sebagai HRD."}, {"start": 371.44, "end": 377.44, "text": "HRD bisa membuat cuti bersama untuk banyak karyawan sekaligus, misalnya cuti bersama akhir tahun."}, {"start": 380.41, "end": 388.26, "text": "Karyawan dikelompokkan per departemen, lengkap dengan sisa saldonya. Centang atau hapus centang untuk mengatur siapa yang ikut."}, {"start": 389.61, "end": 398.95, "text": "Karyawan yang saldonya kurang tetap diproses. Untuk karyawan kontrak di periode pertama, sistem memberi bonus kuota secukupnya supaya saldonya tidak minus."}, {"start": 399.49, "end": 408.54, "text": "Cuti massal tersimpan beserta daftar karyawan dan potongan saldonya. Jika ada yang keliru, cuti massal bisa dibatalkan dan saldo dikembalikan."}, {"start": 409.09, "end": 413.15, "text": "Bab 6. Kontrak & Kompensasi."}, {"start": 415.41, "end": 422.4, "text": "Saat periode cuti karyawan kontrak berakhir, saldonya ditahan sampai HRD mengonfirmasi apakah kontraknya diperpanjang."}, {"start": 422.89, "end": 431.84, "text": "Untuk Karyawan 7, klik 1 Tahun agar tanggal kontrak baru terisi otomatis, lalu Perpanjang. Periode cuti berikutnya langsung dibuka."}, {"start": 436.18, "end": 443.74, "text": "Karyawan 4 tidak diperpanjang. Sisa cutinya tidak hangus begitu saja, tetapi masuk ke daftar kompensasi."}, {"start": 444.23, "end": 454.16, "text": "Di halaman Kompensasi Cuti, HRD mengisi nominal penggantian sisa cuti, lalu menandainya sudah diproses. Bisa juga sekaligus untuk banyak karyawan."}, {"start": 455.5, "end": 459.87, "text": "Bab 7. Master Data & Saldo Cuti."}, {"start": 461.86, "end": 473.34, "text": "Master Data menyimpan data karyawan: departemen, jabatan, jenis kelamin, status kontrak, nomor WhatsApp, dan akun login. Data bisa diimpor dari Excel."}, {"start": 473.86, "end": 484.27, "text": "Saldo dikelompokkan per karyawan. Kuota, terpakai, dan sisa bisa diedit langsung di tabel seperti spreadsheet, dan setiap koreksi wajib disertai catatan."}, {"start": 485.6, "end": 494.48, "text": "Cuti khusus seperti Cuti Haid dan Cuti Hamil hanya muncul untuk karyawan perempuan. Tersedia juga export dan import Excel, serta aksi massal."}, {"start": 495.0, "end": 503.55, "text": "Hari libur nasional disinkronkan otomatis setiap tahun dan tidak dihitung sebagai hari cuti. HRD bisa menambah libur khusus perusahaan."}, {"start": 504.07, "end": 510.87, "text": "Kalender jadwal shift per departemen. Jadwal ini yang dipakai sistem untuk menolak cuti yang bentrok dengan shift."}, {"start": 511.37, "end": 514.83, "text": "Bab 8. Laporan."}, {"start": 516.85, "end": 525.21, "text": "Laporan Cuti bisa difilter per departemen, karyawan, jenis cuti, dan rentang tanggal, lalu diekspor ke Excel atau PDF."}, {"start": 525.68, "end": 529.47, "text": "Di bagian bawah juga ada ringkasan lembur dari jadwal shift."}, {"start": 529.97, "end": 537.34, "text": "Laporan Saldo Cuti merangkum saldo semua karyawan dalam satu tabel. Klik angkanya untuk melihat riwayat perubahan."}, {"start": 537.85, "end": 541.53, "text": "Bab 9. Keamanan Akun."}, {"start": 542.17, "end": 544.98, "text": "Sekarang kita masuk sebagai Karyawan."}, {"start": 549.63, "end": 555.68, "text": "Halaman keamanan dilindungi: Anda diminta mengonfirmasi password sekali lagi sebelum bisa mengubah apa pun."}, {"start": 556.17, "end": 561.17, "text": "Untuk mengganti password, isi password lama, lalu password baru dua kali."}, {"start": 569.06, "end": 574.58, "text": "Password tersimpan. Mulai sekarang, login memakai password yang baru."}, {"start": 575.07, "end": 581.24, "text": "Berikutnya, aktifkan verifikasi dua langkah agar akun tetap aman walaupun password diketahui orang lain."}, {"start": 581.7, "end": 588.8, "text": "Scan kode QR ini dengan aplikasi authenticator di HP, seperti Google Authenticator atau Microsoft Authenticator."}, {"start": 592.5, "end": 596.65, "text": "Lalu masukkan 6 digit kode yang muncul di aplikasi authenticator."}, {"start": 598.43, "end": 605.41, "text": "Verifikasi dua langkah aktif. Simpan recovery code di tempat aman untuk berjaga-jaga jika HP hilang."}, {"start": 605.87, "end": 609.09, "text": "Sekarang kita keluar, lalu login lagi."}, {"start": 610.73, "end": 613.25, "text": "Login memakai password baru."}, {"start": 616.25, "end": 624.12, "text": "Setelah password benar, aplikasi meminta kode dari authenticator. Tanpa HP Anda, akun tidak bisa dibuka."}, {"start": 624.59, "end": 626.56, "text": "Berhasil masuk."}, {"start": 629.45, "end": 639.01, "text": "Fitur terakhir: Passkey. Dengan passkey, Anda masuk memakai sidik jari, wajah, atau PIN perangkat, tanpa mengetik password."}, {"start": 646.67, "end": 653.85, "text": "Passkey Laptop Kantor tersimpan. Satu akun bisa punya beberapa passkey, misalnya untuk laptop dan HP."}, {"start": 654.32, "end": 658.11, "text": "Kita keluar sekali lagi, lalu masuk memakai passkey."}, {"start": 660.78, "end": 668.77, "text": "Di halaman login, klik Sign in with a passkey. Tidak perlu mengetik email, password, maupun kode 2FA."}, {"start": 672.46, "end": 678.77, "text": "Langsung masuk. Passkey lebih cepat dan lebih aman, karena tidak ada password yang bisa dicuri."}, {"start": 679.33, "end": 682.93, "text": "Bab 10. Tema Tampilan."}, {"start": 684.88, "end": 692.95, "text": "Terakhir, tampilan bisa disesuaikan di menu Appearance. Pilih mode terang, gelap, atau mengikuti sistem."}, {"start": 693.45, "end": 701.9, "text": "Ada juga beberapa tema warna, misalnya Ocean, Forest, dan Neubrutalism. Pengaturan ini tersimpan per perangkat."}, {"start": 702.37, "end": 705.22, "text": "Tema langsung berlaku di seluruh halaman."}, {"start": 705.74, "end": 712.05, "text": "Terima kasih telah menonton. Gunakan daftar bab untuk memutar ulang bagian yang Anda butuhkan."}]};
+const CH = DATA.chapters, SUBS = DATA.subs;
+const v = document.getElementById('v');
+const KEY = 'panduan-cuti-progress-v2';
+const store = {
+  get() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; } },
+  set(x) { try { localStorage.setItem(KEY, JSON.stringify(x)); } catch {} },
+};
+let progress = store.get();           // { [n]: detikTerjauhDitonton }
+let role = 'Semua';
+const ROLES = ['Semua', 'Karyawan', 'Kepala Bagian', 'HRD', 'Manager', 'Admin'];
+const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+const relevant = c => role === 'Semua' || c.roles.includes(role) || c.roles.includes('Semua');
+const isDone = c => (progress[c.n] || 0) >= (c.end - c.start) * 0.85;
+const current = () => CH.findLast(c => v.currentTime >= c.start - 0.05) || CH[0];
+
+document.getElementById('meta').textContent =
+  `Video panduan untuk karyawan, atasan, dan HRD · ${Math.round(DATA.duration / 60)} menit · ${CH.length} bab`;
+
+// subtitle lewat JS (berfungsi juga saat dibuka langsung dari file)
+const track = v.addTextTrack('subtitles', 'Indonesia', 'id');
+SUBS.forEach(s => track.addCue(new VTTCue(s.start, s.end, s.text)));
+track.mode = 'hidden';
+
+const strip = document.getElementById('strip'), list = document.getElementById('list'), rolesEl = document.getElementById('roles');
+CH.forEach(c => {
+  const b = document.createElement('button');
+  b.className = 'seg'; b.style.flex = String(c.end - c.start);
+  b.title = `Bab ${c.n}: ${c.title} (${fmt(c.start)})`; b.setAttribute('aria-label', b.title);
+  b.innerHTML = '<i></i>'; b.onclick = () => go(c);
+  c.seg = b; strip.appendChild(b);
+
+  const li = document.createElement('li');
+  li.innerHTML = `<button><span class="num">${c.n}</span><span><span class="ct">${c.title}</span><span class="cr">${c.roles.join(' · ')}</span></span><span class="dur">${fmt(c.start)}</span></button>`;
+  li.querySelector('button').onclick = () => go(c);
+  c.li = li; list.appendChild(li);
+});
+ROLES.forEach(r => {
+  const b = document.createElement('button');
+  b.textContent = r; b.setAttribute('aria-pressed', String(r === role));
+  b.onclick = () => { role = r; [...rolesEl.children].forEach(x => x.setAttribute('aria-pressed', String(x === b))); render(); };
+  rolesEl.appendChild(b);
+});
+
+function go(c, play = true) {
+  v.currentTime = c.start + 0.05;
+  if (play) v.play().catch(() => {});
+  history.replaceState(null, '', `#bab-${c.n}`);
+}
+function step(dir) {
+  const cur = current(), idx = CH.indexOf(cur);
+  const pool = dir > 0 ? CH.slice(idx + 1) : CH.slice(0, idx).reverse();
+  const target = pool.find(relevant);
+  if (target) go(target);
+}
+function render() {
+  const cur = current();
+  CH.forEach(c => {
+    const watched = Math.min(1, (progress[c.n] || 0) / (c.end - c.start));
+    c.seg.querySelector('i').style.width = (c === cur ? Math.min(1, (v.currentTime - c.start) / (c.end - c.start)) : (isDone(c) ? 1 : watched)) * 100 + '%';
+    c.seg.classList.toggle('done', isDone(c));
+    c.seg.classList.toggle('dim', !relevant(c));
+    c.li.classList.toggle('active', c === cur);
+    c.li.classList.toggle('done', isDone(c) && c !== cur);
+    c.li.classList.toggle('dim', !relevant(c));
+  });
+  document.getElementById('nowTitle').innerHTML = `<small>Bab ${cur.n}/${CH.length}</small>${cur.title}`;
+  const done = CH.filter(isDone).length;
+  document.getElementById('doneText').textContent = `${done} dari ${CH.length} bab ditonton`;
+  document.getElementById('doneBar').style.width = (done / CH.length * 100) + '%';
+}
+let lastT = 0;
+v.addEventListener('timeupdate', () => {
+  const t = v.currentTime, c = current();
+  if (t > lastT && t - lastT < 2) {             // hanya hitung saat benar-benar menonton, bukan saat lompat
+    progress[c.n] = Math.max(progress[c.n] || 0, t - c.start);
+    store.set(progress);
+  }
+  lastT = t;
+  if (!relevant(c) && !v.paused) step(1);       // lewati bab yang tidak relevan untuk peran terpilih
+  render();
+});
+v.addEventListener('seeked', () => { lastT = v.currentTime; render(); });
+
+document.getElementById('prev').onclick = () => step(-1);
+document.getElementById('next').onclick = () => step(1);
+const cc = document.getElementById('cc');
+cc.onclick = () => { const on = track.mode !== 'showing'; track.mode = on ? 'showing' : 'hidden'; cc.setAttribute('aria-pressed', String(on)); };
+const speeds = [1, 1.25, 1.5, 0.75];
+const sp = document.getElementById('speed');
+sp.onclick = () => { const i = (speeds.indexOf(v.playbackRate) + 1) % speeds.length; v.playbackRate = speeds[i]; sp.textContent = speeds[i] + '×'; };
+document.getElementById('reset').onclick = () => { progress = {}; store.set(progress); render(); };
+
+document.addEventListener('keydown', e => {
+  if (e.target.closest('input, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === ' ' && e.target === document.body) { e.preventDefault(); v.paused ? v.play() : v.pause(); }
+  else if (k === 'n') step(1);
+  else if (k === 'p') step(-1);
+  else if (k === 'c') cc.click();
+  else if (/^[0-9]$/.test(k)) { const c = CH[(k === '0' ? 10 : +k) - 1]; if (c) go(c); }
+});
+
+const m = location.hash.match(/bab-(\d+)/);
+v.addEventListener('loadedmetadata', () => { if (m && CH[+m[1] - 1]) go(CH[+m[1] - 1], false); render(); }, { once: true });
+render();
+</script>
+</body>
+</html>

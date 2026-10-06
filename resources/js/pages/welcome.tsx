@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { CalendarCheck, ClipboardCheck, Users } from 'lucide-react';
+import { CalendarCheck, CirclePlay, ClipboardCheck, Users } from 'lucide-react';
 import AppLogoFull from '@/components/app-logo-full';
 import { Globe } from '@/components/globe';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -75,6 +75,12 @@ export default function Welcome() {
                                             ? 'Ke Dashboard'
                                             : 'Masuk ke Sistem'}
                                     </Link>
+                                </Button>
+                                <Button asChild size="lg" variant="outline">
+                                    <a href="/demo/index.html">
+                                        <CirclePlay />
+                                        Lihat Demo
+                                    </a>
                                 </Button>
                             </div>
                         </div>

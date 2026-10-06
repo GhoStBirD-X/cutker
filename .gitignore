@@ -31,3 +31,6 @@ yarn-error.log
 
 
 
+
+# Video demo (70 MB) disalin manual ke server, tidak masuk git
+/public/demo/*.mp4
