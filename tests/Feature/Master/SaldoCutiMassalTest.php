@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Master;
 
+use App\Enums\JenisKelamin;
 use App\Models\Departemen;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
@@ -47,6 +48,26 @@ class SaldoCutiMassalTest extends TestCase
             ->has('grupKaryawan.data', 1)
             ->has('grupKaryawan.data.0.saldo_cutis', 1)
             ->where('grupKaryawan.data.0.saldo_cutis.0.id', $cocok->id));
+    }
+
+    public function test_index_hides_saldo_of_gender_specific_jenis_cuti_from_karyawan_of_other_gender(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $cutiHaid = JenisCuti::factory()->create(['khusus_gender' => JenisKelamin::Perempuan]);
+        $milikPerempuan = SaldoCuti::factory()->create([
+            'karyawan_id' => Karyawan::factory()->perempuan()->create()->id,
+            'jenis_cuti_id' => $cutiHaid->id,
+        ]);
+        SaldoCuti::factory()->create([
+            'karyawan_id' => Karyawan::factory()->lakiLaki()->create()->id,
+            'jenis_cuti_id' => $cutiHaid->id,
+        ]);
+
+        $response = $this->actingAs($hrd)->get(route('master.saldo-cuti.index', ['jenis_cuti_id' => $cutiHaid->id]));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->where('totalBaris', 1)
+            ->where('grupKaryawan.data.0.saldo_cutis.0.id', $milikPerempuan->id));
     }
 
     public function test_index_groups_every_saldo_of_a_karyawan_on_the_same_page(): void
@@ -151,6 +172,25 @@ class SaldoCutiMassalTest extends TestCase
             $this->assertDatabaseHas('saldo_cutis', ['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $jenisCuti->id, 'kuota' => 12, 'terpakai' => 2, 'sisa' => 10]);
         }
         $this->assertSame(1, SaldoCuti::query()->where('karyawan_id', $sudahPunya->id)->count());
+    }
+
+    public function test_store_massal_skips_karyawan_whose_gender_does_not_match_the_jenis_cuti(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $cutiHaid = JenisCuti::factory()->create(['masa_kerja_minimal_bulan' => null, 'khusus_gender' => JenisKelamin::Perempuan]);
+        $perempuan = Karyawan::factory()->perempuan()->create();
+        $lakiLaki = Karyawan::factory()->lakiLaki()->create();
+
+        $this->actingAs($hrd)->post(route('master.saldo-cuti.store-massal'), [
+            'karyawan_ids' => [$perempuan->id, $lakiLaki->id],
+            'jenis_cuti_id' => $cutiHaid->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+        ]);
+
+        $this->assertDatabaseHas('saldo_cutis', ['karyawan_id' => $perempuan->id, 'jenis_cuti_id' => $cutiHaid->id]);
+        $this->assertDatabaseMissing('saldo_cutis', ['karyawan_id' => $lakiLaki->id, 'jenis_cuti_id' => $cutiHaid->id]);
     }
 
     public function test_store_massal_uses_each_karyawans_running_periode_for_periode_jenis_cuti(): void

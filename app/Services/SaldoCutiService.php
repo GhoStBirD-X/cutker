@@ -46,6 +46,7 @@ class SaldoCutiService
 
         Karyawan::query()
             ->where('status', StatusKaryawan::Aktif)
+            ->sesuaiGenderJenisCuti($jenisCuti)
             ->chunkById(100, function ($karyawans) use ($jenisCuti, $tahun, &$dibuat) {
                 foreach ($karyawans as $karyawan) {
                     $sudahAda = SaldoCuti::query()
@@ -98,6 +99,7 @@ class SaldoCutiService
 
         Karyawan::query()
             ->where('status', StatusKaryawan::Aktif)
+            ->sesuaiGenderJenisCuti($jenisCuti)
             ->chunkById(100, function ($karyawans) use ($jenisCuti, &$dibuat) {
                 foreach ($karyawans as $karyawan) {
                     $mulai = $karyawan->tanggal_masuk->copy();
@@ -137,7 +139,7 @@ class SaldoCutiService
      */
     public function bootstrapUntukKaryawanBaru(Karyawan $karyawan): void
     {
-        foreach (JenisCuti::all() as $jenisCuti) {
+        foreach (JenisCuti::query()->sesuaiGender($karyawan->jenis_kelamin)->get() as $jenisCuti) {
             if ($jenisCuti->masa_kerja_minimal_bulan !== null) {
                 $mulai = $karyawan->tanggal_masuk->copy();
                 $selesai = $mulai->copy()->addMonths($jenisCuti->masa_kerja_minimal_bulan)->subDay();
@@ -290,6 +292,12 @@ class SaldoCutiService
                 $barisLama = SaldoCuti::query()
                     ->where('karyawan_id', $karyawan->id)
                     ->where('jenis_cuti_id', $jenisCuti->id);
+
+                if ($jenisCuti->khusus_gender !== null && $jenisCuti->khusus_gender !== $karyawan->jenis_kelamin) {
+                    $dilewati[] = "{$karyawan->nama} (khusus karyawan {$jenisCuti->khusus_gender->label()})";
+
+                    continue;
+                }
 
                 if ((clone $barisLama)->aktif()->exists()) {
                     $dilewati[] = "{$karyawan->nama} (sudah punya saldo aktif)";

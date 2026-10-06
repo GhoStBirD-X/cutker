@@ -118,7 +118,7 @@ class ApprovalService
             $approval = Approval::query()->whereKey($approval->id)->lockForUpdate()->firstOrFail();
 
             if ($approval->status !== StatusApproval::Pending) {
-                throw new ApprovalSudahDiprosesException;
+                throw new ApprovalSudahDiprosesException($approval->status);
             }
 
             $approval->update([
@@ -153,7 +153,7 @@ class ApprovalService
             $approval = Approval::query()->whereKey($approval->id)->lockForUpdate()->firstOrFail();
 
             if ($approval->status !== StatusApproval::Pending) {
-                throw new ApprovalSudahDiprosesException;
+                throw new ApprovalSudahDiprosesException($approval->status);
             }
 
             $approval->update([

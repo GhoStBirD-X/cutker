@@ -275,7 +275,9 @@ class SaldoCutiController extends Controller
     /**
      * Query saldo aktif sesuai filter halaman — dipakai bersama oleh daftar,
      * export Excel, dan aksi massal "semua hasil filter" supaya yang dilihat
-     * HRD sama dengan yang diproses.
+     * HRD sama dengan yang diproses. Baris jenis cuti khusus gender yang
+     * tidak cocok dengan karyawannya (mis. Cuti Haid milik karyawan
+     * laki-laki, sisa data lama) disembunyikan.
      *
      * @param  array{search: string, jenis_cuti_id: int|null, departemen_id: int|null, tahun: int|null}  $filters
      * @return Builder<SaldoCuti>
@@ -286,6 +288,9 @@ class SaldoCutiController extends Controller
 
         return SaldoCuti::query()
             ->aktif()
+            ->whereHas('jenisCuti', fn (Builder $query) => $query->where(fn (Builder $q) => $q
+                ->whereNull('khusus_gender')
+                ->orWhereIn('khusus_gender', Karyawan::query()->select('jenis_kelamin')->whereColumn('karyawans.id', 'saldo_cutis.karyawan_id'))))
             ->when($search !== '', fn (Builder $query) => $query->whereHas('karyawan', fn (Builder $q) => $q->where('nama', 'like', "%{$search}%")->orWhere('nip', 'like', "%{$search}%")))
             ->when($filters['jenis_cuti_id'], fn (Builder $query, int $id) => $query->where('jenis_cuti_id', $id))
             ->when($filters['departemen_id'], fn (Builder $query, int $id) => $query->whereHas('karyawan', fn (Builder $q) => $q->where('departemen_id', $id)))

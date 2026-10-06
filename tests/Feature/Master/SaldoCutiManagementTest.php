@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Master;
 
+use App\Enums\JenisKelamin;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\SaldoCuti;
+use App\Services\SaldoCutiService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\InteractsWithKaryawan;
@@ -46,6 +48,48 @@ class SaldoCutiManagementTest extends TestCase
             'sisa' => 9,
             'diubah_oleh_id' => $hrd->karyawan->id,
         ]);
+    }
+
+    public function test_manual_saldo_for_gender_specific_jenis_cuti_is_rejected_for_karyawan_of_other_gender(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $lakiLaki = Karyawan::factory()->lakiLaki()->create();
+        $cutiHaid = JenisCuti::factory()->create(['masa_kerja_minimal_bulan' => null, 'khusus_gender' => JenisKelamin::Perempuan]);
+
+        $response = $this->actingAs($hrd)->post(route('master.saldo-cuti.store'), [
+            'karyawan_id' => $lakiLaki->id,
+            'jenis_cuti_id' => $cutiHaid->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+        ]);
+
+        $response->assertSessionHasErrors('jenis_cuti_id');
+        $this->assertDatabaseMissing('saldo_cutis', ['karyawan_id' => $lakiLaki->id]);
+    }
+
+    public function test_generated_saldo_for_gender_specific_jenis_cuti_skips_karyawan_of_other_gender(): void
+    {
+        $perempuan = Karyawan::factory()->perempuan()->create();
+        $lakiLaki = Karyawan::factory()->lakiLaki()->create();
+        $cutiHaid = JenisCuti::factory()->create(['masa_kerja_minimal_bulan' => null, 'khusus_gender' => JenisKelamin::Perempuan]);
+
+        app(SaldoCutiService::class)->generateUntukJenisCuti($cutiHaid, now()->year);
+
+        $this->assertDatabaseHas('saldo_cutis', ['karyawan_id' => $perempuan->id, 'jenis_cuti_id' => $cutiHaid->id]);
+        $this->assertDatabaseMissing('saldo_cutis', ['karyawan_id' => $lakiLaki->id, 'jenis_cuti_id' => $cutiHaid->id]);
+    }
+
+    public function test_new_male_karyawan_gets_no_saldo_for_female_only_jenis_cuti(): void
+    {
+        $cutiHaid = JenisCuti::factory()->create(['masa_kerja_minimal_bulan' => null, 'khusus_gender' => JenisKelamin::Perempuan]);
+        $cutiUmum = JenisCuti::factory()->create(['masa_kerja_minimal_bulan' => null]);
+        $lakiLaki = Karyawan::factory()->lakiLaki()->create();
+
+        app(SaldoCutiService::class)->bootstrapUntukKaryawanBaru($lakiLaki);
+
+        $this->assertDatabaseHas('saldo_cutis', ['karyawan_id' => $lakiLaki->id, 'jenis_cuti_id' => $cutiUmum->id]);
+        $this->assertDatabaseMissing('saldo_cutis', ['karyawan_id' => $lakiLaki->id, 'jenis_cuti_id' => $cutiHaid->id]);
     }
 
     public function test_hrd_can_create_manual_periode_saldo_for_jenis_cuti_bertipe_periode(): void

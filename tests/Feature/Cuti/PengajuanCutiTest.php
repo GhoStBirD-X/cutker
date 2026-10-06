@@ -3,6 +3,7 @@
 namespace Tests\Feature\Cuti;
 
 use App\Enums\JenisKelamin;
+use App\Enums\StatusApproval;
 use App\Models\AlasanCuti;
 use App\Models\HariLibur;
 use App\Models\JadwalShift;
@@ -540,7 +541,8 @@ class PengajuanCutiTest extends TestCase
         $approveResponse = $this->actingAs($kepalaBagian->user)->post(route('approval.approve', $approval), [
             'catatan' => null,
         ]);
-        $approveResponse->assertForbidden();
+        $approveResponse->assertInertiaFlash('toast.message', 'Pengajuan ini sudah dibatalkan oleh pengaju.');
+        $this->assertSame(StatusApproval::Dibatalkan, $approval->fresh()->status);
     }
 
     public function test_leave_request_is_rejected_when_it_conflicts_with_shift_schedule(): void

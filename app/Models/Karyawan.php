@@ -7,6 +7,7 @@ use App\Enums\StatusKaryawan;
 use App\Enums\TipeKaryawan;
 use Database\Factories\KaryawanFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -140,5 +141,20 @@ class Karyawan extends Model
     public function konfirmasiKontrakCutis(): HasMany
     {
         return $this->hasMany(KonfirmasiKontrakCuti::class);
+    }
+
+    /**
+     * Karyawan yang berhak atas $jenisCuti menurut khusus_gender-nya
+     * (mis. Cuti Hamil/Haid hanya untuk karyawan perempuan).
+     *
+     * @param  Builder<Karyawan>  $query
+     * @return Builder<Karyawan>
+     */
+    public function scopeSesuaiGenderJenisCuti(Builder $query, JenisCuti $jenisCuti): Builder
+    {
+        return $query->when(
+            $jenisCuti->khusus_gender,
+            fn (Builder $query, JenisKelamin $jenisKelamin) => $query->where('jenis_kelamin', $jenisKelamin),
+        );
     }
 }

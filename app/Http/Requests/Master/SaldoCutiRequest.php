@@ -3,7 +3,9 @@
 namespace App\Http\Requests\Master;
 
 use App\Models\JenisCuti;
+use App\Models\Karyawan;
 use App\Models\SaldoCuti;
+use App\Rules\SesuaiGenderJenisCuti;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,11 +27,17 @@ class SaldoCutiRequest extends FormRequest
         $jenisCutiId = $isUpdate && $saldoCuti instanceof SaldoCuti
             ? $saldoCuti->jenis_cuti_id
             : $this->integer('jenis_cuti_id');
+        $karyawan = $isUpdate ? null : Karyawan::query()->find($this->integer('karyawan_id'));
         $bertipePeriode = fn () => JenisCuti::query()->find($jenisCutiId)?->masa_kerja_minimal_bulan !== null;
 
         return [
             'karyawan_id' => $isUpdate ? ['sometimes'] : ['required', 'integer', 'exists:karyawans,id'],
-            'jenis_cuti_id' => $isUpdate ? ['sometimes'] : ['required', 'integer', 'exists:jenis_cutis,id'],
+            'jenis_cuti_id' => $isUpdate ? ['sometimes'] : array_filter([
+                'required',
+                'integer',
+                'exists:jenis_cutis,id',
+                $karyawan ? new SesuaiGenderJenisCuti($karyawan) : null,
+            ]),
             'tahun' => [Rule::requiredIf(fn () => ! $isUpdate && ! $bertipePeriode()), 'nullable', 'integer', 'min:2000', 'max:2100'],
             'periode_ke' => [
                 Rule::requiredIf(fn () => ! $isUpdate && $bertipePeriode()),
