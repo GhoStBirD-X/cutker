@@ -395,6 +395,34 @@ class ApprovalFlowTest extends TestCase
         $this->app->make(ApprovalService::class)->approve($approvalStaleDiTangan, $hrd->karyawan, 'Terlambat');
     }
 
+    public function test_hrd_acting_on_a_request_another_hrd_already_processed_sees_a_toast_instead_of_403(): void
+    {
+        ['pengajuan' => $pengajuan, 'approvalLevel2' => $approvalLevel2, 'hrd' => $hrd] = $this->buatPengajuanDenganApprovalLevel2();
+        $hrdLain = $this->karyawanUser('hrd');
+        $this->karyawanUser('manager');
+
+        $this->actingAs($hrdLain)->post(route('approval.approve', $approvalLevel2));
+
+        $response = $this->actingAs($hrd)->post(route('approval.reject', $approvalLevel2), [
+            'catatan' => 'Terlambat',
+        ]);
+
+        $response->assertRedirect(route('approval.index'));
+        $response->assertInertiaFlash('toast.message', 'Pengajuan ini sudah diproses oleh approver lain.');
+        $this->assertSame(StatusApproval::Disetujui, $approvalLevel2->fresh()->status);
+        $this->assertSame(StatusPengajuan::Pending, $pengajuan->fresh()->status);
+    }
+
+    public function test_user_who_cannot_view_a_processed_request_still_gets_403(): void
+    {
+        ['approvalLevel2' => $approvalLevel2] = $this->buatPengajuanDenganApprovalLevel2();
+        $approvalLevel2->update(['status' => StatusApproval::Disetujui]);
+
+        $this->actingAs($this->karyawanUser('karyawan'))
+            ->post(route('approval.reject', $approvalLevel2))
+            ->assertForbidden();
+    }
+
     public function test_karyawan_without_approval_role_cannot_approve_a_request(): void
     {
         ['approvalLevel1' => $approvalLevel1] = $this->buatPengajuanDenganApprovalLevel1();
