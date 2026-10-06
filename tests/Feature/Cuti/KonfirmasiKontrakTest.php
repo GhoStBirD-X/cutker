@@ -214,7 +214,7 @@ class KonfirmasiKontrakTest extends TestCase
         $this->assertSame(StatusKonfirmasiKontrak::Menunggu, $konfirmasi->fresh()->status);
     }
 
-    public function test_kontrak_ulang_ke_k1_dengan_alasan_dimulai_dari_saldo_nol(): void
+    public function test_kontrak_ulang_ke_k1_dengan_alasan_tetap_mendapat_cuti_tahunan_penuh(): void
     {
         $hrd = $this->karyawanUser('hrd');
         $konfirmasi = $this->konfirmasiMenunggu('2026-09-30', periodeKe: 5);
@@ -230,8 +230,8 @@ class KonfirmasiKontrakTest extends TestCase
         $this->assertDatabaseHas('saldo_cutis', [
             'karyawan_id' => $konfirmasi->karyawan_id,
             'periode_ke' => 6,
-            'kuota' => 0,
-            'sisa' => 0,
+            'kuota' => 12,
+            'sisa' => 12,
         ]);
     }
 

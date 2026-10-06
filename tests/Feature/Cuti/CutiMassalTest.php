@@ -791,7 +791,7 @@ class CutiMassalTest extends TestCase
         $this->actingAs($karyawan->user)->get(route('cuti.show', $pengajuan))->assertOk();
     }
 
-    public function test_kontrak_returning_to_k1_after_k5_gets_bonus_kuota_again(): void
+    public function test_kontrak_returning_to_k1_after_k5_does_not_get_bonus_kuota(): void
     {
         $hrd = $this->karyawanUser('hrd')->karyawan;
         $jenisCuti = JenisCuti::factory()->create();
@@ -818,8 +818,8 @@ class CutiMassalTest extends TestCase
             'karyawan_id' => $karyawan->id,
             'jenis_cuti_id' => $jenisCuti->id,
             'periode_ke' => 6,
-            'kuota' => 3,
-            'sisa' => 0,
+            'kuota' => 0,
+            'sisa' => -3,
         ]);
     }
 }

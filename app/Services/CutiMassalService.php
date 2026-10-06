@@ -119,9 +119,9 @@ class CutiMassalService
      * diperpanjang) belum benar-benar "punya" cuti tahunan — jadi kalau
      * cuti massal membuat saldonya minus, bukan dijadikan utang, tapi
      * kuotanya ditambah (bonus) secukupnya supaya sisa jadi 0. Karyawan
-     * kontrak yang sudah masuk K2–K5 (siklus kontrak kembali ke K1 setelah
-     * K5, dan K1 berikutnya ikut aturan ini lagi), dan karyawan tetap,
-     * tetap boleh minus seperti biasa (sengaja — lihat buat()).
+     * kontrak yang sudah diperpanjang (K2–K5, termasuk K1 ulang setelah K5
+     * yang sudah mendapat Cuti Tahunan penuh), dan karyawan tetap, tetap
+     * boleh minus seperti biasa (sengaja — lihat buat()).
      *
      * @return array{kuota: ?int, terpakai: int, sisa: ?int, bonus: int}
      */
@@ -134,7 +134,7 @@ class CutiMassalService
         }
 
         $sisaBaru = $saldo->sisa - $jumlahHari;
-        $kontrakPertama = $karyawan->tipe_karyawan === TipeKaryawan::Kontrak && $saldo->periode_ke !== null && $saldo->urutanKontrak() === 1;
+        $kontrakPertama = $karyawan->tipe_karyawan === TipeKaryawan::Kontrak && $saldo->periode_ke === 1;
 
         if ($sisaBaru < 0 && $kontrakPertama) {
             $bonus = -$sisaBaru;

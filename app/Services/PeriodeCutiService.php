@@ -102,7 +102,7 @@ class PeriodeCutiService
             $saldo = $konfirmasi->saldoCuti;
 
             if ($konfirmasi->tinjauan_siklus) {
-                $this->terapkanTinjauanSiklus($konfirmasi, $saldo, $olehSiapa, $diperpanjang, $catatan, $tanggalAkhirKontrakBaru);
+                $this->terapkanTinjauanSiklus($konfirmasi, $saldo, $diperpanjang, $tanggalAkhirKontrakBaru);
 
                 return;
             }
@@ -238,23 +238,14 @@ class PeriodeCutiService
     /**
      * Keputusan atas konfirmasi tinjauan siklus. Saldo yang ditunjuk masih
      * berjalan, jadi tidak ada periode baru yang dibuka:
-     * - kontrak ulang ke K1: bila saldo berjalan adalah K1, sisa kuotanya
-     *   dikoreksi jadi 0 (hari yang sudah terpakai tidak dijadikan utang);
+     * - kontrak ulang ke K1: saldo berjalan tetap (K1 ulang tetap mendapat
+     *   Cuti Tahunan), hanya tanggal akhir kontrak yang diperbarui;
      * - tidak diperpanjang: saldo berjalan diarsipkan & ditutup, sisanya
      *   jadi kompensasi, dan karyawan dinonaktifkan.
      */
-    protected function terapkanTinjauanSiklus(KonfirmasiKontrakCuti $konfirmasi, SaldoCuti $saldo, Karyawan $olehSiapa, bool $diperpanjang, ?string $catatan, ?string $tanggalAkhirKontrakBaru): void
+    protected function terapkanTinjauanSiklus(KonfirmasiKontrakCuti $konfirmasi, SaldoCuti $saldo, bool $diperpanjang, ?string $tanggalAkhirKontrakBaru): void
     {
         if ($diperpanjang) {
-            if ($saldo->urutanKontrak() === 1 && $saldo->kuota !== null) {
-                $this->saldoCutiService->sesuaikanManual($saldo, [
-                    'kuota' => $saldo->terpakai,
-                    'terpakai' => $saldo->terpakai,
-                    'sisa' => 0,
-                    'catatan' => 'Tinjauan siklus kontrak: kontrak ulang ke K1 setelah K5, saldo dimulai dari 0. Alasan: '.$catatan,
-                ], $olehSiapa);
-            }
-
             if ($tanggalAkhirKontrakBaru !== null) {
                 $konfirmasi->karyawan->update(['tanggal_akhir_kontrak' => $tanggalAkhirKontrakBaru]);
             }
@@ -334,9 +325,9 @@ class PeriodeCutiService
      * Tutup baris lama (bila belum), buat periode berikutnya, dan
      * konversi sisa cuti jadi record kompensasi bila masih ada sisa.
      *
-     * Karyawan kontrak berjalan dalam siklus K1–K5: periode yang jatuh
-     * kembali ke K1 (setelah K5 diperpanjang) diperlakukan seperti masa
-     * kerja minimal karyawan baru, jadi kuota/sisa-nya 0.
+     * Karyawan kontrak yang kontrak ulang ke K1 setelah K5 (keadaan khusus)
+     * tetap mendapat Cuti Tahunan penuh — hanya periode ke-1 (masa kerja
+     * minimal karyawan baru) yang kuotanya 0.
      */
     protected function lanjutkanPeriode(SaldoCuti $saldoLama, ?RiwayatSaldoCuti $riwayat): void
     {
@@ -352,9 +343,7 @@ class PeriodeCutiService
         $periodeMulaiBaru = $saldoLama->periode_selesai->copy()->addDay();
         $periodeSelesaiBaru = $periodeMulaiBaru->copy()->addMonths($jenisCuti->masa_kerja_minimal_bulan)->subDay();
         $periodeKeBaru = $saldoLama->periode_ke + 1;
-        $kembaliKeK1 = $saldoLama->karyawan->tipe_karyawan === TipeKaryawan::Kontrak
-            && SaldoCuti::urutanKontrakDariPeriode($periodeKeBaru) === 1;
-        $kuotaBaru = $kembaliKeK1 ? 0 : $jenisCuti->kuota_default;
+        $kuotaBaru = $jenisCuti->kuota_default;
 
         SaldoCuti::query()->create([
             'karyawan_id' => $saldoLama->karyawan_id,

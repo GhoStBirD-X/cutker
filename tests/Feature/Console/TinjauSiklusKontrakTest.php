@@ -111,7 +111,7 @@ class TinjauSiklusKontrakTest extends TestCase
         $this->assertSame('2026-02-01', $saldoCutiBesar->periode_mulai->toDateString());
     }
 
-    public function test_kontrak_ulang_from_tinjauan_zeroes_remaining_k1_saldo_without_creating_debt(): void
+    public function test_kontrak_ulang_from_tinjauan_keeps_running_saldo_and_extends_contract(): void
     {
         $hrd = $this->karyawanUser('hrd');
         $saldoK1 = $this->saldoBerjalan(6, terpakai: 4);
@@ -127,9 +127,10 @@ class TinjauSiklusKontrakTest extends TestCase
         }
 
         $saldoK1->refresh();
-        $this->assertSame(4, $saldoK1->kuota);
-        $this->assertSame(0, $saldoK1->sisa);
-        $this->assertSame($hrd->karyawan->id, $saldoK1->diubah_oleh_id);
+        $this->assertSame(12, $saldoK1->kuota);
+        $this->assertSame(8, $saldoK1->sisa);
+        $this->assertNull($saldoK1->ditutup_pada);
+        $this->assertSame('2027-01-31', $saldoK1->karyawan->fresh()->tanggal_akhir_kontrak->toDateString());
         $this->assertSame(12, $saldoK2->fresh()->kuota);
         $this->assertSame(8, $saldoK2->fresh()->sisa);
     }

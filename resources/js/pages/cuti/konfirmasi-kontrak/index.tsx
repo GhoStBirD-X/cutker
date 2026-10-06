@@ -81,8 +81,8 @@ function KonfirmasiRow({
             ? {
                   title: `Kontrak ulang ${nama} ke K1?`,
                   description: tinjauan
-                      ? 'Keadaan khusus: bila karyawan sedang berada di K1, sisa saldo Cuti Tahunan-nya dikoreksi menjadi 0. Hari yang sudah terpakai tidak dijadikan utang.'
-                      : 'Keadaan khusus: hitungan kontrak kembali ke K1 dan saldo Cuti Tahunan dimulai dari 0 seperti karyawan baru.',
+                      ? 'Keadaan khusus: hitungan kontrak kembali ke K1. Saldo Cuti Tahunan yang sedang berjalan tetap.'
+                      : 'Keadaan khusus: hitungan kontrak kembali ke K1 dan Cuti Tahunan berikutnya tetap penuh.',
                   confirmText: 'Kontrak Ulang ke K1',
               }
             : {
