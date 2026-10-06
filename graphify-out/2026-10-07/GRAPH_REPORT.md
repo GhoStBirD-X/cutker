@@ -1,17 +1,17 @@
 # Graph Report - cutker  (2026-10-07)
 
 ## Corpus Check
-- 424 files · ~123,360 words
+- 424 files · ~123,284 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 31 file(s) not represented in the graph (top: (none) 19, .stub 6, .example 1)
 
 ## Summary
-- 2836 nodes · 8117 edges · 164 communities (76 shown, 88 thin omitted)
+- 2836 nodes · 8116 edges · 164 communities (76 shown, 88 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 42 edges (avg confidence: 0.91)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4dd95859`
+- Built from commit: `4c5874a2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -162,7 +162,7 @@
 - Akun login otomatis dibuat sekalian dengan karyawan
 
 ## God Nodes (most connected - your core abstractions)
-1. `Karyawan` - 219 edges
+1. `Karyawan` - 218 edges
 2. `JenisCuti` - 208 edges
 3. `SaldoCuti` - 170 edges
 4. `cn()` - 170 edges

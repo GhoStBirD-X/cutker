@@ -282,6 +282,31 @@ class KonfirmasiKontrakTest extends TestCase
         $this->assertSame(StatusKonfirmasiKontrak::Menunggu, $akhirK5->fresh()->status);
     }
 
+    public function test_perpanjang_massal_yang_semuanya_di_akhir_k5_tidak_dilaporkan_berhasil(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $akhirK5 = $this->konfirmasiMenunggu('2026-09-30', periodeKe: 5);
+
+        $response = $this->actingAs($hrd)->post(route('cuti.konfirmasi-kontrak.perpanjang-massal'), ['semua' => true]);
+
+        $response->assertInertiaFlash('toast.type', 'error');
+        $response->assertInertiaFlash(
+            'toast.message',
+            'Tidak ada kontrak yang diperpanjang. 1 karyawan di akhir K5 harus diputuskan satu per satu (angkat tetap atau kontrak ulang ke K1).',
+        );
+        $this->assertSame(StatusKonfirmasiKontrak::Menunggu, $akhirK5->fresh()->status);
+    }
+
+    public function test_jumlah_yang_bisa_diperpanjang_massal_tidak_menghitung_akhir_k5(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $this->konfirmasiMenunggu('2026-09-30', periodeKe: 2);
+        $this->konfirmasiMenunggu('2026-09-30', periodeKe: 5);
+
+        $this->actingAs($hrd)->get(route('cuti.konfirmasi-kontrak.index'))
+            ->assertInertia(fn ($page) => $page->where('jumlahBisaDiperpanjangMassal', 1));
+    }
+
     private function konfirmasiMenunggu(string $tanggalBatas, int $periodeKe = 1): KonfirmasiKontrakCuti
     {
         $karyawan = Karyawan::factory()->create([

@@ -31,9 +31,12 @@ class KonfirmasiKontrakController extends Controller
             ->paginate($this->resolvePerPage($request, 15))
             ->withQueryString();
 
+        $menunggu = KonfirmasiKontrakCuti::query()->where('status', StatusKonfirmasiKontrak::Menunggu)->get(['id', 'periode_ke']);
+
         return Inertia::render('cuti/konfirmasi-kontrak/index', [
             'konfirmasiKontraks' => $konfirmasiKontraks,
-            'jumlahMenunggu' => KonfirmasiKontrakCuti::query()->where('status', StatusKonfirmasiKontrak::Menunggu)->count(),
+            // Akhir K5 selalu dilewati perpanjangan massal, jadi tidak ikut dihitung.
+            'jumlahBisaDiperpanjangMassal' => $menunggu->reject(fn (KonfirmasiKontrakCuti $konfirmasi) => $konfirmasi->diAkhirSiklusKontrak())->count(),
         ]);
     }
 
@@ -118,6 +121,12 @@ class KonfirmasiKontrakController extends Controller
 
         $jumlah = $periodeCutiService->perpanjangSatuTahunMassal($konfirmasis, $request->user()->karyawan, $data['catatan'] ?? null);
         $dilewatiAkhirK5 = $konfirmasis->filter(fn (KonfirmasiKontrakCuti $konfirmasi) => $konfirmasi->diAkhirSiklusKontrak())->count();
+
+        if ($jumlah === 0) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => "Tidak ada kontrak yang diperpanjang. {$dilewatiAkhirK5} karyawan di akhir K5 harus diputuskan satu per satu (angkat tetap atau kontrak ulang ke K1)."]);
+
+            return back();
+        }
 
         Inertia::flash('toast', [
             'type' => 'success',

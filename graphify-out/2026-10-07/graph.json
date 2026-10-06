@@ -7112,14 +7112,14 @@
       "source_location": "L180"
     },
     {
-      "id": "tests_feature_cuti_cutimassaltest_cutimassaltest_test_kontrak_returning_to_k1_after_k5_gets_bonus_kuota_again",
-      "label": ".test_kontrak_returning_to_k1_after_k5_gets_bonus_kuota_again()",
+      "id": "tests_feature_cuti_cutimassaltest_cutimassaltest_test_kontrak_returning_to_k1_after_k5_does_not_get_bonus_kuota",
+      "label": ".test_kontrak_returning_to_k1_after_k5_does_not_get_bonus_kuota()",
       "_callable": true,
       "_origin": "ast",
       "community": 134,
       "community_name": "Karyawan",
       "file_type": "code",
-      "norm_label": ".test_kontrak_returning_to_k1_after_k5_gets_bonus_kuota_again()",
+      "norm_label": ".test_kontrak_returning_to_k1_after_k5_does_not_get_bonus_kuota()",
       "source_file": "tests/Feature/Cuti/CutiMassalTest.php",
       "source_location": "L794"
     },
@@ -11381,7 +11381,7 @@
       "file_type": "code",
       "norm_label": "{closure#8}()",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L288"
+      "source_location": "L279"
     },
     {
       "id": "app_services_periodecutiservice_closure_9",
@@ -11393,7 +11393,7 @@
       "file_type": "code",
       "norm_label": "{closure#9}()",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L291"
+      "source_location": "L282"
     },
     {
       "id": "app_services_periodecutiservice_periodecutiservice_angkatkaryawantetap",
@@ -11417,7 +11417,7 @@
       "file_type": "code",
       "norm_label": ".arsipkan()",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L306"
+      "source_location": "L297"
     },
     {
       "id": "app_services_periodecutiservice_periodecutiservice_buatkompensasi",
@@ -11429,7 +11429,7 @@
       "file_type": "code",
       "norm_label": ".buatkompensasi()",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L372"
+      "source_location": "L361"
     },
     {
       "id": "app_services_periodecutiservice_periodecutiservice_buattinjauansiklus",
@@ -11477,7 +11477,7 @@
       "file_type": "code",
       "norm_label": ".lanjutkanperiode()",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L341"
+      "source_location": "L332"
     },
     {
       "id": "app_services_periodecutiservice_periodecutiservice_prosessemuakaryawan",
@@ -11501,7 +11501,7 @@
       "file_type": "code",
       "norm_label": ".riwayatuntuk()",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L324"
+      "source_location": "L315"
     },
     {
       "id": "app_services_periodecutiservice_periodecutiservice_tanggalakhirperiode",
@@ -12341,7 +12341,7 @@
       "file_type": "code",
       "norm_label": ".perpanjangsatutahunmassal()",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L285"
+      "source_location": "L276"
     },
     {
       "id": "app_services_saldocutiservice_saldocutiservice_hitungaksimassal",
@@ -16160,14 +16160,14 @@
       "source_location": "L133"
     },
     {
-      "id": "tests_feature_cuti_konfirmasikontraktest_konfirmasikontraktest_test_kontrak_ulang_ke_k1_dengan_alasan_dimulai_dari_saldo_nol",
-      "label": ".test_kontrak_ulang_ke_k1_dengan_alasan_dimulai_dari_saldo_nol()",
+      "id": "tests_feature_cuti_konfirmasikontraktest_konfirmasikontraktest_test_kontrak_ulang_ke_k1_dengan_alasan_tetap_mendapat_cuti_tahunan_penuh",
+      "label": ".test_kontrak_ulang_ke_k1_dengan_alasan_tetap_mendapat_cuti_tahunan_penuh()",
       "_callable": true,
       "_origin": "ast",
       "community": 49,
       "community_name": "KonfirmasiKontrakTest",
       "file_type": "code",
-      "norm_label": ".test_kontrak_ulang_ke_k1_dengan_alasan_dimulai_dari_saldo_nol()",
+      "norm_label": ".test_kontrak_ulang_ke_k1_dengan_alasan_tetap_mendapat_cuti_tahunan_penuh()",
       "source_file": "tests/Feature/Cuti/KonfirmasiKontrakTest.php",
       "source_location": "L217"
     },
@@ -18512,14 +18512,14 @@
       "source_location": "L56"
     },
     {
-      "id": "tests_feature_console_tinjausikluskontraktest_tinjausikluskontraktest_test_kontrak_ulang_from_tinjauan_zeroes_remaining_k1_saldo_without_creating_debt",
-      "label": ".test_kontrak_ulang_from_tinjauan_zeroes_remaining_k1_saldo_without_creating_debt()",
+      "id": "tests_feature_console_tinjausikluskontraktest_tinjausikluskontraktest_test_kontrak_ulang_from_tinjauan_keeps_running_saldo_and_extends_contract",
+      "label": ".test_kontrak_ulang_from_tinjauan_keeps_running_saldo_and_extends_contract()",
       "_callable": true,
       "_origin": "ast",
       "community": 62,
       "community_name": "KonfirmasiKontrakCuti",
       "file_type": "code",
-      "norm_label": ".test_kontrak_ulang_from_tinjauan_zeroes_remaining_k1_saldo_without_creating_debt()",
+      "norm_label": ".test_kontrak_ulang_from_tinjauan_keeps_running_saldo_and_extends_contract()",
       "source_file": "tests/Feature/Console/TinjauSiklusKontrakTest.php",
       "source_location": "L114"
     },
@@ -18545,7 +18545,7 @@
       "file_type": "code",
       "norm_label": ".test_tidak_diperpanjang_from_tinjauan_closes_running_saldo_and_compensates_remaining_days()",
       "source_file": "tests/Feature/Console/TinjauSiklusKontrakTest.php",
-      "source_location": "L137"
+      "source_location": "L138"
     },
     {
       "id": "tests_feature_cuti_periodecutisiklustest_periodecutisiklustest_perpanjangkontrakdariperiode",
@@ -18620,14 +18620,14 @@
       "source_location": "L277"
     },
     {
-      "id": "tests_feature_cuti_periodecutisiklustest_periodecutisiklustest_test_kontrak_k5_yang_diperpanjang_kembali_ke_k1_dengan_saldo_nol",
-      "label": ".test_kontrak_k5_yang_diperpanjang_kembali_ke_k1_dengan_saldo_nol()",
+      "id": "tests_feature_cuti_periodecutisiklustest_periodecutisiklustest_test_kontrak_k5_yang_diperpanjang_kembali_ke_k1_tetap_dengan_kuota_penuh",
+      "label": ".test_kontrak_k5_yang_diperpanjang_kembali_ke_k1_tetap_dengan_kuota_penuh()",
       "_callable": true,
       "_origin": "ast",
       "community": 62,
       "community_name": "KonfirmasiKontrakCuti",
       "file_type": "code",
-      "norm_label": ".test_kontrak_k5_yang_diperpanjang_kembali_ke_k1_dengan_saldo_nol()",
+      "norm_label": ".test_kontrak_k5_yang_diperpanjang_kembali_ke_k1_tetap_dengan_kuota_penuh()",
       "source_file": "tests/Feature/Cuti/PeriodeCutiSiklusTest.php",
       "source_location": "L268"
     },
@@ -35883,7 +35883,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L293",
+      "source_location": "L284",
       "weight": 1.0
     },
     {
@@ -35895,7 +35895,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L374",
+      "source_location": "L363",
       "weight": 1.0
     },
     {
@@ -35919,7 +35919,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L348",
+      "source_location": "L339",
       "weight": 1.0
     },
     {
@@ -35931,7 +35931,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L265",
+      "source_location": "L256",
       "weight": 1.0
     },
     {
@@ -35943,7 +35943,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L269",
+      "source_location": "L260",
       "weight": 1.0
     },
     {
@@ -47263,7 +47263,7 @@
       "weight": 1.0
     },
     {
-      "source": "tests_feature_console_tinjausikluskontraktest_tinjausikluskontraktest_test_kontrak_ulang_from_tinjauan_zeroes_remaining_k1_saldo_without_creating_debt",
+      "source": "tests_feature_console_tinjausikluskontraktest_tinjausikluskontraktest_test_kontrak_ulang_from_tinjauan_keeps_running_saldo_and_extends_contract",
       "target": "tests_feature_console_tinjausikluskontraktest_tinjausikluskontraktest_saldoberjalan",
       "relation": "calls",
       "_origin": "ast",
@@ -47307,7 +47307,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tests/Feature/Console/TinjauSiklusKontrakTest.php",
-      "source_location": "L140",
+      "source_location": "L141",
       "weight": 1.0
     },
     {
@@ -48115,7 +48115,7 @@
       "weight": 1.0
     },
     {
-      "source": "tests_feature_cuti_cutimassaltest_cutimassaltest_test_kontrak_returning_to_k1_after_k5_gets_bonus_kuota_again",
+      "source": "tests_feature_cuti_cutimassaltest_cutimassaltest_test_kontrak_returning_to_k1_after_k5_does_not_get_bonus_kuota",
       "target": "app_models_jeniscuti_jeniscuti",
       "relation": "calls",
       "_origin": "ast",
@@ -48127,7 +48127,7 @@
       "weight": 1.0
     },
     {
-      "source": "tests_feature_cuti_cutimassaltest_cutimassaltest_test_kontrak_returning_to_k1_after_k5_gets_bonus_kuota_again",
+      "source": "tests_feature_cuti_cutimassaltest_cutimassaltest_test_kontrak_returning_to_k1_after_k5_does_not_get_bonus_kuota",
       "target": "app_models_karyawan_karyawan",
       "relation": "calls",
       "_origin": "ast",
@@ -48139,7 +48139,7 @@
       "weight": 1.0
     },
     {
-      "source": "tests_feature_cuti_cutimassaltest_cutimassaltest_test_kontrak_returning_to_k1_after_k5_gets_bonus_kuota_again",
+      "source": "tests_feature_cuti_cutimassaltest_cutimassaltest_test_kontrak_returning_to_k1_after_k5_does_not_get_bonus_kuota",
       "target": "app_models_saldocuti_saldocuti",
       "relation": "calls",
       "_origin": "ast",
@@ -48607,7 +48607,7 @@
       "weight": 1.0
     },
     {
-      "source": "tests_feature_cuti_konfirmasikontraktest_konfirmasikontraktest_test_kontrak_ulang_ke_k1_dengan_alasan_dimulai_dari_saldo_nol",
+      "source": "tests_feature_cuti_konfirmasikontraktest_konfirmasikontraktest_test_kontrak_ulang_ke_k1_dengan_alasan_tetap_mendapat_cuti_tahunan_penuh",
       "target": "tests_feature_cuti_konfirmasikontraktest_konfirmasikontraktest_konfirmasimenunggu",
       "relation": "calls",
       "_origin": "ast",
@@ -49699,7 +49699,7 @@
       "weight": 1.0
     },
     {
-      "source": "tests_feature_cuti_periodecutisiklustest_periodecutisiklustest_test_kontrak_k5_yang_diperpanjang_kembali_ke_k1_dengan_saldo_nol",
+      "source": "tests_feature_cuti_periodecutisiklustest_periodecutisiklustest_test_kontrak_k5_yang_diperpanjang_kembali_ke_k1_tetap_dengan_kuota_penuh",
       "target": "tests_feature_cuti_periodecutisiklustest_periodecutisiklustest_perpanjangkontrakdariperiode",
       "relation": "calls",
       "_origin": "ast",
@@ -97528,7 +97528,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L288",
+      "source_location": "L279",
       "weight": 1.0
     },
     {
@@ -97564,7 +97564,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L306",
+      "source_location": "L297",
       "weight": 1.0
     },
     {
@@ -97576,7 +97576,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L372",
+      "source_location": "L361",
       "weight": 1.0
     },
     {
@@ -97588,7 +97588,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L372",
+      "source_location": "L361",
       "weight": 1.0
     },
     {
@@ -97648,7 +97648,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L341",
+      "source_location": "L332",
       "weight": 1.0
     },
     {
@@ -97660,7 +97660,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L341",
+      "source_location": "L332",
       "weight": 1.0
     },
     {
@@ -97672,7 +97672,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L285",
+      "source_location": "L276",
       "weight": 1.0
     },
     {
@@ -97684,7 +97684,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L285",
+      "source_location": "L276",
       "weight": 1.0
     },
     {
@@ -97696,7 +97696,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L324",
+      "source_location": "L315",
       "weight": 1.0
     },
     {
@@ -97709,18 +97709,6 @@
       "context": "parameter_type",
       "source_file": "app/Services/PeriodeCutiService.php",
       "source_location": "L219",
-      "weight": 1.0
-    },
-    {
-      "source": "app_services_periodecutiservice_periodecutiservice_terapkantinjauansiklus",
-      "target": "app_models_karyawan_karyawan",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "parameter_type",
-      "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L246",
       "weight": 1.0
     },
     {
@@ -101380,7 +101368,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L306",
+      "source_location": "L297",
       "weight": 1.0
     },
     {
@@ -101416,7 +101404,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L324",
+      "source_location": "L315",
       "weight": 1.0
     },
     {
@@ -104661,7 +104649,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L288",
+      "source_location": "L279",
       "weight": 1.0
     },
     {
@@ -104672,7 +104660,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L291",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -122050,7 +122038,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L285",
+      "source_location": "L276",
       "weight": 1.0
     },
     {
@@ -122061,7 +122049,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L306",
+      "source_location": "L297",
       "weight": 1.0
     },
     {
@@ -122072,7 +122060,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L324",
+      "source_location": "L315",
       "weight": 1.0
     },
     {
@@ -122083,7 +122071,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L341",
+      "source_location": "L332",
       "weight": 1.0
     },
     {
@@ -122105,7 +122093,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/Services/PeriodeCutiService.php",
-      "source_location": "L372",
+      "source_location": "L361",
       "weight": 1.0
     },
     {
@@ -123496,7 +123484,7 @@
     },
     {
       "source": "tests_feature_console_tinjausikluskontraktest_tinjausikluskontraktest",
-      "target": "tests_feature_console_tinjausikluskontraktest_tinjausikluskontraktest_test_kontrak_ulang_from_tinjauan_zeroes_remaining_k1_saldo_without_creating_debt",
+      "target": "tests_feature_console_tinjausikluskontraktest_tinjausikluskontraktest_test_kontrak_ulang_from_tinjauan_keeps_running_saldo_and_extends_contract",
       "relation": "method",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -123513,7 +123501,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tests/Feature/Console/TinjauSiklusKontrakTest.php",
-      "source_location": "L137",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
@@ -123837,7 +123825,7 @@
     },
     {
       "source": "tests_feature_cuti_cutimassaltest_cutimassaltest",
-      "target": "tests_feature_cuti_cutimassaltest_cutimassaltest_test_kontrak_returning_to_k1_after_k5_gets_bonus_kuota_again",
+      "target": "tests_feature_cuti_cutimassaltest_cutimassaltest_test_kontrak_returning_to_k1_after_k5_does_not_get_bonus_kuota",
       "relation": "method",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -124024,7 +124012,7 @@
     },
     {
       "source": "tests_feature_cuti_konfirmasikontraktest_konfirmasikontraktest",
-      "target": "tests_feature_cuti_konfirmasikontraktest_konfirmasikontraktest_test_kontrak_ulang_ke_k1_dengan_alasan_dimulai_dari_saldo_nol",
+      "target": "tests_feature_cuti_konfirmasikontraktest_konfirmasikontraktest_test_kontrak_ulang_ke_k1_dengan_alasan_tetap_mendapat_cuti_tahunan_penuh",
       "relation": "method",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -124574,7 +124562,7 @@
     },
     {
       "source": "tests_feature_cuti_periodecutisiklustest_periodecutisiklustest",
-      "target": "tests_feature_cuti_periodecutisiklustest_periodecutisiklustest_test_kontrak_k5_yang_diperpanjang_kembali_ke_k1_dengan_saldo_nol",
+      "target": "tests_feature_cuti_periodecutisiklustest_periodecutisiklustest_test_kontrak_k5_yang_diperpanjang_kembali_ke_k1_tetap_dengan_kuota_penuh",
       "relation": "method",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -128631,5 +128619,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "4dd9585906d4cfc3fd4d3cd116f34961f394df5c"
+  "built_at_commit": "4c5874a2e34a6ae780eb7e171f92ef0905bd55be"
 }

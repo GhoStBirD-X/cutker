@@ -20,7 +20,7 @@ import type { KonfirmasiKontrakCuti, Paginated } from '@/types';
 
 type PageProps = {
     konfirmasiKontraks: Paginated<KonfirmasiKontrakCuti>;
-    jumlahMenunggu: number;
+    jumlahBisaDiperpanjangMassal: number;
 };
 
 const STATUS_LABEL: Record<KonfirmasiKontrakCuti['status'], string> = {
@@ -100,6 +100,26 @@ function KonfirmasiRow({
     };
 
     const submit = async (keputusan: Keputusan) => {
+        if (keputusan === 'perpanjang') {
+            const kurang: Record<string, string> = {};
+
+            if (!tanggalAkhirKontrakBaru) {
+                kurang.tanggal_akhir_kontrak_baru =
+                    'Isi tanggal berakhir kontrak baru (atau klik "1 Tahun").';
+            }
+
+            if (akhirK5 && catatan.trim() === '') {
+                kurang.catatan =
+                    'Alasan wajib diisi untuk kontrak ulang ke K1 setelah K5.';
+            }
+
+            if (Object.keys(kurang).length > 0) {
+                setErrors(kurang);
+
+                return;
+            }
+        }
+
         if (!(await tampilkanKonfirmasi(DIALOG[keputusan]))) {
             return;
         }
@@ -269,11 +289,7 @@ function KonfirmasiRow({
                         <Button
                             size="sm"
                             variant={akhirK5 ? 'outline' : 'default'}
-                            disabled={
-                                processing ||
-                                !tanggalAkhirKontrakBaru ||
-                                (akhirK5 && catatan.trim() === '')
-                            }
+                            disabled={processing}
                             onClick={() => submit('perpanjang')}
                         >
                             {akhirK5 ? 'Kontrak Ulang ke K1' : 'Perpanjang'}
@@ -305,7 +321,8 @@ function KonfirmasiRow({
 }
 
 export default function KonfirmasiKontrakIndex() {
-    const { konfirmasiKontraks, jumlahMenunggu } = usePage<PageProps>().props;
+    const { konfirmasiKontraks, jumlahBisaDiperpanjangMassal } =
+        usePage<PageProps>().props;
 
     // Akhir K5 tidak bisa ikut perpanjangan massal — wajib diputuskan per orang.
     const menungguDiHalaman = konfirmasiKontraks.data.filter(
@@ -324,7 +341,9 @@ export default function KonfirmasiKontrakIndex() {
     const idDipilih = menungguDiHalaman
         .filter((k) => dipilih.has(k.id))
         .map((k) => k.id);
-    const jumlahDipilih = semua ? jumlahMenunggu : idDipilih.length;
+    const jumlahDipilih = semua
+        ? jumlahBisaDiperpanjangMassal
+        : idDipilih.length;
     const semuaHalamanDipilih =
         menungguDiHalaman.length > 0 &&
         idDipilih.length === menungguDiHalaman.length;
@@ -401,7 +420,7 @@ export default function KonfirmasiKontrakIndex() {
                     khusus, kontrak ulang ke K1.
                 </p>
 
-                {jumlahMenunggu > 0 && (
+                {jumlahBisaDiperpanjangMassal > 0 && (
                     <Card>
                         <CardContent className="flex flex-col gap-3">
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
@@ -426,7 +445,8 @@ export default function KonfirmasiKontrakIndex() {
                                             setDipilih(new Set());
                                         }}
                                     />
-                                    Semua yang menunggu ({jumlahMenunggu})
+                                    Semua yang bisa diperpanjang (
+                                    {jumlahBisaDiperpanjangMassal})
                                 </label>
                             </div>
                             <div className="flex flex-col gap-2 md:flex-row md:items-start">
