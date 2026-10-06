@@ -241,6 +241,22 @@ class ApprovalFlowTest extends TestCase
         ]);
     }
 
+    public function test_hrd_can_reject_a_level_2_request(): void
+    {
+        ['pengajuan' => $pengajuan, 'approvalLevel2' => $approvalLevel2, 'saldo' => $saldo, 'hrd' => $hrd] =
+            $this->buatPengajuanDenganApprovalLevel2();
+
+        $response = $this->actingAs($hrd)->post(route('approval.reject', $approvalLevel2), [
+            'catatan' => 'Ditolak HRD',
+        ]);
+
+        $response->assertRedirect(route('approval.index'));
+
+        $this->assertSame(StatusApproval::Ditolak, $approvalLevel2->fresh()->status);
+        $this->assertSame(StatusPengajuan::Ditolak, $pengajuan->fresh()->status);
+        $this->assertSame(0, $saldo->fresh()->terpakai);
+    }
+
     public function test_approving_a_mendadak_request_requires_a_catatan(): void
     {
         ['pengajuan' => $pengajuan, 'approvalLevel1' => $approvalLevel1, 'kepalaBagian' => $kepalaBagian] =
