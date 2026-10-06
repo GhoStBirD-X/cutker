@@ -157,4 +157,17 @@ class Karyawan extends Model
             fn (Builder $query, JenisKelamin $jenisKelamin) => $query->where('jenis_kelamin', $jenisKelamin),
         );
     }
+
+    /**
+     * Masih punya saldo Cuti Tahunan aktif yang bisa dipakai (sisa > 0 atau
+     * tanpa batas). Selama masih ada, Cuti Besar tidak boleh dipakai.
+     */
+    public function masihPunyaSaldoCutiTahunan(): bool
+    {
+        return $this->saldoCutis()
+            ->aktif()
+            ->whereHas('jenisCuti', fn (Builder $query) => $query->where('nama_jenis', JenisCuti::NAMA_CUTI_TAHUNAN))
+            ->where(fn (Builder $query) => $query->whereNull('sisa')->orWhere('sisa', '>', 0))
+            ->exists();
+    }
 }

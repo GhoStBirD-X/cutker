@@ -5,6 +5,7 @@ namespace App\Http\Requests\Cuti;
 use App\Models\JenisCuti;
 use App\Models\PengajuanCuti;
 use App\Rules\BatasWaktuPengajuanCuti;
+use App\Rules\CutiBesarSetelahCutiTahunanHabis;
 use App\Rules\MasaKerjaMencukupi;
 use App\Rules\SesuaiDurasiAlasanCuti;
 use App\Rules\SesuaiGenderJenisCuti;
@@ -45,6 +46,7 @@ class StorePengajuanCutiRequest extends FormRequest
                 'exists:jenis_cutis,id',
                 new MasaKerjaMencukupi($karyawan),
                 new SesuaiGenderJenisCuti($karyawan),
+                new CutiBesarSetelahCutiTahunanHabis($karyawan),
             ],
             'alasan_cuti_id' => [
                 Rule::requiredIf(fn () => JenisCuti::query()->find($this->integer('jenis_cuti_id'))?->alasanCutis()->exists() ?? false),

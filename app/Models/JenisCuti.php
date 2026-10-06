@@ -25,6 +25,14 @@ class JenisCuti extends Model
     /** @use HasFactory<JenisCutiFactory> */
     use HasFactory;
 
+    public const NAMA_CUTI_TAHUNAN = 'Cuti Tahunan';
+
+    /**
+     * Cuti Besar baru boleh dipakai setelah saldo Cuti Tahunan habis
+     * (lihat Karyawan::masihPunyaSaldoCutiTahunan()).
+     */
+    public const NAMA_CUTI_BESAR = 'Cuti Besar';
+
     /**
      * @return array<string, string>
      */

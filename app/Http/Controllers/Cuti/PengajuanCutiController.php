@@ -52,9 +52,14 @@ class PengajuanCutiController extends Controller
     private function dataUntukForm(Request $request): array
     {
         $karyawan = $request->user()->karyawan;
+        $cutiBesarTerkunci = $karyawan->masihPunyaSaldoCutiTahunan();
 
         return [
-            'jenisCutis' => JenisCuti::query()->sesuaiGender($karyawan->jenis_kelamin)->get(),
+            'jenisCutis' => JenisCuti::query()
+                ->sesuaiGender($karyawan->jenis_kelamin)
+                ->when($cutiBesarTerkunci, fn ($query) => $query->where('nama_jenis', '!=', JenisCuti::NAMA_CUTI_BESAR))
+                ->get(),
+            'cutiBesarTerkunci' => $cutiBesarTerkunci,
             'alasanCutis' => AlasanCuti::all(),
             'saldoCuti' => SaldoCuti::query()
                 ->with('jenisCuti')

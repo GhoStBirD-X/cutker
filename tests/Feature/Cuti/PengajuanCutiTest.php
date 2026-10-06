@@ -8,12 +8,14 @@ use App\Models\AlasanCuti;
 use App\Models\HariLibur;
 use App\Models\JadwalShift;
 use App\Models\JenisCuti;
+use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
 use App\Models\Shift;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Testing\TestResponse;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -495,6 +497,52 @@ class PengajuanCutiTest extends TestCase
 
         $response->assertSessionHasErrors('jenis_cuti_id');
         $this->assertDatabaseCount('pengajuan_cutis', 0);
+    }
+
+    /**
+     * @return array{0: Karyawan, 1: JenisCuti, 2: TestResponse}
+     */
+    protected function ajukanCutiBesarDenganSisaCutiTahunan(int $sisaCutiTahunan): array
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id]);
+
+        $cutiTahunan = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_TAHUNAN]);
+        $cutiBesar = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_BESAR]);
+        foreach ([[$cutiTahunan, $sisaCutiTahunan], [$cutiBesar, 21]] as [$jenisCuti, $sisa]) {
+            SaldoCuti::factory()->create([
+                'karyawan_id' => $karyawan->id,
+                'jenis_cuti_id' => $jenisCuti->id,
+                'tahun' => now()->year,
+                'kuota' => $sisa,
+                'terpakai' => 0,
+                'sisa' => $sisa,
+            ]);
+        }
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $cutiBesar->id,
+            'tanggal_mulai' => now()->addDays(7)->toDateString(),
+            'tanggal_selesai' => now()->addDays(8)->toDateString(),
+            'alasan' => 'Umrah bersama keluarga',
+        ]);
+
+        return [$karyawan, $cutiBesar, $response];
+    }
+
+    public function test_cuti_besar_is_rejected_while_cuti_tahunan_saldo_remains(): void
+    {
+        [, , $response] = $this->ajukanCutiBesarDenganSisaCutiTahunan(1);
+
+        $response->assertSessionHasErrors(['jenis_cuti_id' => 'Cuti Besar baru bisa diajukan setelah saldo Cuti Tahunan Anda habis.']);
+        $this->assertDatabaseCount('pengajuan_cutis', 0);
+    }
+
+    public function test_cuti_besar_can_be_submitted_once_cuti_tahunan_saldo_is_used_up(): void
+    {
+        [$karyawan, $cutiBesar] = $this->ajukanCutiBesarDenganSisaCutiTahunan(0);
+
+        $this->assertDatabaseHas('pengajuan_cutis', ['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $cutiBesar->id]);
     }
 
     public function test_karyawan_can_cancel_own_pending_leave_request_and_its_pending_approval_is_cancelled_too(): void

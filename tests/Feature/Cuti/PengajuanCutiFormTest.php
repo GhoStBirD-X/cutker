@@ -4,6 +4,7 @@ namespace Tests\Feature\Cuti;
 
 use App\Enums\JenisKelamin;
 use App\Models\JenisCuti;
+use App\Models\Karyawan;
 use App\Models\SaldoCuti;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,6 +22,40 @@ class PengajuanCutiFormTest extends TestCase
         parent::setUp();
 
         $this->seed(RoleSeeder::class);
+    }
+
+    /**
+     * @return array{0: Karyawan, 1: JenisCuti}
+     */
+    protected function karyawanDenganSisaCutiTahunan(int $sisa): array
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $cutiTahunan = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_TAHUNAN]);
+        $cutiBesar = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_BESAR]);
+        SaldoCuti::factory()->create(['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $cutiTahunan->id, 'kuota' => 12, 'sisa' => $sisa]);
+        SaldoCuti::factory()->create(['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $cutiBesar->id, 'kuota' => 21, 'sisa' => 21]);
+
+        return [$karyawan, $cutiBesar];
+    }
+
+    public function test_cuti_besar_is_not_offered_while_cuti_tahunan_saldo_remains(): void
+    {
+        [$karyawan, $cutiBesar] = $this->karyawanDenganSisaCutiTahunan(3);
+
+        $response = $this->actingAs($karyawan->user)->get(route('cuti.create'));
+
+        $response->assertInertia(fn (Assert $page) => $page->where('cutiBesarTerkunci', true));
+        $this->assertFalse(collect($response->viewData('page')['props']['jenisCutis'])->pluck('id')->contains($cutiBesar->id));
+    }
+
+    public function test_cuti_besar_is_offered_once_cuti_tahunan_saldo_is_used_up(): void
+    {
+        [$karyawan, $cutiBesar] = $this->karyawanDenganSisaCutiTahunan(0);
+
+        $response = $this->actingAs($karyawan->user)->get(route('cuti.create-mendadak'));
+
+        $response->assertInertia(fn (Assert $page) => $page->where('cutiBesarTerkunci', false));
+        $this->assertTrue(collect($response->viewData('page')['props']['jenisCutis'])->pluck('id')->contains($cutiBesar->id));
     }
 
     public function test_male_karyawan_does_not_see_gender_restricted_jenis_cuti_or_saldo(): void

@@ -27,10 +27,12 @@ type PageProps = {
     jenisCutis: JenisCuti[];
     alasanCutis: AlasanCuti[];
     saldoCuti: SaldoCuti[];
+    cutiBesarTerkunci: boolean;
 };
 
 export default function CutiAjukanMendadak() {
-    const { jenisCutis, alasanCutis, saldoCuti } = usePage<PageProps>().props;
+    const { jenisCutis, alasanCutis, saldoCuti, cutiBesarTerkunci } =
+        usePage<PageProps>().props;
     const today = new Date().toISOString().slice(0, 10);
 
     const [jenisCutiId, setJenisCutiId] = useState('');
@@ -144,6 +146,13 @@ export default function CutiAjukanMendadak() {
                                         <InputError
                                             message={errors.jenis_cuti_id}
                                         />
+                                        {cutiBesarTerkunci && (
+                                            <p className="text-xs text-muted-foreground">
+                                                Cuti Besar baru bisa dipilih
+                                                setelah saldo Cuti Tahunan
+                                                habis.
+                                            </p>
+                                        )}
                                     </div>
 
                                     {alasanUntukJenisTerpilih.length > 0 && (
