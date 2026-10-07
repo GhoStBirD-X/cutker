@@ -290,4 +290,39 @@ class PeriodeCutiSiklusTest extends TestCase
         $this->assertSame(12, $saldo->kuota);
         $this->assertSame(12, $saldo->sisa);
     }
+
+    public function test_cuti_besar_karyawan_tetap_direset_penuh_setiap_lima_tahun(): void
+    {
+        $this->travelTo('2026-10-01');
+        $karyawan = Karyawan::factory()->create(['tipe_karyawan' => TipeKaryawan::Tetap]);
+        $cutiBesar = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_BESAR, 'kuota_default' => 21, 'masa_kerja_minimal_bulan' => 60]);
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $cutiBesar->id,
+            'periode_ke' => 1,
+            'periode_mulai' => '2026-10-01',
+            'periode_selesai' => '2031-09-30',
+            'kuota' => 21,
+            'terpakai' => 5,
+            'sisa' => 16,
+        ]);
+
+        $this->travelTo('2031-09-30');
+        app(PeriodeCutiService::class)->prosesSemuaKaryawan();
+        $this->assertDatabaseCount('saldo_cutis', 1);
+
+        $this->travelTo('2036-10-02');
+        app(PeriodeCutiService::class)->prosesSemuaKaryawan();
+
+        $periode = SaldoCuti::query()->where('jenis_cuti_id', $cutiBesar->id)->orderBy('periode_ke')->get();
+        $this->assertSame([1, 2, 3], $periode->pluck('periode_ke')->all());
+        $this->assertSame('2031-10-01', $periode[1]->periode_mulai->toDateString());
+        $this->assertSame('2036-09-30', $periode[1]->periode_selesai->toDateString());
+        $this->assertSame('2036-10-01', $periode[2]->periode_mulai->toDateString());
+        $this->assertSame(21, $periode[2]->kuota);
+        $this->assertSame(21, $periode[2]->sisa);
+        $this->assertNull($periode[2]->ditutup_pada);
+        $this->assertDatabaseHas('kompensasi_cutis', ['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $cutiBesar->id, 'jumlah_hari' => 16]);
+        $this->assertDatabaseHas('kompensasi_cutis', ['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $cutiBesar->id, 'jumlah_hari' => 21]);
+    }
 }
