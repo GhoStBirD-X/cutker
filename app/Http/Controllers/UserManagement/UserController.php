@@ -4,6 +4,7 @@ namespace App\Http\Controllers\UserManagement;
 
 use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UserManagement\ResetPasswordNpkRequest;
 use App\Http\Requests\UserManagement\UserRequest;
 use App\Models\Karyawan;
 use App\Models\User;
@@ -71,6 +72,40 @@ class UserController extends Controller
         $user->syncRoles($data['roles']);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'User berhasil diperbarui.']);
+
+        return back();
+    }
+
+    /**
+     * Reset password user terpilih menjadi NPK karyawan masing-masing
+     * (bisa satu atau banyak sekaligus). User tanpa profil karyawan (tidak
+     * punya NPK) dan akun admin yang menjalankannya sendiri dilewati.
+     */
+    public function resetPasswordKeNpk(ResetPasswordNpkRequest $request): RedirectResponse
+    {
+        $userIds = collect($request->validated('user_ids'))->unique();
+
+        $users = User::query()
+            ->with('karyawan')
+            ->whereKey($userIds)
+            ->whereKeyNot($request->user()->id)
+            ->whereHas('karyawan')
+            ->get();
+
+        foreach ($users as $user) {
+            $user->password = Hash::make($user->karyawan->nip);
+            $user->save();
+        }
+
+        $dilewati = $userIds->count() - $users->count();
+
+        Inertia::flash('toast', [
+            'type' => $users->isEmpty() ? 'error' : 'success',
+            'message' => $users->isEmpty()
+                ? 'Tidak ada password yang direset. User tanpa profil karyawan (NPK) dan akun Anda sendiri dilewati.'
+                : "Password {$users->count()} user berhasil direset menjadi NPK masing-masing."
+                    .($dilewati > 0 ? " {$dilewati} user dilewati (tanpa NPK atau akun Anda sendiri)." : ''),
+        ]);
 
         return back();
     }

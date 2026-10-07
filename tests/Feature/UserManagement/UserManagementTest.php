@@ -5,6 +5,7 @@ namespace Tests\Feature\UserManagement;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -93,5 +94,49 @@ class UserManagementTest extends TestCase
         ]);
 
         $response->assertForbidden();
+    }
+
+    public function test_admin_can_bulk_reset_passwords_to_each_users_npk(): void
+    {
+        $admin = $this->karyawanUser('admin');
+        $budi = $this->karyawanUser('karyawan', ['nip' => '100231']);
+        $sari = $this->karyawanUser('karyawan', ['nip' => '100232']);
+        $tidakDipilih = $this->karyawanUser('karyawan', ['nip' => '100233']);
+
+        $response = $this->actingAs($admin)->post(route('users.reset-password-npk'), [
+            'user_ids' => [$budi->id, $sari->id],
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertTrue(Hash::check('100231', $budi->fresh()->password));
+        $this->assertTrue(Hash::check('100232', $sari->fresh()->password));
+        $this->assertFalse(Hash::check('100233', $tidakDipilih->fresh()->password));
+    }
+
+    public function test_reset_password_to_npk_skips_users_without_karyawan_and_the_admin_themself(): void
+    {
+        $admin = $this->karyawanUser('admin', ['nip' => '900001']);
+        $tanpaKaryawan = $this->unlinkedUser('hrd');
+        $passwordLama = $tanpaKaryawan->password;
+
+        $this->actingAs($admin)->post(route('users.reset-password-npk'), [
+            'user_ids' => [$admin->id, $tanpaKaryawan->id],
+        ])->assertRedirect();
+
+        $this->assertFalse(Hash::check('900001', $admin->fresh()->password));
+        $this->assertSame($passwordLama, $tanpaKaryawan->fresh()->password);
+    }
+
+    public function test_non_admin_cannot_reset_passwords_to_npk(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawan = $this->karyawanUser('karyawan', ['nip' => '100234']);
+
+        $this->actingAs($hrd)->post(route('users.reset-password-npk'), [
+            'user_ids' => [$karyawan->id],
+        ])->assertForbidden();
+
+        $this->assertFalse(Hash::check('100234', $karyawan->fresh()->password));
     }
 }

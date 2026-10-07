@@ -1,5 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { ShieldCheck } from 'lucide-react';
+import { KeyRound, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import UserController from '@/actions/App/Http/Controllers/UserManagement/UserController';
 import { konfirmasi } from '@/components/confirm-dialog';
@@ -38,6 +38,62 @@ export default function UsersIndex() {
     const { users, karyawans, filters } = usePage<PageProps>().props;
     const [editing, setEditing] = useState<UserRow | null>(null);
     const [search, setSearch] = useState(filters.search ?? '');
+    const [dipilih, setDipilih] = useState<Set<number>>(new Set());
+    const [mereset, setMereset] = useState(false);
+
+    const bisaDireset = users.data.filter((u) => u.karyawan?.nip);
+    const semuaHalamanDipilih =
+        bisaDireset.length > 0 && bisaDireset.every((u) => dipilih.has(u.id));
+
+    const togglePilih = (id: number) => {
+        setDipilih((prev) => {
+            const next = new Set(prev);
+
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+
+            return next;
+        });
+    };
+
+    const togglePilihHalaman = () => {
+        setDipilih(
+            semuaHalamanDipilih
+                ? new Set()
+                : new Set(bisaDireset.map((u) => u.id)),
+        );
+    };
+
+    const resetPasswordKeNpk = async (target: UserRow[]) => {
+        if (
+            !(await konfirmasi({
+                title:
+                    target.length === 1
+                        ? `Reset password ${target[0].name} ke NPK?`
+                        : `Reset password ${target.length} user ke NPK?`,
+                description:
+                    'Password diganti menjadi NPK karyawan masing-masing, sehingga bisa login dengan NPK sebagai password. Minta mereka segera mengganti password setelah login.',
+                confirmText: 'Reset ke NPK',
+                destructive: true,
+            }))
+        ) {
+            return;
+        }
+
+        router.post(
+            UserController.resetPasswordKeNpk.url(),
+            { user_ids: target.map((u) => u.id) },
+            {
+                preserveScroll: true,
+                onStart: () => setMereset(true),
+                onFinish: () => setMereset(false),
+                onSuccess: () => setDipilih(new Set()),
+            },
+        );
+    };
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
         name: '',
@@ -225,32 +281,85 @@ export default function UsersIndex() {
                 </form>
 
                 <Card className="gap-0 overflow-hidden py-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/40 px-4 py-2 text-sm">
+                        <label className="flex items-center gap-2">
+                            <Checkbox
+                                checked={semuaHalamanDipilih}
+                                disabled={bisaDireset.length === 0}
+                                onCheckedChange={togglePilihHalaman}
+                            />
+                            {dipilih.size > 0
+                                ? `${dipilih.size} user dipilih`
+                                : 'Pilih semua di halaman ini'}
+                        </label>
+                        {dipilih.size > 0 && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5"
+                                disabled={mereset}
+                                onClick={() =>
+                                    resetPasswordKeNpk(
+                                        users.data.filter((u) =>
+                                            dipilih.has(u.id),
+                                        ),
+                                    )
+                                }
+                            >
+                                <KeyRound className="size-4" />
+                                Reset Password ke NPK ({dipilih.size})
+                            </Button>
+                        )}
+                    </div>
                     <CardContent className="divide-y p-0">
                         {users.data.map((user) => (
                             <div
                                 key={user.id}
                                 className="flex flex-col gap-3 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
                             >
-                                <div>
-                                    <div className="flex flex-wrap items-center gap-2 font-medium">
-                                        {user.name}
-                                        {user.roles.map((role) => (
-                                            <Badge
-                                                key={role.name}
-                                                variant="secondary"
-                                            >
-                                                {roleLabel(role.name)}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                    <div className="text-muted-foreground">
-                                        {user.email}
-                                        {user.karyawan
-                                            ? ` · terhubung ke ${user.karyawan.nama}`
-                                            : ''}
+                                <div className="flex items-start gap-3">
+                                    <Checkbox
+                                        className="mt-0.5"
+                                        aria-label={`Pilih ${user.name}`}
+                                        checked={dipilih.has(user.id)}
+                                        disabled={!user.karyawan?.nip}
+                                        onCheckedChange={() =>
+                                            togglePilih(user.id)
+                                        }
+                                    />
+                                    <div>
+                                        <div className="flex flex-wrap items-center gap-2 font-medium">
+                                            {user.name}
+                                            {user.roles.map((role) => (
+                                                <Badge
+                                                    key={role.name}
+                                                    variant="secondary"
+                                                >
+                                                    {roleLabel(role.name)}
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                        <div className="text-muted-foreground">
+                                            {user.email}
+                                            {user.karyawan
+                                                ? ` · terhubung ke ${user.karyawan.nama} (NPK ${user.karyawan.nip})`
+                                                : ''}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex shrink-0 flex-wrap gap-2">
+                                    {user.karyawan?.nip && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            disabled={mereset}
+                                            onClick={() =>
+                                                resetPasswordKeNpk([user])
+                                            }
+                                        >
+                                            Reset ke NPK
+                                        </Button>
+                                    )}
                                     <Button
                                         size="sm"
                                         variant="outline"
