@@ -92,7 +92,7 @@ class TinjauSiklusKontrakTest extends TestCase
         $this->assertDatabaseCount('konfirmasi_kontrak_cutis', 1);
     }
 
-    public function test_angkat_tetap_from_tinjauan_keeps_running_saldo_and_starts_cuti_besar_after_k5(): void
+    public function test_angkat_tetap_from_tinjauan_zeroes_first_year_cuti_tahunan_and_grants_full_cuti_besar(): void
     {
         $hrd = $this->karyawanUser('hrd');
         $cutiBesar = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_BESAR, 'kuota_default' => 21, 'masa_kerja_minimal_bulan' => 60]);
@@ -105,13 +105,29 @@ class TinjauSiklusKontrakTest extends TestCase
 
         $this->assertSame(TipeKaryawan::Tetap, $saldo->karyawan->fresh()->tipe_karyawan);
         $this->assertNull($saldo->fresh()->ditutup_pada);
-        $this->assertSame(8, $saldo->fresh()->sisa);
+        $this->assertSame(4, $saldo->fresh()->kuota);
+        $this->assertSame(0, $saldo->fresh()->sisa);
         $this->assertDatabaseMissing('saldo_cutis', ['karyawan_id' => $saldo->karyawan_id, 'periode_ke' => 7]);
         $saldoCutiBesar = SaldoCuti::query()->where('karyawan_id', $saldo->karyawan_id)->where('jenis_cuti_id', $cutiBesar->id)->firstOrFail();
         $this->assertSame('2026-02-01', $saldoCutiBesar->periode_mulai->toDateString());
+        $this->assertSame(21, $saldoCutiBesar->kuota);
     }
 
-    public function test_kontrak_ulang_from_tinjauan_keeps_running_saldo_and_extends_contract(): void
+    public function test_angkat_tetap_from_tinjauan_past_first_year_keeps_running_cuti_tahunan(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $saldo = $this->saldoBerjalan(7, terpakai: 4);
+        $konfirmasi = app(PeriodeCutiService::class)->buatTinjauanSiklus($saldo);
+
+        $this->actingAs($hrd)->post(route('cuti.konfirmasi-kontrak.konfirmasi', $konfirmasi), [
+            'keputusan' => 'angkat_tetap',
+        ])->assertSessionDoesntHaveErrors();
+
+        $this->assertSame(12, $saldo->fresh()->kuota);
+        $this->assertSame(8, $saldo->fresh()->sisa);
+    }
+
+    public function test_kontrak_ulang_from_tinjauan_zeroes_remaining_k1_saldo_without_creating_debt(): void
     {
         $hrd = $this->karyawanUser('hrd');
         $saldoK1 = $this->saldoBerjalan(6, terpakai: 4);
@@ -127,10 +143,9 @@ class TinjauSiklusKontrakTest extends TestCase
         }
 
         $saldoK1->refresh();
-        $this->assertSame(12, $saldoK1->kuota);
-        $this->assertSame(8, $saldoK1->sisa);
-        $this->assertNull($saldoK1->ditutup_pada);
-        $this->assertSame('2027-01-31', $saldoK1->karyawan->fresh()->tanggal_akhir_kontrak->toDateString());
+        $this->assertSame(4, $saldoK1->kuota);
+        $this->assertSame(0, $saldoK1->sisa);
+        $this->assertSame($hrd->karyawan->id, $saldoK1->diubah_oleh_id);
         $this->assertSame(12, $saldoK2->fresh()->kuota);
         $this->assertSame(8, $saldoK2->fresh()->sisa);
     }

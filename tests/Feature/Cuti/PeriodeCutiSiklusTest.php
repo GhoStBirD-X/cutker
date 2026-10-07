@@ -265,13 +265,13 @@ class PeriodeCutiSiklusTest extends TestCase
         return ['karyawan' => $karyawan, 'saldo' => $saldoBaru];
     }
 
-    public function test_kontrak_k5_yang_diperpanjang_kembali_ke_k1_tetap_dengan_kuota_penuh(): void
+    public function test_kontrak_k5_yang_diperpanjang_kembali_ke_k1_dengan_saldo_nol(): void
     {
         ['saldo' => $saldo] = $this->perpanjangKontrakDariPeriode(5);
 
         $this->assertSame(1, $saldo->urutanKontrak());
-        $this->assertSame(12, $saldo->kuota);
-        $this->assertSame(12, $saldo->sisa);
+        $this->assertSame(0, $saldo->kuota);
+        $this->assertSame(0, $saldo->sisa);
     }
 
     public function test_kontrak_k4_yang_diperpanjang_menjadi_k5_dengan_kuota_penuh(): void

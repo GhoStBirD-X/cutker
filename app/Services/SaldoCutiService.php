@@ -172,11 +172,12 @@ class SaldoCutiService
     /**
      * Saat karyawan kontrak diangkat menjadi tetap, jenis cuti khusus
      * karyawan tetap (Cuti Besar) baru mulai dihitung sejak tanggal
-     * pengangkatan — masa kontrak tidak ikut dihitung. Periode ke-1-nya
-     * adalah masa kerja minimal dengan kuota 0, sama seperti karyawan baru.
+     * pengangkatan. Periode ke-1-nya adalah masa kerja minimal dengan kuota
+     * 0, kecuali $langsungPenuh (diangkat tetap di akhir K5 — masa kerja 5
+     * tahun sudah terpenuhi selama kontrak) yang langsung berkuota penuh.
      * Karyawan yang sudah punya baris aktif untuk jenis cuti itu dilewati.
      */
-    public function mulaiSaldoKhususKaryawanTetap(Karyawan $karyawan, CarbonInterface $tanggalPengangkatan): void
+    public function mulaiSaldoKhususKaryawanTetap(Karyawan $karyawan, CarbonInterface $tanggalPengangkatan, bool $langsungPenuh = false): void
     {
         $jenisCutis = JenisCuti::query()
             ->sesuaiGender($karyawan->jenis_kelamin)
@@ -208,9 +209,9 @@ class SaldoCutiService
                 'periode_ke' => $periodeKe,
                 'periode_mulai' => $mulai,
                 'periode_selesai' => $mulai->copy()->addMonths($jenisCuti->masa_kerja_minimal_bulan)->subDay(),
-                'kuota' => 0,
+                'kuota' => $langsungPenuh ? $jenisCuti->kuota_default : 0,
                 'terpakai' => 0,
-                'sisa' => 0,
+                'sisa' => $langsungPenuh ? $jenisCuti->kuota_default : 0,
             ]);
         }
     }

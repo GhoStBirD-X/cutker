@@ -214,7 +214,7 @@ class KonfirmasiKontrakTest extends TestCase
         $this->assertSame(StatusKonfirmasiKontrak::Menunggu, $konfirmasi->fresh()->status);
     }
 
-    public function test_kontrak_ulang_ke_k1_dengan_alasan_tetap_mendapat_cuti_tahunan_penuh(): void
+    public function test_kontrak_ulang_ke_k1_dengan_alasan_dimulai_dari_saldo_nol(): void
     {
         $hrd = $this->karyawanUser('hrd');
         $konfirmasi = $this->konfirmasiMenunggu('2026-09-30', periodeKe: 5);
@@ -230,12 +230,12 @@ class KonfirmasiKontrakTest extends TestCase
         $this->assertDatabaseHas('saldo_cutis', [
             'karyawan_id' => $konfirmasi->karyawan_id,
             'periode_ke' => 6,
-            'kuota' => 12,
-            'sisa' => 12,
+            'kuota' => 0,
+            'sisa' => 0,
         ]);
     }
 
-    public function test_angkat_tetap_di_akhir_k5_melanjutkan_cuti_tahunan_penuh_dan_memulai_cuti_besar_sejak_pengangkatan(): void
+    public function test_angkat_tetap_di_akhir_k5_langsung_mendapat_cuti_besar_tanpa_cuti_tahunan_tahun_pertama(): void
     {
         $hrd = $this->karyawanUser('hrd');
         $cutiBesar = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_BESAR, 'kuota_default' => 21, 'masa_kerja_minimal_bulan' => 60]);
@@ -254,14 +254,15 @@ class KonfirmasiKontrakTest extends TestCase
             'karyawan_id' => $karyawan->id,
             'jenis_cuti_id' => $konfirmasi->saldoCuti->jenis_cuti_id,
             'periode_ke' => 6,
-            'kuota' => 12,
-            'sisa' => 12,
+            'kuota' => 0,
+            'sisa' => 0,
         ]);
 
         $saldoCutiBesar = SaldoCuti::query()->where('karyawan_id', $karyawan->id)->where('jenis_cuti_id', $cutiBesar->id)->firstOrFail();
         $this->assertSame('2026-10-01', $saldoCutiBesar->periode_mulai->toDateString());
         $this->assertSame('2031-09-30', $saldoCutiBesar->periode_selesai->toDateString());
-        $this->assertSame(0, $saldoCutiBesar->kuota);
+        $this->assertSame(21, $saldoCutiBesar->kuota);
+        $this->assertSame(21, $saldoCutiBesar->sisa);
     }
 
     public function test_perpanjang_massal_melewati_karyawan_di_akhir_k5(): void

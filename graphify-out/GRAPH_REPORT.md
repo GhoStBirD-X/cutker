@@ -1,97 +1,96 @@
 # Graph Report - cutker  (2026-10-07)
 
 ## Corpus Check
-- 424 files · ~123,456 words
+- 424 files · ~123,666 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 31 file(s) not represented in the graph (top: (none) 19, .stub 6, .example 1)
 
 ## Summary
-- 2840 nodes · 8123 edges · 157 communities (76 shown, 81 thin omitted)
+- 2841 nodes · 8126 edges · 156 communities (74 shown, 82 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 42 edges (avg confidence: 0.91)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `6cb6b1ae`
+- Built from commit: `517fd0fe`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - ApprovalController.php
-- ApprovalService
-- sidebar.tsx
+- Laporan/SaldoCutiController.php
+- nav-main.tsx
 - KaryawanFactory.php
-- Illuminate\Database\Eloquent\Relations\BelongsTo
+- StatusApproval
 - SaldoCuti
 - ajukan.tsx
-- index.ts
-- react
-- Karyawan
+- approval/show.tsx
+- cn
+- PasswordResetTest
 - Illuminate\Foundation\Http\FormRequest
-- Inertia\Response
+- KompensasiCuti
 - app-sidebar-layout.tsx
-- Illuminate\Http\RedirectResponse
-- Button
+- JadwalShiftController.php
+- @inertiajs/react
 - Illuminate\Contracts\Validation\ValidationRule
-- PengajuanCuti
-- PengajuanCutiDiteruskan
+- Illuminate\Http\RedirectResponse
+- HariLiburController.php
 - useIsMobile
 - package.json
-- JabatanController.php
+- PengajuanCuti
 - app-header.tsx
-- CutiMassalService.php
+- sidebar.tsx
 - dependencies
-- PeriodeCutiService
+- TinjauSiklusKontrak.php
 - CLAUDE.md
-- Laporan/SaldoCutiController.php
+- KaryawanController.php
 - Departemen
 - KaryawanImport.php
 - PengajuanCutiDiajukan
 - JadwalShift
-- AlasanCuti
+- Illuminate\Database\Seeder
 - app-sidebar.tsx
 - dropdown-menu.tsx
 - Approval
 - Illuminate\Database\Schema\Blueprint
-- cn
+- Button
 - use-appearance.tsx
-- JadwalShiftController.php
-- Card
+- ApprovalService
+- react
 - SaldoCutiTest.php
 - components.json
-- Illuminate\Database\Eloquent\Factories\HasFactory
-- FortifyServiceProvider
+- Illuminate\Database\Eloquent\Relations\BelongsTo
+- AppServiceProvider.php
 - icon.tsx
 - compilerOptions
-- ShiftController.php
+- master.php
 - devDependencies
 - KonfirmasiKontrakTest
-- Illuminate\Database\Eloquent\Relations\HasMany
 - scripts
 - Illuminate\Database\Migrations\Migration
-- AppLogoIcon
+- StatusPengajuan
 - breadcrumbs.tsx
 - composer.json
 - require
 - eslint.config.js
-- CutiMassalService
+- Illuminate\Support\Facades\Hash
 - require-dev
 - Illuminate\Database\Eloquent\Builder
-- Controller
+- PasswordValidationRules
 - KonfirmasiKontrakCuti
-- SaldoCutiService.php
+- CutiMassalService
 - TestCase
-- kompensasi/index.tsx
+- calendar.tsx
 - config
-- DashboardController.php
+- Controller
 - scripts
 - User
 - optionalDependencies
 - .buatDataKaryawanLengkap
-- Illuminate\Http\Request
+- Inertia\Response
 - psr-4
 - laravel
-- bootstrap/app.php
-- UserFactory.php
+- Illuminate\Http\Request
+- AlasanCutiController.php
 - 2025_08_14_170933_add_two_factor_columns_to_users_table.php
 - 2026_08_27_141753_add_karyawan_id_to_users_table.php
 - 2026_08_28_150006_alter_kuota_default_and_add_masa_kerja_minimal_bulan_to_jenis_cutis_table.php
@@ -116,45 +115,45 @@
 - SaldoSeverity
 - Illuminate\Support\Facades\Schema
 - 2026_08_27_142636_create_notifications_table.php
-- ErrorPageTest.php
+- PengajuanCutiDiteruskan
 - 2026_09_05_172005_create_riwayat_saldo_cutis_table.php
 - 2026_09_05_172006_create_kompensasi_cutis_table.php
-- HariLiburManagementTest
+- EmailVerificationTest
 - Config
 - General
 - laravel-boost
-- PengajuanCutiWhatsAppTest
+- JadwalShiftPolicy
 - placeholder-pattern.tsx
 - index.md
 - KaryawanRequest.php
 - master/saldo-cuti.tsx
-- TinjauSiklusKontrak.php
+- PengajuanCutiPolicy
 - 2026_09_05_172004_add_periode_dan_ditutup_pada_ke_saldo_cutis_table.php
-- Cuti Kerja Pabrik
+- Arsitektur Singkat
 - DepartemenController.php
-- JenisCuti
+- Karyawan
 - InteractsWithKaryawan
 - toggle-group.tsx
 - Inertia\Testing\AssertableInertia
-- StatusPengajuanCutiWhatsAppTest.php
+- StatusPengajuanCutiWhatsAppTest
 - Illuminate\Database\Eloquent\Factories\Factory
 - 0001_01_01_000001_create_cache_table.php
 - 2026_08_28_150007_alter_kuota_and_sisa_nullable_on_saldo_cutis_table.php
-- KaryawanSeeder
-- .generatePeriodeAwalUntukJenisCuti
+- FortifyServiceProvider
+- SecurityTest
 - 2024_01_01_000000_create_passkeys_table.php
 - 2026_08_27_141756_create_approvals_table.php
 - 2026_08_28_150008_create_alasan_cutis_table.php
-- Arsitektur Singkat
-- DepartemenFactory
+- PengajuanCutiService.php
+- SumberHariLibur
+- ApprovalPolicy
 - PengajuanCutiFormTest
-- DashboardTest
 - 2026_09_05_172010_drop_unique_tahun_dari_saldo_cutis_table.php
 - 2026_08_27_141755_create_saldo_cutis_table.php
 - 2026_09_10_173106_create_cuti_massals_table.php
 
 ## God Nodes (most connected - your core abstractions)
-1. `Karyawan` - 218 edges
+1. `Karyawan` - 219 edges
 2. `JenisCuti` - 208 edges
 3. `SaldoCuti` - 170 edges
 4. `cn()` - 170 edges
@@ -180,110 +179,106 @@
 ## Import Cycles
 - None detected.
 
-## Communities (157 total, 81 thin omitted)
+## Communities (156 total, 82 thin omitted)
 
 ### Community 0 - "ApprovalController.php"
 Cohesion: 0.14
 Nodes (3): ApprovalController, {closure#1}(), ApprovalActionRequest
 
-### Community 1 - "ApprovalService"
-Cohesion: 0.13
-Nodes (7): approvals.approver_id nullable — kolam kosong tidak boleh crash, Hari libur nasional tidak auto-populate on fresh install, HRD/Manager mengajukan cuti sendiri skip level di bawah wewenangnya, Services, Reset Semua Data Karyawan — khusus admin, hapus permanen, ApprovalPolicy, ApprovalService
+### Community 1 - "Laporan/SaldoCutiController.php"
+Cohesion: 0.08
+Nodes (6): {closure#10}(), {closure#2}(), {closure#4}(), {closure#5}(), {closure#6}(), SaldoCutiController
 
-### Community 2 - "sidebar.tsx"
-Cohesion: 0.10
-Nodes (39): @radix-ui/react-collapsible, AppSidebar(), buildNavGroups(), NavFooter(), NavMain(), Collapsible(), CollapsibleContent(), CollapsibleTrigger() (+31 more)
+### Community 2 - "nav-main.tsx"
+Cohesion: 0.16
+Nodes (20): @radix-ui/react-collapsible, NavFooter(), NavMain(), Collapsible(), CollapsibleContent(), CollapsibleTrigger(), SidebarGroup(), SidebarGroupContent() (+12 more)
 
-### Community 4 - "Illuminate\Database\Eloquent\Relations\BelongsTo"
-Cohesion: 0.07
-Nodes (3): KompensasiCuti, RiwayatSaldoCuti, KompensasiCutiTest
+### Community 4 - "StatusApproval"
+Cohesion: 0.16
+Nodes (6): StatusApproval, ApprovalSudahDiprosesException, CutiMassalSudahDibatalkanException, SaldoCutiTidakCukupException, {closure#1}(), {closure#2}()
 
 ### Community 5 - "SaldoCuti"
-Cohesion: 0.06
-Nodes (4): {closure#1}(), SaldoCuti, PengajuanCutiTest, SaldoCutiMassalTest
+Cohesion: 0.04
+Nodes (6): {closure#1}(), SaldoCuti, KonfirmasiKontrakCutiFactory, PengajuanCutiTest, SaldoCutiTest, SaldoCutiMassalTest
 
 ### Community 6 - "ajukan.tsx"
-Cohesion: 0.14
-Nodes (28): PratinjauHariCuti(), PratinjauHariCutiProps, Select(), SelectContent(), SelectItem(), SelectScrollDownButton(), SelectScrollUpButton(), SelectTrigger() (+20 more)
+Cohesion: 0.08
+Nodes (35): PaginationProps, PILIHAN_PER_HALAMAN, terjemahkanLabel(), PratinjauHariCuti(), PratinjauHariCutiProps, Select(), SelectContent(), SelectItem() (+27 more)
 
-### Community 7 - "index.ts"
+### Community 7 - "approval/show.tsx"
 Cohesion: 0.07
-Nodes (37): RiwayatApprovalList(), CLASSES, LABELS, StatusBadge(), Badge(), badgeVariants, UnlimitedBadge(), APPROVAL_LEVEL_LABELS (+29 more)
+Nodes (42): RiwayatApprovalList(), ICONS, SaldoCutiInline(), SaldoCutiInlineProps, SaldoCutiMeter(), SaldoCutiMeterProps, CLASSES, LABELS (+34 more)
 
-### Community 8 - "react"
-Cohesion: 0.09
-Nodes (26): @inertiajs/react, input-otp, react, AlertError(), ManageTwoFactor(), Props, TwoFactorRecoveryCodes(), GridScanIcon() (+18 more)
-
-### Community 9 - "Karyawan"
-Cohesion: 0.06
-Nodes (7): {closure#2}(), {closure#4}(), Karyawan, {closure#5}(), {closure#1}(), SaldoCutiTest, SaldoCutiManagementTest
+### Community 8 - "cn"
+Cohesion: 0.08
+Nodes (33): cobe, input-otp, AlertError(), Globe(), MARKERS, warnaTema(), GridScanIcon(), Props (+25 more)
 
 ### Community 10 - "Illuminate\Foundation\Http\FormRequest"
-Cohesion: 0.06
-Nodes (8): SecurityController, ResetDataKaryawanRequest, SaldoCutiImportRequest, {closure#1}(), PasswordUpdateRequest, TwoFactorAuthenticationRequest, {closure#1}(), {closure#3}()
-
-### Community 11 - "Inertia\Response"
 Cohesion: 0.07
-Nodes (6): StatusCutiMassal, CutiMassalController, PengajuanCutiController, StoreCutiMassalRequest, StorePengajuanCutiRequest, TambahKaryawanBaruCutiMassalRequest
+Nodes (8): {closure#1}(), {closure#4}(), SecurityController, StoreCutiMassalRequest, SaldoCutiImportRequest, {closure#1}(), PasswordUpdateRequest, TwoFactorAuthenticationRequest
 
 ### Community 12 - "app-sidebar-layout.tsx"
-Cohesion: 0.15
-Nodes (14): AppContent(), Props, AppShell(), Props, SidebarInset(), SidebarProvider(), AppHeaderLayout(), AppSidebarLayout() (+6 more)
+Cohesion: 0.22
+Nodes (11): AppContent(), Props, AppShell(), Props, SidebarInset(), SidebarProvider(), AppHeaderLayout(), AppSidebarLayout() (+3 more)
 
-### Community 13 - "Illuminate\Http\RedirectResponse"
-Cohesion: 0.06
-Nodes (12): HasPerPage, {closure#1}(), {closure#4}(), AlasanCutiController, HariLiburController, JenisCutiController, NotificationController, UserController (+4 more)
+### Community 13 - "JadwalShiftController.php"
+Cohesion: 0.10
+Nodes (4): JadwalShiftController, {closure#1}(), StoreJadwalShiftRequest, UpdateLemburRequest
 
-### Community 14 - "Button"
+### Community 14 - "@inertiajs/react"
 Cohesion: 0.07
-Nodes (35): @laravel/passkeys, Heading(), InputError(), EmptyState(), ManagePasskeys(), Props, Props, PasskeyRegistration() (+27 more)
+Nodes (31): @inertiajs/react, @laravel/passkeys, Heading(), InputError(), EmptyState(), ManagePasskeys(), Props, ManageTwoFactor() (+23 more)
 
 ### Community 15 - "Illuminate\Contracts\Validation\ValidationRule"
-Cohesion: 0.10
-Nodes (10): {closure#1}(), {closure#1}(), BatasWaktuPengajuanCuti, CutiBesarKhususKaryawanTetap, CutiBesarSetelahCutiTahunanHabis, MasaKerjaMencukupi, SesuaiDurasiAlasanCuti, SesuaiGenderJenisCuti (+2 more)
+Cohesion: 0.06
+Nodes (15): EnsureKaryawanLinked, HandleAppearance, {closure#1}(), {closure#1}(), BatasWaktuPengajuanCuti, CutiBesarKhususKaryawanTetap, CutiBesarSetelahCutiTahunanHabis, MasaKerjaMencukupi (+7 more)
 
-### Community 16 - "PengajuanCuti"
-Cohesion: 0.14
-Nodes (4): PengajuanCuti, PengajuanCutiDisetujui, PengajuanCutiPolicy, {closure#3}()
+### Community 16 - "Illuminate\Http\RedirectResponse"
+Cohesion: 0.07
+Nodes (9): HasPerPage, KompensasiCutiController, JabatanController, JenisCutiController, NotificationController, UserController, JabatanRequest, JenisCutiRequest (+1 more)
 
 ### Community 18 - "useIsMobile"
 Cohesion: 0.70
 Nodes (4): getServerSnapshot(), isSmallerThanBreakpoint(), mediaQueryListener(), useIsMobile()
 
 ### Community 19 - "package.json"
-Cohesion: 0.06
-Nodes (38): private, $schema, type, babel-plugin-react-compiler, clsx, concurrently, eslint, eslint-import-resolver-typescript (+30 more)
+Cohesion: 0.05
+Nodes (39): private, $schema, type, babel-plugin-react-compiler, clsx, concurrently, eslint, eslint-import-resolver-typescript (+31 more)
+
+### Community 20 - "PengajuanCuti"
+Cohesion: 0.16
+Nodes (4): PengajuanCuti, PengajuanCutiDisetujui, {closure#3}(), ApprovalFactory
 
 ### Community 21 - "app-header.tsx"
-Cohesion: 0.11
-Nodes (32): class-variance-authority, @radix-ui/react-avatar, AppHeader(), mainNavItems, Props, rightNavItems, Avatar(), AvatarFallback() (+24 more)
+Cohesion: 0.10
+Nodes (31): class-variance-authority, AppHeader(), mainNavItems, Props, rightNavItems, AppLogo(), AppLogoIcon(), NavigationMenu() (+23 more)
 
-### Community 22 - "CutiMassalService.php"
-Cohesion: 0.09
-Nodes (8): StatusApproval, StatusPengajuan, ApprovalSudahDiprosesException, CutiMassalSudahDibatalkanException, SaldoCutiTidakCukupException, {closure#1}(), {closure#2}(), {closure#1}()
+### Community 22 - "sidebar.tsx"
+Cohesion: 0.21
+Nodes (14): SidebarContext, SidebarGroupAction(), SidebarMenuAction(), SidebarMenuBadge(), SidebarMenuButton(), sidebarMenuButtonVariants, SidebarMenuSkeleton(), SidebarRail() (+6 more)
 
 ### Community 23 - "dependencies"
 Cohesion: 0.05
 Nodes (37): dependencies, class-variance-authority, clsx, cobe, concurrently, globals, @inertiajs/react, @inertiajs/vite (+29 more)
 
-### Community 24 - "PeriodeCutiService"
-Cohesion: 0.13
-Nodes (7): {closure#1}(), {closure#2}(), {closure#3}(), {closure#4}(), {closure#8}(), {closure#9}(), PeriodeCutiService
+### Community 24 - "TinjauSiklusKontrak.php"
+Cohesion: 0.19
+Nodes (6): HariLiburSync, ProsesSiklusCutiTahunan, ResetSaldoCutiTahunan, {closure#1}(), {closure#2}(), TinjauSiklusKontrak
 
 ### Community 25 - "CLAUDE.md"
 Cohesion: 0.06
 Nodes (33): APIs & Eloquent Resources, Application Structure & Architecture, Artisan, Conventions, Deployment, Do Things the Laravel Way, Documentation Files, Foundational Context (+25 more)
 
-### Community 26 - "Laporan/SaldoCutiController.php"
-Cohesion: 0.05
-Nodes (8): {closure#10}(), {closure#5}(), {closure#6}(), {closure#3}(), KaryawanController, KaryawanImportRequest, KaryawanRequest, ResetDataService
+### Community 26 - "KaryawanController.php"
+Cohesion: 0.09
+Nodes (6): {closure#3}(), KaryawanController, KaryawanImportRequest, KaryawanRequest, ResetDataKaryawanRequest, ResetDataService
 
 ### Community 27 - "Departemen"
-Cohesion: 0.17
+Cohesion: 0.14
 Nodes (4): Departemen, Jabatan, KaryawanImportTest, KaryawanManagementTest
 
 ### Community 28 - "KaryawanImport.php"
-Cohesion: 0.10
+Cohesion: 0.13
 Nodes (4): {closure#3}(), KaryawanImport, SaldoCutiImport, PetaRoleJabatan
 
 ### Community 29 - "PengajuanCutiDiajukan"
@@ -291,44 +286,52 @@ Cohesion: 0.11
 Nodes (6): Notifications, Notifikasi cuti sengaja tidak ShouldQueue, WhatsAppChannel, PengajuanCutiDiajukan, PengajuanCutiDitolak, {closure#3}()
 
 ### Community 30 - "JadwalShift"
-Cohesion: 0.11
-Nodes (5): JadwalShift, Shift, JadwalShiftFactory, ShiftFactory, JadwalShiftManagementTest
+Cohesion: 0.10
+Nodes (4): JadwalShift, Shift, JadwalShiftFactory, JadwalShiftManagementTest
 
-### Community 31 - "AlasanCuti"
+### Community 31 - "Illuminate\Database\Seeder"
 Cohesion: 0.08
-Nodes (12): AlasanCuti, AlasanCutiSeeder, {closure#1}(), DatabaseSeeder, {closure#1}(), DepartemenSeeder, {closure#1}(), JabatanSeeder (+4 more)
+Nodes (12): AlasanCutiSeeder, {closure#1}(), DatabaseSeeder, {closure#1}(), DepartemenSeeder, {closure#1}(), JabatanSeeder, {closure#1}() (+4 more)
+
+### Community 32 - "app-sidebar.tsx"
+Cohesion: 0.11
+Nodes (7): AppSidebar(), buildNavGroups(), footerNavItems, NavGroup, SidebarContent(), SidebarFooter(), SidebarHeader()
 
 ### Community 33 - "dropdown-menu.tsx"
 Cohesion: 0.11
-Nodes (24): @radix-ui/react-dropdown-menu, AppSidebarHeader(), NavUser(), NotificationBell(), PageProps, OPTIONS, ThemeToggle(), DropdownMenu() (+16 more)
+Nodes (27): @radix-ui/react-dropdown-menu, AppSidebarHeader(), NavUser(), NotificationBell(), PageProps, OPTIONS, ThemeToggle(), Avatar() (+19 more)
 
 ### Community 35 - "Illuminate\Database\Schema\Blueprint"
 Cohesion: 0.12
 Nodes (13): {closure#1}(), {closure#2}(), {closure#3}(), {closure#1}(), {closure#2}(), {closure#3}(), {closure#1}(), {closure#2}() (+5 more)
 
-### Community 36 - "cn"
-Cohesion: 0.10
-Nodes (29): cobe, Globe(), MARKERS, warnaTema(), ICONS, SaldoCutiInline(), SaldoCutiInlineProps, SaldoCutiMeter() (+21 more)
+### Community 36 - "Button"
+Cohesion: 0.13
+Nodes (47): konfirmasi(), KonfirmasiOptions, MasterNav(), Pagination(), Button(), Card(), CardContent(), Checkbox() (+39 more)
 
 ### Community 38 - "use-appearance.tsx"
-Cohesion: 0.07
-Nodes (40): sonner, withApp(), AppLogoFull(), AppearanceToggleTab(), ThemeColorPicker(), THEMES, Toaster(), TooltipProvider() (+32 more)
+Cohesion: 0.08
+Nodes (38): sonner, withApp(), AppearanceToggleTab(), ThemeColorPicker(), THEMES, Toaster(), TooltipProvider(), Appearance (+30 more)
 
-### Community 39 - "JadwalShiftController.php"
-Cohesion: 0.10
-Nodes (4): JadwalShiftController, {closure#1}(), StoreJadwalShiftRequest, UpdateLemburRequest
+### Community 39 - "ApprovalService"
+Cohesion: 0.19
+Nodes (6): approvals.approver_id nullable — kolam kosong tidak boleh crash, Hari libur nasional tidak auto-populate on fresh install, HRD/Manager mengajukan cuti sendiri skip level di bawah wewenangnya, Services, Reset Semua Data Karyawan — khusus admin, hapus permanen, ApprovalService
 
-### Community 40 - "Card"
-Cohesion: 0.07
-Nodes (52): konfirmasi(), KonfirmasiOptions, MasterNav(), Pagination(), PaginationProps, PILIHAN_PER_HALAMAN, terjemahkanLabel(), Card() (+44 more)
+### Community 40 - "react"
+Cohesion: 0.08
+Nodes (22): react, Props, buttonVariants, PageProps, LemburSummary, PageProps, cariSaldo(), KaryawanRow (+14 more)
 
 ### Community 42 - "components.json"
 Cohesion: 0.11
 Nodes (17): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+9 more)
 
-### Community 43 - "Illuminate\Database\Eloquent\Factories\HasFactory"
-Cohesion: 0.16
-Nodes (3): SumberHariLibur, HariLibur, HariLiburFactory
+### Community 43 - "Illuminate\Database\Eloquent\Relations\BelongsTo"
+Cohesion: 0.08
+Nodes (6): AlasanCuti, HariLibur, {closure#1}(), {closure#2}(), {closure#3}(), {closure#4}()
+
+### Community 44 - "AppServiceProvider.php"
+Cohesion: 0.15
+Nodes (3): AppServiceProvider, {closure#1}(), {closure#3}()
 
 ### Community 46 - "compilerOptions"
 Cohesion: 0.12
@@ -338,10 +341,6 @@ Nodes (16): compilerOptions, allowJs, baseUrl, esModuleInterop, forceConsistentC
 Cohesion: 0.13
 Nodes (15): devDependencies, babel-plugin-react-compiler, eslint, eslint-config-prettier, eslint-import-resolver-typescript, @eslint/js, eslint-plugin-import, eslint-plugin-react (+7 more)
 
-### Community 50 - "Illuminate\Database\Eloquent\Relations\HasMany"
-Cohesion: 0.09
-Nodes (4): {closure#1}(), {closure#2}(), {closure#3}(), {closure#4}()
-
 ### Community 51 - "scripts"
 Cohesion: 0.15
 Nodes (13): scripts, ci:check, dev, lint, lint:check, post-autoload-dump, post-create-project-cmd, post-root-package-install (+5 more)
@@ -350,13 +349,9 @@ Nodes (13): scripts, ci:check, dev, lint, lint:check, post-autoload-dump, post-c
 Cohesion: 0.12
 Nodes (3): {closure#1}(), {closure#1}(), {closure#1}()
 
-### Community 53 - "AppLogoIcon"
-Cohesion: 0.29
-Nodes (4): AppLogo(), AppLogoIcon(), AuthSplitLayout(), AuthLayoutProps
-
 ### Community 54 - "breadcrumbs.tsx"
-Cohesion: 0.40
-Nodes (9): @radix-ui/react-slot, Breadcrumbs(), Breadcrumb(), BreadcrumbEllipsis(), BreadcrumbItem(), BreadcrumbLink(), BreadcrumbList(), BreadcrumbPage() (+1 more)
+Cohesion: 0.21
+Nodes (12): @radix-ui/react-slot, Breadcrumbs(), Breadcrumb(), BreadcrumbEllipsis(), BreadcrumbItem(), BreadcrumbLink(), BreadcrumbList(), BreadcrumbPage() (+4 more)
 
 ### Community 55 - "composer.json"
 Cohesion: 0.17
@@ -378,45 +373,49 @@ Nodes (10): require-dev, larastan/larastan, laravel/boost, laravel/pail, laravel
 Cohesion: 0.06
 Nodes (18): Akun login otomatis dibuat sekalian dengan karyawan, Imports, KaryawanImportDataSheet, KaryawanImportPanduanRoleSheet, KaryawanImportTemplateExport, PengajuanCutiExport, SaldoCutiExport, SaldoCutiMasterExport (+10 more)
 
-### Community 61 - "Controller"
-Cohesion: 0.09
-Nodes (8): CreateNewUser, ResetUserPassword, PasswordValidationRules, ProfileValidationRules, Controller, ProfileController, ProfileDeleteRequest, ProfileUpdateRequest
+### Community 61 - "PasswordValidationRules"
+Cohesion: 0.15
+Nodes (5): CreateNewUser, ResetUserPassword, PasswordValidationRules, ProfileValidationRules, ProfileDeleteRequest
 
 ### Community 62 - "KonfirmasiKontrakCuti"
-Cohesion: 0.14
-Nodes (4): TipeKaryawan, KonfirmasiKontrakCuti, TinjauSiklusKontrakTest, PeriodeCutiSiklusTest
+Cohesion: 0.07
+Nodes (12): TipeKaryawan, KonfirmasiKontrakCuti, RiwayatSaldoCuti, {closure#1}(), {closure#2}(), {closure#3}(), {closure#4}(), {closure#8}() (+4 more)
 
-### Community 63 - "SaldoCutiService.php"
-Cohesion: 0.29
-Nodes (3): {closure#3}(), {closure#4}(), {closure#8}()
+### Community 63 - "CutiMassalService"
+Cohesion: 0.09
+Nodes (8): Kontrak pertama (K1) dapat bonus kuota, bukan minus, dari Cuti Massal, AksiMassalSaldoCuti, {closure#2}(), CutiMassalService, {closure#3}(), {closure#4}(), {closure#6}(), {closure#8}()
 
 ### Community 64 - "TestCase"
-Cohesion: 0.06
-Nodes (12): StatusKaryawan, StatusKonfirmasiKontrak, {closure#1}(), PasswordConfirmationTest, RegistrationTest, {closure#1}(), TwoFactorChallengeTest, VerificationNotificationTest (+4 more)
+Cohesion: 0.05
+Nodes (14): StatusKaryawan, StatusKonfirmasiKontrak, {closure#1}(), PasswordConfirmationTest, RegistrationTest, {closure#1}(), TwoFactorChallengeTest, VerificationNotificationTest (+6 more)
 
-### Community 65 - "kompensasi/index.tsx"
-Cohesion: 0.06
-Nodes (32): Checkbox(), Filters, formatRupiah(), Karyawan(), KompensasiCutiIndex(), PageProps, Periode(), rateValid() (+24 more)
+### Community 65 - "calendar.tsx"
+Cohesion: 0.05
+Nodes (35): AppLogoFull(), AuthSimpleLayout(), ErrorPage(), PESAN, NAMA_BULAN, PageProps, parseTanggalLocal(), semuaTanggalDiBulan() (+27 more)
 
 ### Community 66 - "config"
 Cohesion: 0.22
 Nodes (9): pestphp/pest-plugin, php-http/discovery, config, allow-plugins, optimize-autoloader, platform, preferred-install, sort-packages (+1 more)
+
+### Community 67 - "Controller"
+Cohesion: 0.19
+Nodes (3): Controller, ProfileController, ProfileUpdateRequest
 
 ### Community 68 - "scripts"
 Cohesion: 0.22
 Nodes (9): scripts, build, build:ssr, dev, format, format:check, lint, lint:check (+1 more)
 
 ### Community 69 - "User"
-Cohesion: 0.06
-Nodes (7): User, JadwalShiftPolicy, AuthenticationTest, EmailVerificationTest, PasswordResetTest, ProfileUpdateTest, SecurityTest
+Cohesion: 0.10
+Nodes (3): User, AuthenticationTest, ProfileUpdateTest
 
 ### Community 70 - "optionalDependencies"
 Cohesion: 0.25
 Nodes (8): optionalDependencies, @laravel/multiplex, lightningcss-linux-x64-gnu, lightningcss-win32-x64-msvc, @rollup/rollup-linux-x64-gnu, @rollup/rollup-win32-x64-msvc, @tailwindcss/oxide-linux-x64-gnu, @tailwindcss/oxide-win32-x64-msvc
 
-### Community 72 - "Illuminate\Http\Request"
-Cohesion: 0.07
-Nodes (14): StatusKompensasiCuti, KompensasiCutiController, KonfirmasiKontrakController, LaporanCutiController, SaldoCutiController, HandleInertiaRequests, {closure#1}(), {closure#10}() (+6 more)
+### Community 72 - "Inertia\Response"
+Cohesion: 0.08
+Nodes (6): StatusCutiMassal, StatusKompensasiCuti, CutiMassalController, PengajuanCutiController, StorePengajuanCutiRequest, TambahKaryawanBaruCutiMassalRequest
 
 ### Community 74 - "psr-4"
 Cohesion: 0.40
@@ -426,17 +425,17 @@ Nodes (5): autoload, psr-4, App\\, Database\\Factories\\, Database\\Seeders\\
 Cohesion: 0.40
 Nodes (5): extra, laravel, post-create-project, dont-discover, installer
 
-### Community 76 - "bootstrap/app.php"
-Cohesion: 0.13
-Nodes (5): EnsureKaryawanLinked, HandleAppearance, {closure#1}(), {closure#2}(), {closure#3}()
+### Community 76 - "Illuminate\Http\Request"
+Cohesion: 0.11
+Nodes (11): KonfirmasiKontrakController, LaporanCutiController, HandleInertiaRequests, {closure#1}(), {closure#10}(), {closure#11}(), {closure#3}(), {closure#4}() (+3 more)
 
 ### Community 82 - "global.d.ts"
 Cohesion: 0.40
 Nodes (4): InertiaConfig, @inertiajs/core, InputHTMLAttributes, react
 
 ### Community 87 - "SaldoCutiService"
-Cohesion: 0.05
-Nodes (18): AksiMassalSaldoCuti, {closure#1}(), {closure#10}(), {closure#11}(), {closure#12}(), {closure#2}(), {closure#5}(), {closure#6}() (+10 more)
+Cohesion: 0.06
+Nodes (17): Periode ke-1 cuti tipe periode = masa kerja minimal, kuota harus 0, Services Services, {closure#1}(), {closure#10}(), {closure#11}(), {closure#12}(), {closure#5}(), {closure#6}() (+9 more)
 
 ### Community 101 - "SaldoSeverity"
 Cohesion: 0.14
@@ -448,63 +447,55 @@ Nodes (3): {closure#1}(), {closure#1}(), {closure#1}()
 
 ### Community 127 - "master/saldo-cuti.tsx"
 Cohesion: 0.09
-Nodes (55): lucide-react, ConfirmDialogHost(), KonfirmasiState, listeners, setState(), subscribe(), DeleteUser(), PasskeyItem() (+47 more)
+Nodes (52): lucide-react, ConfirmDialogHost(), KonfirmasiState, listeners, setState(), subscribe(), DeleteUser(), PasskeyItem() (+44 more)
 
-### Community 128 - "TinjauSiklusKontrak.php"
-Cohesion: 0.19
-Nodes (6): HariLiburSync, ProsesSiklusCutiTahunan, ResetSaldoCutiTahunan, {closure#1}(), {closure#2}(), TinjauSiklusKontrak
+### Community 130 - "Arsitektur Singkat"
+Cohesion: 0.14
+Nodes (11): PengajuanCutiFactory, Akun Demo, Alur Uji Coba End-to-End, Arsitektur Singkat, Cuti Kerja Pabrik, Fungsi Utama, Menjalankan dengan Docker, Menjalankan Secara Lokal (+3 more)
 
-### Community 130 - "Cuti Kerja Pabrik"
-Cohesion: 0.20
-Nodes (9): Akun Demo, Alur Uji Coba End-to-End, Cuti Kerja Pabrik, Fungsi Utama, Menjalankan dengan Docker, Menjalankan Secara Lokal, Menjalankan Test, Role & Hak Akses (+1 more)
-
-### Community 134 - "JenisCuti"
-Cohesion: 0.12
-Nodes (4): CutiMassal, JenisCuti, ResetSaldoCutiTahunanTest, CutiMassalTest
+### Community 134 - "Karyawan"
+Cohesion: 0.06
+Nodes (13): CutiMassal, JenisCuti, Karyawan, {closure#5}(), {closure#1}(), CutiMassalFactory, {closure#1}(), KompensasiCutiFactory (+5 more)
 
 ### Community 135 - "InteractsWithKaryawan"
 Cohesion: 0.06
-Nodes (5): RoleSeeder, InteractsWithKaryawan, EnsureKaryawanLinkedTest, AlasanCutiManagementTest, UserManagementTest
+Nodes (10): RoleSeeder, InteractsWithKaryawan, EnsureKaryawanLinkedTest, AlasanCutiManagementTest, HariLiburManagementTest, {closure#1}(), PengajuanCutiWhatsAppTest, {closure#1}() (+2 more)
 
 ### Community 136 - "toggle-group.tsx"
 Cohesion: 0.31
 Nodes (7): @radix-ui/react-toggle, @radix-ui/react-toggle-group, ToggleGroup(), ToggleGroupContext, ToggleGroupItem(), Toggle(), toggleVariants
 
 ### Community 137 - "Inertia\Testing\AssertableInertia"
-Cohesion: 0.08
-Nodes (25): JenisKelamin, {closure#1}(), {closure#2}(), {closure#3}(), {closure#1}(), {closure#2}(), {closure#3}(), {closure#1}() (+17 more)
-
-### Community 140 - "StatusPengajuanCutiWhatsAppTest.php"
-Cohesion: 0.23
-Nodes (4): {closure#1}(), {closure#1}(), {closure#2}(), StatusPengajuanCutiWhatsAppTest
+Cohesion: 0.07
+Nodes (26): JenisKelamin, {closure#1}(), {closure#2}(), {closure#3}(), {closure#1}(), {closure#2}(), {closure#3}(), {closure#1}() (+18 more)
 
 ### Community 141 - "Illuminate\Database\Eloquent\Factories\Factory"
-Cohesion: 0.08
-Nodes (10): AlasanCutiFactory, ApprovalFactory, CutiMassalFactory, JabatanFactory, JenisCutiFactory, {closure#1}(), KompensasiCutiFactory, KonfirmasiKontrakCutiFactory (+2 more)
-
-### Community 149 - "Arsitektur Singkat"
 Cohesion: 0.14
-Nodes (5): HariLiburService, {closure#1}(), PengajuanCutiService, PengajuanCutiFactory, Arsitektur Singkat
+Nodes (6): AlasanCutiFactory, DepartemenFactory, HariLiburFactory, JabatanFactory, JenisCutiFactory, ShiftFactory
+
+### Community 149 - "PengajuanCutiService.php"
+Cohesion: 0.14
+Nodes (4): HariLiburService, {closure#1}(), PengajuanCutiService, {closure#1}()
 
 ## Knowledge Gaps
 - **348 isolated node(s):** `php`, `$schema`, `style`, `rsc`, `tsx` (+343 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 911 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **81 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **82 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Karyawan` connect `Karyawan` to `ApprovalService`, `KaryawanFactory.php`, `Illuminate\Database\Eloquent\Relations\BelongsTo`, `SaldoCuti`, `JenisCuti`, `InteractsWithKaryawan`, `Inertia\Testing\AssertableInertia`, `StatusPengajuanCutiWhatsAppTest.php`, `Illuminate\Http\RedirectResponse`, `Illuminate\Database\Eloquent\Factories\Factory`, `Illuminate\Contracts\Validation\ValidationRule`, `PengajuanCuti`, `PengajuanCutiDiteruskan`, `KaryawanSeeder`, `Arsitektur Singkat`, `CutiMassalService.php`, `PeriodeCutiService`, `Laporan/SaldoCutiController.php`, `Departemen`, `KaryawanImport.php`, `PengajuanCutiDiajukan`, `JadwalShift`, `Approval`, `JadwalShiftController.php`, `SaldoCutiTest.php`, `Illuminate\Database\Eloquent\Factories\HasFactory`, `KonfirmasiKontrakTest`, `Illuminate\Database\Eloquent\Relations\HasMany`, `CutiMassalService`, `Illuminate\Database\Eloquent\Builder`, `KonfirmasiKontrakCuti`, `SaldoCutiService.php`, `TestCase`, `DashboardController.php`, `User`, `.buatDataKaryawanLengkap`, `Illuminate\Http\Request`, `SaldoCutiService`, `JenisCutiManagementTest`, `KaryawanRequest.php`?**
-  _High betweenness centrality (0.057) - this node is a cross-community bridge._
-- **Why does `JenisCuti` connect `JenisCuti` to `Illuminate\Database\Eloquent\Relations\BelongsTo`, `SaldoCuti`, `InteractsWithKaryawan`, `Inertia\Testing\AssertableInertia`, `Illuminate\Foundation\Http\FormRequest`, `Inertia\Response`, `Karyawan`, `Illuminate\Http\RedirectResponse`, `Illuminate\Database\Eloquent\Factories\Factory`, `Illuminate\Contracts\Validation\ValidationRule`, `PengajuanCuti`, `.generatePeriodeAwalUntukJenisCuti`, `StatusPengajuanCutiWhatsAppTest.php`, `Arsitektur Singkat`, `CutiMassalService.php`, `PeriodeCutiService`, `PengajuanCutiFormTest`, `Laporan/SaldoCutiController.php`, `DashboardTest`, `Departemen`, `JadwalShift`, `AlasanCuti`, `Approval`, `SaldoCutiTest.php`, `Illuminate\Database\Eloquent\Factories\HasFactory`, `KonfirmasiKontrakTest`, `Illuminate\Database\Eloquent\Relations\HasMany`, `CutiMassalService`, `Illuminate\Database\Eloquent\Builder`, `KonfirmasiKontrakCuti`, `SaldoCutiService.php`, `TestCase`, `.buatDataKaryawanLengkap`, `Illuminate\Http\Request`, `SaldoCutiService`, `JenisCutiManagementTest`, `PengajuanCutiWhatsAppTest`?**
+- **Why does `Karyawan` connect `Karyawan` to `Laporan/SaldoCutiController.php`, `Arsitektur Singkat`, `KaryawanFactory.php`, `StatusApproval`, `SaldoCuti`, `InteractsWithKaryawan`, `Inertia\Testing\AssertableInertia`, `KompensasiCuti`, `JadwalShiftController.php`, `Illuminate\Contracts\Validation\ValidationRule`, `Illuminate\Http\RedirectResponse`, `PengajuanCuti`, `PengajuanCutiService.php`, `KaryawanController.php`, `Departemen`, `KaryawanImport.php`, `PengajuanCutiDiajukan`, `JadwalShift`, `Illuminate\Database\Seeder`, `Approval`, `ApprovalService`, `SaldoCutiTest.php`, `Illuminate\Database\Eloquent\Relations\BelongsTo`, `KonfirmasiKontrakTest`, `Illuminate\Database\Eloquent\Relations\HasMany`, `StatusPengajuan`, `Illuminate\Database\Eloquent\Builder`, `KonfirmasiKontrakCuti`, `CutiMassalService`, `TestCase`, `User`, `.buatDataKaryawanLengkap`, `Illuminate\Http\Request`, `SaldoCutiService`, `JenisCutiManagementTest`, `PengajuanCutiDiteruskan`, `JadwalShiftPolicy`, `KaryawanRequest.php`?**
+  _High betweenness centrality (0.056) - this node is a cross-community bridge._
+- **Why does `JenisCuti` connect `Karyawan` to `Laporan/SaldoCutiController.php`, `Arsitektur Singkat`, `SaldoCuti`, `InteractsWithKaryawan`, `Inertia\Testing\AssertableInertia`, `Illuminate\Foundation\Http\FormRequest`, `KompensasiCuti`, `StatusPengajuanCutiWhatsAppTest`, `Illuminate\Database\Eloquent\Factories\Factory`, `Illuminate\Contracts\Validation\ValidationRule`, `Illuminate\Http\RedirectResponse`, `PengajuanCuti`, `PengajuanCutiService.php`, `PengajuanCutiFormTest`, `Departemen`, `Illuminate\Database\Seeder`, `Approval`, `SaldoCutiTest.php`, `Illuminate\Database\Eloquent\Relations\BelongsTo`, `KonfirmasiKontrakTest`, `Illuminate\Database\Eloquent\Relations\HasMany`, `StatusPengajuan`, `Illuminate\Database\Eloquent\Builder`, `KonfirmasiKontrakCuti`, `CutiMassalService`, `TestCase`, `.buatDataKaryawanLengkap`, `Inertia\Response`, `Illuminate\Http\Request`, `AlasanCutiController.php`, `SaldoCutiService`, `JenisCutiManagementTest`?**
   _High betweenness centrality (0.054) - this node is a cross-community bridge._
-- **Why does `User` connect `User` to `ApprovalService`, `Illuminate\Database\Eloquent\Relations\BelongsTo`, `InteractsWithKaryawan`, `Inertia\Testing\AssertableInertia`, `Illuminate\Foundation\Http\FormRequest`, `StatusPengajuanCutiWhatsAppTest.php`, `Illuminate\Http\RedirectResponse`, `PengajuanCuti`, `KaryawanSeeder`, `Arsitektur Singkat`, `CutiMassalService.php`, `DashboardTest`, `Laporan/SaldoCutiController.php`, `Departemen`, `KaryawanImport.php`, `PengajuanCutiDiajukan`, `Illuminate\Database\Eloquent\Factories\HasFactory`, `Controller`, `TestCase`, `.buatDataKaryawanLengkap`, `Illuminate\Http\Request`, `UserFactory.php`, `ErrorPageTest.php`, `KaryawanRequest.php`?**
-  _High betweenness centrality (0.046) - this node is a cross-community bridge._
+- **Why does `SaldoCuti` connect `SaldoCuti` to `Laporan/SaldoCutiController.php`, `StatusApproval`, `Karyawan`, `InteractsWithKaryawan`, `Inertia\Testing\AssertableInertia`, `StatusPengajuanCutiWhatsAppTest`, `Illuminate\Contracts\Validation\ValidationRule`, `PengajuanCuti`, `TinjauSiklusKontrak.php`, `PengajuanCutiFormTest`, `Departemen`, `KaryawanImport.php`, `Approval`, `ApprovalService`, `SaldoCutiTest.php`, `Illuminate\Database\Eloquent\Relations\BelongsTo`, `KonfirmasiKontrakTest`, `StatusPengajuan`, `Illuminate\Database\Eloquent\Builder`, `KonfirmasiKontrakCuti`, `CutiMassalService`, `TestCase`, `.buatDataKaryawanLengkap`, `Inertia\Response`, `SaldoCutiService`?**
+  _High betweenness centrality (0.042) - this node is a cross-community bridge._
 - **What connects `php`, `$schema`, `style` to the rest of the system?**
   _348 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `ApprovalController.php` be split into smaller, more focused modules?**
   _Cohesion score 0.14166666666666666 - nodes in this community are weakly interconnected._
-- **Should `ApprovalService` be split into smaller, more focused modules?**
-  _Cohesion score 0.13450292397660818 - nodes in this community are weakly interconnected._
-- **Should `sidebar.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.09528214616096208 - nodes in this community are weakly interconnected._
+- **Should `Laporan/SaldoCutiController.php` be split into smaller, more focused modules?**
+  _Cohesion score 0.0761904761904762 - nodes in this community are weakly interconnected._
+- **Should `SaldoCuti` be split into smaller, more focused modules?**
+  _Cohesion score 0.041353383458646614 - nodes in this community are weakly interconnected._

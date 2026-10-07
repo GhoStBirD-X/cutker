@@ -73,16 +73,16 @@ function KonfirmasiRow({
         angkat_tetap: {
             title: `Angkat ${nama} menjadi karyawan tetap?`,
             description: tinjauan
-                ? 'Saldo Cuti Tahunan yang sedang berjalan tetap. Cuti Besar mulai dihitung 5 tahun sejak akhir K5.'
-                : 'Cuti Tahunan berikutnya langsung penuh. Cuti Besar mulai dihitung 5 tahun sejak tanggal pengangkatan.',
+                ? 'Cuti Besar langsung didapat penuh sejak akhir K5. Bila karyawan masih di tahun pertama setelah K5, sisa Cuti Tahunan-nya dikoreksi menjadi 0.'
+                : 'Cuti Besar langsung didapat penuh. Cuti Tahunan tahun pertama setelah pengangkatan tidak didapat (0), tahun berikutnya normal.',
             confirmText: 'Angkat Tetap',
         },
         perpanjang: akhirK5
             ? {
                   title: `Kontrak ulang ${nama} ke K1?`,
                   description: tinjauan
-                      ? 'Keadaan khusus: hitungan kontrak kembali ke K1. Saldo Cuti Tahunan yang sedang berjalan tetap.'
-                      : 'Keadaan khusus: hitungan kontrak kembali ke K1 dan Cuti Tahunan berikutnya tetap penuh.',
+                      ? 'Keadaan khusus: bila karyawan sedang berada di K1, sisa saldo Cuti Tahunan-nya dikoreksi menjadi 0. Hari yang sudah terpakai tidak dijadikan utang.'
+                      : 'Keadaan khusus: hitungan kontrak kembali ke K1 dan saldo Cuti Tahunan dimulai dari 0 seperti karyawan baru.',
                   confirmText: 'Kontrak Ulang ke K1',
               }
             : {
