@@ -3,12 +3,16 @@
 namespace App\Services;
 
 use App\Enums\StatusKaryawan;
+use App\Enums\StatusKompensasiCuti;
 use App\Enums\StatusKonfirmasiKontrak;
+use App\Enums\StatusPengajuan;
 use App\Enums\TipeKaryawan;
+use App\Exceptions\KeputusanKontrakTidakBisaDibatalkanException;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\KompensasiCuti;
 use App\Models\KonfirmasiKontrakCuti;
+use App\Models\PengajuanCuti;
 use App\Models\RiwayatSaldoCuti;
 use App\Models\SaldoCuti;
 use Carbon\CarbonInterface;
@@ -174,6 +178,102 @@ class PeriodeCutiService
 
             $this->saldoCutiService->mulaiSaldoKhususKaryawanTetap($karyawan, $konfirmasi->tanggal_batas->copy()->addDay(), langsungPenuh: true);
         });
+    }
+
+    /**
+     * Batalkan keputusan HRD atas satu konfirmasi kontrak (mis. salah pilih
+     * atau salah input) dan kembalikan konfirmasi ke status menunggu supaya
+     * bisa diputuskan ulang. Semua efek keputusan ditarik kembali: periode
+     * Cuti Tahunan baru & saldo Cuti Besar dari pengangkatan dihapus,
+     * kompensasi yang dibuat dihapus, dan tipe/status/tanggal akhir kontrak
+     * karyawan dikembalikan (tanggal akhir kontrak = tanggal_batas).
+     *
+     * Ditolak bila efeknya sudah terlanjur dipakai: saldo baru sudah ada
+     * pengajuan cuti, kompensasi sudah diproses, atau sudah ada konfirmasi
+     * kontrak yang lebih baru. Tinjauan siklus tidak bisa dibatalkan karena
+     * koreksinya langsung mengubah saldo yang sedang berjalan.
+     *
+     * @throws KeputusanKontrakTidakBisaDibatalkanException
+     */
+    public function batalkanKeputusan(KonfirmasiKontrakCuti $konfirmasi): void
+    {
+        if ($konfirmasi->status === StatusKonfirmasiKontrak::Menunggu) {
+            throw new KeputusanKontrakTidakBisaDibatalkanException('Konfirmasi ini belum diputuskan.');
+        }
+
+        if ($konfirmasi->tinjauan_siklus) {
+            throw new KeputusanKontrakTidakBisaDibatalkanException('Keputusan tinjauan susulan tidak bisa dibatalkan. Koreksi saldonya lewat Master Saldo Cuti.');
+        }
+
+        $adaKonfirmasiLebihBaru = KonfirmasiKontrakCuti::query()
+            ->where('karyawan_id', $konfirmasi->karyawan_id)
+            ->where('id', '>', $konfirmasi->id)
+            ->exists();
+
+        if ($adaKonfirmasiLebihBaru) {
+            throw new KeputusanKontrakTidakBisaDibatalkanException('Sudah ada konfirmasi kontrak yang lebih baru untuk karyawan ini, jadi keputusan lama tidak bisa dibatalkan.');
+        }
+
+        DB::transaction(function () use ($konfirmasi) {
+            $saldoLama = $konfirmasi->saldoCuti;
+            $karyawan = $konfirmasi->karyawan;
+
+            $saldoBaru = SaldoCuti::query()
+                ->where('karyawan_id', $karyawan->id)
+                ->where('jenis_cuti_id', $saldoLama->jenis_cuti_id)
+                ->where('periode_ke', $saldoLama->periode_ke + 1)
+                ->first();
+
+            $saldoCutiBesar = $konfirmasi->status === StatusKonfirmasiKontrak::DiangkatTetap
+                ? SaldoCuti::query()
+                    ->where('karyawan_id', $karyawan->id)
+                    ->whereHas('jenisCuti', fn ($query) => $query->where('nama_jenis', JenisCuti::NAMA_CUTI_BESAR))
+                    ->whereDate('periode_mulai', $konfirmasi->tanggal_batas->copy()->addDay())
+                    ->first()
+                : null;
+
+            $riwayat = $this->riwayatUntuk($saldoLama);
+            $kompensasi = $riwayat
+                ? KompensasiCuti::query()->where('riwayat_saldo_cuti_id', $riwayat->id)->first()
+                : null;
+
+            foreach ([$saldoBaru, $saldoCutiBesar] as $saldo) {
+                if ($saldo !== null && ($saldo->terpakai !== 0 || $this->adaPengajuanDalamPeriode($saldo))) {
+                    throw new KeputusanKontrakTidakBisaDibatalkanException("Saldo {$saldo->jenisCuti->nama_jenis} periode baru sudah dipakai untuk pengajuan cuti. Batalkan pengajuannya dulu, atau koreksi lewat Master Saldo Cuti.");
+                }
+            }
+
+            if ($kompensasi?->status === StatusKompensasiCuti::Diproses) {
+                throw new KeputusanKontrakTidakBisaDibatalkanException('Kompensasi sisa cuti dari keputusan ini sudah diproses, jadi keputusan tidak bisa dibatalkan.');
+            }
+
+            $saldoBaru?->delete();
+            $saldoCutiBesar?->delete();
+            $kompensasi?->delete();
+
+            $karyawan->update([
+                'tipe_karyawan' => TipeKaryawan::Kontrak,
+                'status' => StatusKaryawan::Aktif,
+                'tanggal_akhir_kontrak' => $konfirmasi->tanggal_batas,
+            ]);
+
+            $konfirmasi->update([
+                'status' => StatusKonfirmasiKontrak::Menunggu,
+                'dikonfirmasi_oleh_id' => null,
+                'dikonfirmasi_pada' => null,
+                'catatan' => null,
+            ]);
+        });
+    }
+
+    protected function adaPengajuanDalamPeriode(SaldoCuti $saldo): bool
+    {
+        return PengajuanCuti::query()
+            ->where('karyawan_id', $saldo->karyawan_id)
+            ->where('jenis_cuti_id', $saldo->jenis_cuti_id)
+            ->whereIn('status', [StatusPengajuan::Pending, StatusPengajuan::Disetujui])
+            ->whereDate('tanggal_mulai', '>=', $saldo->periode_mulai)
+            ->exists();
     }
 
     /**

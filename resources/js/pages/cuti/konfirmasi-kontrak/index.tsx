@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { CalendarClock, CalendarPlus, UserCheck } from 'lucide-react';
+import { CalendarClock, CalendarPlus, Undo2, UserCheck } from 'lucide-react';
 import { useState } from 'react';
 import KonfirmasiKontrakController from '@/actions/App/Http/Controllers/Cuti/KonfirmasiKontrakController';
 import { konfirmasi as tampilkanKonfirmasi } from '@/components/confirm-dialog';
@@ -97,6 +97,30 @@ function KonfirmasiRow({
             confirmText: 'Tidak Diperpanjang',
             destructive: true,
         },
+    };
+
+    const batalkanKeputusan = async () => {
+        if (
+            !(await tampilkanKonfirmasi({
+                title: `Batalkan keputusan untuk ${nama}?`,
+                description:
+                    'Untuk koreksi salah input. Efek keputusan ditarik kembali (saldo periode baru, Cuti Besar, dan kompensasi yang dibuat dihapus; tipe, status, dan tanggal akhir kontrak karyawan dikembalikan), lalu konfirmasi kembali menunggu untuk diputuskan ulang. Tidak bisa bila saldo baru sudah dipakai cuti atau kompensasinya sudah diproses.',
+                confirmText: 'Batalkan Keputusan',
+                destructive: true,
+            }))
+        ) {
+            return;
+        }
+
+        setProcessing(true);
+        router.post(
+            KonfirmasiKontrakController.batalkan.url(konfirmasi.id),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setProcessing(false),
+            },
+        );
     };
 
     const submit = async (keputusan: Keputusan) => {
@@ -306,15 +330,29 @@ function KonfirmasiRow({
                     </div>
                 </div>
             ) : (
-                <Badge
-                    variant={
-                        konfirmasi.status === 'tidak_diperpanjang'
-                            ? 'destructive'
-                            : 'secondary'
-                    }
-                >
-                    {STATUS_LABEL[konfirmasi.status]}
-                </Badge>
+                <div className="flex flex-col items-start gap-2 md:items-end">
+                    <Badge
+                        variant={
+                            konfirmasi.status === 'tidak_diperpanjang'
+                                ? 'destructive'
+                                : 'secondary'
+                        }
+                    >
+                        {STATUS_LABEL[konfirmasi.status]}
+                    </Badge>
+                    {!tinjauan && (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 gap-1.5 text-xs text-muted-foreground"
+                            disabled={processing}
+                            onClick={batalkanKeputusan}
+                        >
+                            <Undo2 className="size-3.5" />
+                            Batalkan Keputusan
+                        </Button>
+                    )}
+                </div>
             )}
         </div>
     );

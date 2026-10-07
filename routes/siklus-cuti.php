@@ -9,6 +9,7 @@ Route::middleware(['auth', 'verified', 'role:hrd|admin', 'karyawan.linked'])->pr
     Route::get('konfirmasi-kontrak', [KonfirmasiKontrakController::class, 'index'])->name('konfirmasi-kontrak.index');
     Route::post('konfirmasi-kontrak/perpanjang-massal', [KonfirmasiKontrakController::class, 'perpanjangMassal'])->name('konfirmasi-kontrak.perpanjang-massal');
     Route::post('konfirmasi-kontrak/{konfirmasi_kontrak}', [KonfirmasiKontrakController::class, 'konfirmasi'])->name('konfirmasi-kontrak.konfirmasi');
+    Route::post('konfirmasi-kontrak/{konfirmasi_kontrak}/batalkan', [KonfirmasiKontrakController::class, 'batalkan'])->name('konfirmasi-kontrak.batalkan');
 
     Route::get('kompensasi', [KompensasiCutiController::class, 'index'])->name('kompensasi.index');
     Route::post('kompensasi/proses-massal', [KompensasiCutiController::class, 'prosesMassal'])->name('kompensasi.proses-massal');

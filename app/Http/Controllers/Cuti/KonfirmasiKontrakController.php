@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cuti;
 
 use App\Enums\StatusKonfirmasiKontrak;
+use App\Exceptions\KeputusanKontrakTidakBisaDibatalkanException;
 use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Models\KonfirmasiKontrakCuti;
@@ -88,6 +89,25 @@ class KonfirmasiKontrakController extends Controller
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Konfirmasi perpanjangan kontrak berhasil disimpan.']);
+
+        return back();
+    }
+
+    /**
+     * Koreksi salah input: tarik kembali keputusan yang sudah diambil dan
+     * kembalikan konfirmasi ke status menunggu untuk diputuskan ulang.
+     */
+    public function batalkan(KonfirmasiKontrakCuti $konfirmasi_kontrak, PeriodeCutiService $periodeCutiService): RedirectResponse
+    {
+        try {
+            $periodeCutiService->batalkanKeputusan($konfirmasi_kontrak);
+        } catch (KeputusanKontrakTidakBisaDibatalkanException $e) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => $e->getMessage()]);
+
+            return back();
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Keputusan dibatalkan. Konfirmasi kembali menunggu dan bisa diputuskan ulang.']);
 
         return back();
     }
