@@ -24,13 +24,17 @@ class KonfirmasiKontrakController extends Controller
 
     private const KEPUTUSAN_TIDAK_DIPERPANJANG = 'tidak_diperpanjang';
 
-    public function index(Request $request): Response
+    public function index(Request $request, PeriodeCutiService $periodeCutiService): Response
     {
         $konfirmasiKontraks = KonfirmasiKontrakCuti::query()
             ->with(['karyawan', 'saldoCuti.jenisCuti'])
             ->latest('id')
             ->paginate($this->resolvePerPage($request, 15))
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (KonfirmasiKontrakCuti $konfirmasi) => $konfirmasi->setAttribute(
+                'bisa_dibatalkan',
+                $periodeCutiService->bisaDibatalkan($konfirmasi),
+            ));
 
         $menunggu = KonfirmasiKontrakCuti::query()->where('status', StatusKonfirmasiKontrak::Menunggu)->get(['id', 'periode_ke']);
 

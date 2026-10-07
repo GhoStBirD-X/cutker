@@ -12,8 +12,10 @@ use App\Models\KompensasiCuti;
 use App\Models\KonfirmasiKontrakCuti;
 use App\Models\RiwayatSaldoCuti;
 use App\Models\SaldoCuti;
+use App\Services\PeriodeCutiService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -410,6 +412,55 @@ class KonfirmasiKontrakTest extends TestCase
 
         $this->assertSame(StatusKonfirmasiKontrak::TidakDiperpanjang, $konfirmasi->fresh()->status);
         $this->assertSame(StatusKaryawan::Nonaktif, $konfirmasi->karyawan->fresh()->status);
+    }
+
+    public function test_batalkan_keputusan_ditolak_dan_tombol_disembunyikan_bila_periode_berikutnya_sudah_punya_tinjauan_susulan(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $konfirmasi = $this->konfirmasiMenunggu('2026-09-30', periodeKe: 5);
+        $this->actingAs($hrd)->post(route('cuti.konfirmasi-kontrak.konfirmasi', $konfirmasi), [
+            'keputusan' => 'perpanjang',
+            'tanggal_akhir_kontrak_baru' => '2027-09-30',
+            'catatan' => 'Kontrak ulang.',
+        ])->assertSessionDoesntHaveErrors();
+        $saldoBaru = SaldoCuti::query()->where('karyawan_id', $konfirmasi->karyawan_id)->where('periode_ke', 6)->firstOrFail();
+        app(PeriodeCutiService::class)->buatTinjauanSiklus($saldoBaru);
+
+        $this->actingAs($hrd)->get(route('cuti.konfirmasi-kontrak.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('konfirmasiKontraks.data.1.id', $konfirmasi->id)
+                ->where('konfirmasiKontraks.data.1.bisa_dibatalkan', false));
+
+        $this->actingAs($hrd)->post(route('cuti.konfirmasi-kontrak.batalkan', $konfirmasi))->assertRedirect();
+
+        $this->assertSame(StatusKonfirmasiKontrak::Diperpanjang, $konfirmasi->fresh()->status);
+        $this->assertNotNull($saldoBaru->fresh());
+    }
+
+    public function test_konfirmasi_periode_sebelumnya_yang_dibuat_belakangan_tidak_menghalangi_pembatalan(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $konfirmasi = $this->konfirmasiMenunggu('2026-09-30', periodeKe: 2);
+        $this->actingAs($hrd)->post(route('cuti.konfirmasi-kontrak.konfirmasi', $konfirmasi), [
+            'keputusan' => 'perpanjang',
+            'tanggal_akhir_kontrak_baru' => '2027-09-30',
+        ])->assertSessionDoesntHaveErrors();
+        $saldoPeriode1 = SaldoCuti::factory()->create([
+            'karyawan_id' => $konfirmasi->karyawan_id,
+            'jenis_cuti_id' => $konfirmasi->saldoCuti->jenis_cuti_id,
+            'periode_ke' => 1,
+            'ditutup_pada' => now(),
+        ]);
+        KonfirmasiKontrakCuti::factory()->create([
+            'karyawan_id' => $konfirmasi->karyawan_id,
+            'saldo_cuti_id' => $saldoPeriode1->id,
+            'periode_ke' => 1,
+            'status' => StatusKonfirmasiKontrak::Diperpanjang,
+        ]);
+
+        $this->actingAs($hrd)->post(route('cuti.konfirmasi-kontrak.batalkan', $konfirmasi))->assertRedirect();
+
+        $this->assertSame(StatusKonfirmasiKontrak::Menunggu, $konfirmasi->fresh()->status);
     }
 
     private function konfirmasiMenunggu(string $tanggalBatas, int $periodeKe = 1, int $sisa = 0): KonfirmasiKontrakCuti

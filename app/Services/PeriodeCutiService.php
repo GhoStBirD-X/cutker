@@ -205,13 +205,12 @@ class PeriodeCutiService
             throw new KeputusanKontrakTidakBisaDibatalkanException('Keputusan tinjauan susulan tidak bisa dibatalkan. Koreksi saldonya lewat Master Saldo Cuti.');
         }
 
-        $adaKonfirmasiLebihBaru = KonfirmasiKontrakCuti::query()
-            ->where('karyawan_id', $konfirmasi->karyawan_id)
-            ->where('id', '>', $konfirmasi->id)
-            ->exists();
+        $lebihBaru = $this->konfirmasiPeriodeBerikutnya($konfirmasi);
 
-        if ($adaKonfirmasiLebihBaru) {
-            throw new KeputusanKontrakTidakBisaDibatalkanException('Sudah ada konfirmasi kontrak yang lebih baru untuk karyawan ini, jadi keputusan lama tidak bisa dibatalkan.');
+        if ($lebihBaru !== null) {
+            throw new KeputusanKontrakTidakBisaDibatalkanException($lebihBaru->tinjauan_siklus
+                ? 'Karyawan ini sudah punya tinjauan susulan untuk periode berikutnya. Koreksi lewat tinjauan itu, bukan keputusan lama ini.'
+                : 'Periode berikutnya sudah punya konfirmasi kontrak sendiri. Batalkan keputusan yang terbaru dulu.');
         }
 
         DB::transaction(function () use ($konfirmasi) {
@@ -264,6 +263,39 @@ class PeriodeCutiService
                 'catatan' => null,
             ]);
         });
+    }
+
+    /**
+     * Konfirmasi lain milik karyawan yang sama untuk periode SETELAH periode
+     * yang diputuskan konfirmasi ini (jenis cuti yang sama) — termasuk
+     * tinjauan siklus yang menunjuk saldo berjalan. Selama ada, keputusan
+     * ini tidak boleh dibatalkan karena periode berikutnya bergantung padanya.
+     */
+    public function konfirmasiPeriodeBerikutnya(KonfirmasiKontrakCuti $konfirmasi): ?KonfirmasiKontrakCuti
+    {
+        $saldo = $konfirmasi->saldoCuti;
+
+        return KonfirmasiKontrakCuti::query()
+            ->where('karyawan_id', $konfirmasi->karyawan_id)
+            ->whereKeyNot($konfirmasi->id)
+            ->whereHas('saldoCuti', fn ($query) => $query
+                ->where('jenis_cuti_id', $saldo->jenis_cuti_id)
+                ->where('periode_ke', '>', $saldo->periode_ke))
+            ->latest('id')
+            ->first();
+    }
+
+    /**
+     * Tombol "Batalkan Keputusan" hanya ditampilkan untuk konfirmasi yang
+     * sudah diputuskan, bukan tinjauan susulan, dan belum disusul konfirmasi
+     * periode berikutnya. Syarat lain (saldo baru belum dipakai, kompensasi
+     * belum diproses) baru dicek saat tombol diklik.
+     */
+    public function bisaDibatalkan(KonfirmasiKontrakCuti $konfirmasi): bool
+    {
+        return $konfirmasi->status !== StatusKonfirmasiKontrak::Menunggu
+            && ! $konfirmasi->tinjauan_siklus
+            && $this->konfirmasiPeriodeBerikutnya($konfirmasi) === null;
     }
 
     protected function adaPengajuanDalamPeriode(SaldoCuti $saldo): bool

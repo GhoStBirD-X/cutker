@@ -177,6 +177,8 @@ export type KonfirmasiKontrakCuti = {
     status: StatusKonfirmasiKontrak;
     /** Konfirmasi susulan untuk kontrak yang telanjur melewati K5 (perintah kontrak:tinjau-siklus). */
     tinjauan_siklus: boolean;
+    /** Keputusan bisa ditarik lewat tombol "Batalkan Keputusan". */
+    bisa_dibatalkan?: boolean;
     dikonfirmasi_oleh_id: number | null;
     dikonfirmasi_pada: string | null;
     catatan: string | null;

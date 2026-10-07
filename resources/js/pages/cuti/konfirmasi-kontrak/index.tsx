@@ -340,7 +340,7 @@ function KonfirmasiRow({
                     >
                         {STATUS_LABEL[konfirmasi.status]}
                     </Badge>
-                    {!tinjauan && (
+                    {konfirmasi.bisa_dibatalkan && (
                         <Button
                             size="sm"
                             variant="ghost"
