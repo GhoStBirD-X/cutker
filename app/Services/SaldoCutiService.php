@@ -4,9 +4,13 @@ namespace App\Services;
 
 use App\Enums\AksiMassalSaldoCuti;
 use App\Enums\StatusKaryawan;
+use App\Enums\StatusKompensasiCuti;
 use App\Enums\TipeKaryawan;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
+use App\Models\KompensasiCuti;
+use App\Models\KonfirmasiKontrakCuti;
+use App\Models\RiwayatSaldoCuti;
 use App\Models\SaldoCuti;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -214,6 +218,96 @@ class SaldoCutiService
                 'sisa' => $langsungPenuh ? $jenisCuti->kuota_default : 0,
             ]);
         }
+    }
+
+    /**
+     * Koreksi salah input Tanggal Masuk: periode berjalan setiap jenis cuti
+     * bertipe periode (kecuali Cuti Besar, yang dihitung sejak pengangkatan
+     * tetap) dipindah ke posisi yang benar menurut tanggal_masuk baru, mis.
+     * masuk 2019 → hari ini periode ke-8 (K3 siklus kedua).
+     *
+     * Kuota mengikuti posisi baru (periode ke-1 dan K1 ulang setelah K5 = 0,
+     * selain itu kuota_default); hari yang sudah terpakai di periode
+     * berjalan tetap dihitung. Riwayat dari tanggal masuk yang salah
+     * (periode tertutup, arsip, konfirmasi kontrak, kompensasi yang belum
+     * diproses) dihapus supaya tidak bentrok. Kompensasi yang sudah
+     * diproses tetap disimpan.
+     */
+    public function sesuaikanPeriodeDenganTanggalMasuk(Karyawan $karyawan): void
+    {
+        $jenisCutis = JenisCuti::query()
+            ->sesuaiGender($karyawan->jenis_kelamin)
+            ->berlakuUntukTipe($karyawan->tipe_karyawan)
+            ->whereNotNull('masa_kerja_minimal_bulan')
+            ->get()
+            ->reject(fn (JenisCuti $jenisCuti) => $jenisCuti->khususKaryawanTetap());
+
+        DB::transaction(function () use ($karyawan, $jenisCutis) {
+            foreach ($jenisCutis as $jenisCuti) {
+                $this->pindahkanPeriodeBerjalan($karyawan, $jenisCuti);
+            }
+        });
+    }
+
+    protected function pindahkanPeriodeBerjalan(Karyawan $karyawan, JenisCuti $jenisCuti): void
+    {
+        $periodeKe = 1;
+        [$mulai, $selesai] = $this->hitungTanggalPeriode($karyawan, $jenisCuti, $periodeKe);
+
+        while ($selesai->lt(today())) {
+            $periodeKe++;
+            [$mulai, $selesai] = $this->hitungTanggalPeriode($karyawan, $jenisCuti, $periodeKe);
+        }
+
+        $kuota = $periodeKe === 1
+            || ($karyawan->tipe_karyawan === TipeKaryawan::Kontrak && SaldoCuti::urutanKontrakDariPeriode($periodeKe) === 1)
+            ? 0
+            : $jenisCuti->kuota_default;
+
+        $saldoBerjalan = $this->untukPeriodeAktif($karyawan, $jenisCuti);
+        $saldoIds = SaldoCuti::query()
+            ->where('karyawan_id', $karyawan->id)
+            ->where('jenis_cuti_id', $jenisCuti->id)
+            ->pluck('id');
+
+        KonfirmasiKontrakCuti::query()->whereIn('saldo_cuti_id', $saldoIds)->delete();
+        KompensasiCuti::query()
+            ->where('karyawan_id', $karyawan->id)
+            ->where('jenis_cuti_id', $jenisCuti->id)
+            ->where('status', StatusKompensasiCuti::MenungguDiproses)
+            ->delete();
+        RiwayatSaldoCuti::query()
+            ->where('karyawan_id', $karyawan->id)
+            ->where('jenis_cuti_id', $jenisCuti->id)
+            ->delete();
+        SaldoCuti::query()
+            ->whereIn('id', $saldoIds)
+            ->when($saldoBerjalan, fn ($query) => $query->whereKeyNot($saldoBerjalan->id))
+            ->delete();
+
+        $terpakai = $saldoBerjalan?->terpakai ?? 0;
+        $atribut = [
+            'tahun' => $mulai->year,
+            'periode_ke' => $periodeKe,
+            'periode_mulai' => $mulai,
+            'periode_selesai' => $selesai,
+            'kuota' => $kuota,
+            'terpakai' => $terpakai,
+            'sisa' => $kuota - $terpakai,
+            'ditutup_pada' => null,
+        ];
+
+        if ($saldoBerjalan) {
+            $saldoBerjalan->update($atribut);
+
+            return;
+        }
+
+        SaldoCuti::query()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            ...$atribut,
+        ]);
     }
 
     /**

@@ -257,8 +257,25 @@ export default function MasterKaryawan() {
         reset();
     };
 
-    const submit = (e: React.FormEvent) => {
+    const tanggalMasukDikoreksi =
+        editing !== null &&
+        data.tanggal_masuk !== editing.tanggal_masuk.slice(0, 10);
+
+    const submit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (
+            tanggalMasukDikoreksi &&
+            !(await konfirmasi({
+                title: `Koreksi tanggal masuk ${editing.nama}?`,
+                description:
+                    'Periode Cuti Tahunan yang sedang berjalan dihitung ulang dari tanggal masuk baru (posisi K dan kuota ikut menyesuaikan, hari yang sudah terpakai tetap). Riwayat periode lama, konfirmasi kontrak, dan kompensasi yang belum diproses dari tanggal lama dihapus.',
+                confirmText: 'Simpan & Hitung Ulang',
+                destructive: true,
+            }))
+        ) {
+            return;
+        }
 
         if (editing) {
             put(KaryawanController.update.url(editing.id), {
@@ -653,6 +670,13 @@ export default function MasterKaryawan() {
                                         setData('tanggal_masuk', e.target.value)
                                     }
                                 />
+                                {tanggalMasukDikoreksi && (
+                                    <p className="text-xs text-amber-700 dark:text-amber-400">
+                                        Periode Cuti Tahunan akan dihitung ulang
+                                        dari tanggal ini; riwayat periode lama
+                                        dihapus.
+                                    </p>
+                                )}
                                 <InputError message={errors.tanggal_masuk} />
                             </div>
                             <div className="grid gap-2">

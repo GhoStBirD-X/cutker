@@ -88,18 +88,31 @@ class KaryawanController extends Controller
      * Karyawan kontrak yang diangkat menjadi tetap lewat form edit langsung
      * dibuatkan saldo yang sebelumnya tidak berlaku baginya (Cuti Besar),
      * dihitung sejak hari pengangkatan — masa kontrak tidak ikut dihitung.
+     * Koreksi Tanggal Masuk menghitung ulang posisi periode cuti berjalan
+     * (lihat SaldoCutiService::sesuaikanPeriodeDenganTanggalMasuk()).
      */
     public function update(KaryawanRequest $request, Karyawan $karyawan, SaldoCutiService $saldoCutiService): RedirectResponse
     {
         $sebelumnyaKontrak = $karyawan->tipe_karyawan === TipeKaryawan::Kontrak;
+        $tanggalMasukLama = $karyawan->tanggal_masuk->toDateString();
 
         $karyawan->update($request->validated());
+        $tanggalMasukDikoreksi = $karyawan->tanggal_masuk->toDateString() !== $tanggalMasukLama;
 
         if ($sebelumnyaKontrak && $karyawan->tipe_karyawan === TipeKaryawan::Tetap) {
             $saldoCutiService->mulaiSaldoKhususKaryawanTetap($karyawan, today());
         }
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Karyawan berhasil diperbarui.']);
+        if ($tanggalMasukDikoreksi) {
+            $saldoCutiService->sesuaikanPeriodeDenganTanggalMasuk($karyawan);
+        }
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => $tanggalMasukDikoreksi
+                ? 'Karyawan berhasil diperbarui. Periode Cuti Tahunan dihitung ulang dari tanggal masuk baru.'
+                : 'Karyawan berhasil diperbarui.',
+        ]);
 
         return back();
     }
