@@ -464,6 +464,44 @@ class PengajuanCutiTest extends TestCase
         ]);
     }
 
+    public function test_alasan_cuti_jumlah_hari_cap_counts_working_days_only(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id]);
+
+        $jenisCuti = JenisCuti::factory()->create();
+        $alasanCuti = AlasanCuti::factory()->create([
+            'jenis_cuti_id' => $jenisCuti->id,
+            'nama_alasan' => 'Khitanan anak pekerja',
+            'jumlah_hari' => 2,
+        ]);
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => null,
+            'terpakai' => 0,
+            'sisa' => null,
+        ]);
+
+        // Jumat s/d Senin: 4 hari kalender, tapi hanya 2 hari kerja.
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'alasan_cuti_id' => $alasanCuti->id,
+            'tanggal_mulai' => now()->addDays(11)->toDateString(),
+            'tanggal_selesai' => now()->addDays(14)->toDateString(),
+            'alasan' => 'Khitanan anak',
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertDatabaseHas('pengajuan_cutis', [
+            'karyawan_id' => $karyawan->id,
+            'alasan_cuti_id' => $alasanCuti->id,
+            'jumlah_hari' => 2,
+            'jumlah_hari_kalender' => 4,
+        ]);
+    }
+
     public function test_jumlah_hari_is_reduced_by_overlapping_hari_libur(): void
     {
         $karyawan = $this->karyawanUser('karyawan')->karyawan;
