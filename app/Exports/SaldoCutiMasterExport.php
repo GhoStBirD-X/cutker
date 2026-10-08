@@ -20,7 +20,8 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  * sekaligus berfungsi sebagai template import: HRD cukup mengubah kolom
  * kuota/terpakai/sisa lalu mengunggahnya kembali (lihat SaldoCutiImport).
  * Kolom A–F hanya informasi & diberi latar abu-abu; kolom id dipakai untuk
- * mencocokkan baris sehingga tidak boleh diubah. Kolom G–I (yang diisi HRD)
+ * mencocokkan baris (boleh dikosongkan, lalu dicocokkan lewat npk +
+ * jenis_cuti + periode). Kolom G–I (yang diisi HRD)
  * diberi latar kuning. WithStrictNullComparison wajib: tanpa itu angka 0
  * ditulis sebagai sel kosong, padahal kosong berarti "tanpa batas".
  *
@@ -85,7 +86,7 @@ class SaldoCutiMasterExport implements FromQuery, ShouldAutoSize, WithHeadings, 
             $sheet->getStyle("G2:I{$highestRow}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FEF9C3');
         }
 
-        $sheet->getComment('A1')->getText()->createText('Jangan diubah — dipakai untuk mencocokkan baris saat import.');
+        $sheet->getComment('A1')->getText()->createText('Dipakai untuk mencocokkan baris saat import. Boleh dikosongkan: baris lalu dicocokkan lewat npk + jenis_cuti (+ periode).');
         $sheet->getComment('G1')->getText()->createText('Isi jumlah hari. Kosongkan untuk jenis cuti tanpa batas.');
         $sheet->getComment('H1')->getText()->createText('Jumlah hari yang sudah terpakai (wajib, isi 0 kalau belum ada).');
         $sheet->getComment('I1')->getText()->createText('Sisa hari. Kosongkan untuk jenis cuti tanpa batas.');

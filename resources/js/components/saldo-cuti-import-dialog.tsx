@@ -172,8 +172,9 @@ export function SaldoCutiImportDialog({
                         <span>
                             Isi kolom berwarna kuning: <b>kuota</b>,{' '}
                             <b>terpakai</b>, <b>sisa</b> (kosong = tanpa batas).
-                            Kolom abu-abu jangan diubah, terutama kolom{' '}
-                            <b>id</b> & <b>nip</b>.
+                            Kolom abu-abu jangan diubah. Kolom <b>id</b> boleh
+                            dikosongkan — baris lalu dicocokkan lewat <b>npk</b>{' '}
+                            + <b>jenis_cuti</b> (+ <b>periode</b>).
                         </span>
                     </li>
                     <li>

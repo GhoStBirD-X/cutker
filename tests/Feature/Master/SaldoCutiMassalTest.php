@@ -370,4 +370,58 @@ class SaldoCutiMassalTest extends TestCase
         $response->assertInertiaFlash('importPratinjau.failures.1.row', 5);
         $this->assertDatabaseHas('saldo_cutis', ['id' => $berubah->id, 'terpakai' => 0]);
     }
+
+    public function test_pratinjau_import_matches_rows_without_id_by_npk_and_jenis_cuti(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $saldo = SaldoCuti::factory()->create(['kuota' => 12, 'terpakai' => 0, 'sisa' => 12]);
+        $nip = $saldo->karyawan->nip;
+        $jenis = $saldo->jenisCuti->nama_jenis;
+
+        $csv = implode("\n", [
+            'npk,nama,jenis_cuti,periode,kuota,terpakai,sisa',
+            "{$nip},x,{$jenis},x,12,4,8",
+            "{$nip},x,Jenis Tidak Ada,x,12,4,8",
+            ",x,{$jenis},x,12,4,8",
+        ]);
+
+        $response = $this->actingAs($hrd)->post(route('master.saldo-cuti.import.pratinjau'), [
+            'file' => UploadedFile::fake()->createWithContent('saldo.csv', $csv),
+        ]);
+
+        $response->assertInertiaFlash('importPratinjau.perubahan.0.id', $saldo->id);
+        $response->assertInertiaFlash('importPratinjau.perubahan.0.sesudah', ['kuota' => 12, 'terpakai' => 4, 'sisa' => 8]);
+        $response->assertInertiaFlash('importPratinjau.failures.0.row', 3);
+        $response->assertInertiaFlash('importPratinjau.failures.1.row', 4);
+    }
+
+    public function test_pratinjau_import_without_id_uses_periode_when_npk_has_several_active_saldo_of_one_jenis(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $pertama = SaldoCuti::factory()->create(['tahun' => 2025, 'periode_ke' => null, 'kuota' => 12, 'terpakai' => 0, 'sisa' => 12]);
+        $kedua = SaldoCuti::factory()->create([
+            'karyawan_id' => $pertama->karyawan_id,
+            'jenis_cuti_id' => $pertama->jenis_cuti_id,
+            'tahun' => 2026,
+            'periode_ke' => null,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+        $nip = $pertama->karyawan->nip;
+        $jenis = $pertama->jenisCuti->nama_jenis;
+
+        $csv = implode("\n", [
+            'id,npk,jenis_cuti,periode,kuota,terpakai,sisa',
+            ",{$nip},{$jenis},Tahun 2026,12,3,9",
+            ",{$nip},{$jenis},,12,3,9",
+        ]);
+
+        $response = $this->actingAs($hrd)->post(route('master.saldo-cuti.import.pratinjau'), [
+            'file' => UploadedFile::fake()->createWithContent('saldo.csv', $csv),
+        ]);
+
+        $response->assertInertiaFlash('importPratinjau.perubahan.0.id', $kedua->id);
+        $response->assertInertiaFlash('importPratinjau.failures.0.row', 3);
+    }
 }
