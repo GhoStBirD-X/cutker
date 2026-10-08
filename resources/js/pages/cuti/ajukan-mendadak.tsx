@@ -37,7 +37,8 @@ type PageProps = {
 export default function CutiAjukanMendadak() {
     const { jenisCutis, alasanCutis, saldoCuti, cutiBesarTerkunci, hariLibur } =
         usePage<PageProps>().props;
-    const today = tanggalHariIni();
+    // Cuti mendadak boleh dimulai paling cepat kemarin (H-1).
+    const kemarin = tanggalHariIni(-1);
 
     const [jenisCutiId, setJenisCutiId] = useState('');
     const [alasanCutiId, setAlasanCutiId] = useState('');
@@ -70,8 +71,9 @@ export default function CutiAjukanMendadak() {
                             <p className="text-amber-800/80 dark:text-amber-300/80">
                                 Gunakan form ini hanya untuk kondisi mendesak
                                 yang tidak memenuhi batas waktu pengajuan
-                                normal. Pengajuan tetap harus disetujui atasan,
-                                dan alasan mendadak yang Anda isi akan
+                                normal. Tanggal mulai boleh mundur sampai
+                                kemarin (H-1). Pengajuan tetap harus disetujui
+                                atasan, dan alasan mendadak yang Anda isi akan
                                 ditampilkan ke approver.
                             </p>
                         </div>
@@ -218,7 +220,7 @@ export default function CutiAjukanMendadak() {
                                                 id="tanggal_mulai"
                                                 type="date"
                                                 name="tanggal_mulai"
-                                                min={today}
+                                                min={kemarin}
                                                 value={tanggalMulai}
                                                 onChange={(e) =>
                                                     setTanggalMulai(
@@ -239,7 +241,7 @@ export default function CutiAjukanMendadak() {
                                                 id="tanggal_selesai"
                                                 type="date"
                                                 name="tanggal_selesai"
-                                                min={tanggalMulai || today}
+                                                min={tanggalMulai || kemarin}
                                                 value={tanggalSelesai}
                                                 onChange={(e) =>
                                                     setTanggalSelesai(

@@ -35,6 +35,27 @@ class PengajuanCutiService
      */
     public function ajukan(Karyawan $karyawan, array $data, ?UploadedFile $lampiran = null): PengajuanCuti
     {
+        return $this->buat($karyawan, $data, $lampiran, fn (PengajuanCuti $pengajuan) => $this->approvalService->mulaiAlur($pengajuan, $karyawan, $this->cariKepalaBagian($karyawan)));
+    }
+
+    /**
+     * HRD/Admin mencatat cuti atas nama karyawan (boleh backdate jauh).
+     * Cutinya dianggap sudah disetujui: tanpa alur approval, saldo periode
+     * aktif langsung dipotong, dan yang mencatat tercatat sebagai approver.
+     *
+     * @param  array{jenis_cuti_id: int, alasan_cuti_id?: int|null, tanggal_mulai: string, tanggal_selesai: string, alasan: string}  $data
+     */
+    public function catatOlehHrd(Karyawan $karyawan, array $data, Karyawan $dicatatOleh, ?UploadedFile $lampiran = null): PengajuanCuti
+    {
+        return $this->buat($karyawan, $data, $lampiran, fn (PengajuanCuti $pengajuan) => $this->approvalService->setujuiLangsung($pengajuan, $dicatatOleh));
+    }
+
+    /**
+     * @param  array{jenis_cuti_id: int, alasan_cuti_id?: int|null, tanggal_mulai: string, tanggal_selesai: string, alasan: string, mendadak?: bool, alasan_mendadak?: string|null}  $data
+     * @param  callable(PengajuanCuti): void  $lanjutkan
+     */
+    protected function buat(Karyawan $karyawan, array $data, ?UploadedFile $lampiran, callable $lanjutkan): PengajuanCuti
+    {
         $tanggalMulai = Carbon::parse($data['tanggal_mulai']);
         $tanggalSelesai = Carbon::parse($data['tanggal_selesai']);
         $jumlahHariKalender = (int) $tanggalMulai->diffInDays($tanggalSelesai) + 1;
@@ -48,7 +69,7 @@ class PengajuanCutiService
             throw new SaldoCutiTidakCukupException($saldo->sisa ?? 0, $jumlahHari);
         }
 
-        return DB::transaction(function () use ($karyawan, $data, $lampiran, $tanggalMulai, $tanggalSelesai, $jumlahHari, $jumlahHariKalender) {
+        return DB::transaction(function () use ($karyawan, $data, $lampiran, $lanjutkan, $tanggalMulai, $tanggalSelesai, $jumlahHari, $jumlahHariKalender) {
             $pengajuan = PengajuanCuti::query()->create([
                 'karyawan_id' => $karyawan->id,
                 'jenis_cuti_id' => $data['jenis_cuti_id'],
@@ -65,7 +86,7 @@ class PengajuanCutiService
                 'alasan_mendadak' => $data['alasan_mendadak'] ?? null,
             ]);
 
-            $this->approvalService->mulaiAlur($pengajuan, $karyawan, $this->cariKepalaBagian($karyawan));
+            $lanjutkan($pengajuan);
 
             return $pengajuan;
         });

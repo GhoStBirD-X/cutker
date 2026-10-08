@@ -1,6 +1,11 @@
-/** Tanggal hari ini (zona waktu lokal browser) dalam format YYYY-MM-DD untuk atribut `min` input date. */
-export function tanggalHariIni(): string {
+/**
+ * Tanggal hari ini (zona waktu lokal browser) dalam format YYYY-MM-DD untuk
+ * atribut `min` input date. `geserHari` menggeser tanggalnya, mis. -1 untuk
+ * kemarin (batas backdate cuti mendadak).
+ */
+export function tanggalHariIni(geserHari = 0): string {
     const sekarang = new Date();
+    sekarang.setDate(sekarang.getDate() + geserHari);
     const bulan = String(sekarang.getMonth() + 1).padStart(2, '0');
     const hari = String(sekarang.getDate()).padStart(2, '0');
 

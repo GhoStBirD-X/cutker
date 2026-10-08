@@ -3,16 +3,12 @@
 namespace App\Http\Controllers\Cuti;
 
 use App\Enums\StatusPengajuan;
-use App\Enums\TipeKaryawan;
 use App\Exceptions\SaldoCutiTidakCukupException;
+use App\Http\Controllers\Concerns\DataFormPengajuanCuti;
 use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cuti\StorePengajuanCutiRequest;
-use App\Models\AlasanCuti;
-use App\Models\HariLibur;
-use App\Models\JenisCuti;
 use App\Models\PengajuanCuti;
-use App\Models\SaldoCuti;
 use App\Services\PengajuanCutiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +17,7 @@ use Inertia\Response;
 
 class PengajuanCutiController extends Controller
 {
-    use HasPerPage;
+    use DataFormPengajuanCuti, HasPerPage;
 
     public function index(Request $request): Response
     {
@@ -55,49 +51,12 @@ class PengajuanCutiController extends Controller
 
     public function create(Request $request): Response
     {
-        return Inertia::render('cuti/ajukan', $this->dataUntukForm($request));
+        return Inertia::render('cuti/ajukan', $this->dataFormCuti($request->user()->karyawan, today()));
     }
 
     public function createMendadak(Request $request): Response
     {
-        return Inertia::render('cuti/ajukan-mendadak', $this->dataUntukForm($request));
-    }
-
-    /**
-     * `hariLibur` (tanggal libur terdaftar setahun ke depan) dipakai form
-     * untuk menampilkan pratinjau jumlah hari kerja sebelum dikirim, dengan
-     * aturan yang sama seperti HariLiburService::hitungHariLibur().
-     *
-     * @return array<string, mixed>
-     */
-    private function dataUntukForm(Request $request): array
-    {
-        $karyawan = $request->user()->karyawan;
-        // Kontrak tidak pernah mendapat Cuti Besar, jadi petunjuk "terkunci"
-        // hanya relevan untuk karyawan tetap.
-        $cutiBesarTerkunci = $karyawan->tipe_karyawan === TipeKaryawan::Tetap
-            && $karyawan->masihPunyaSaldoCutiTahunan();
-
-        return [
-            'jenisCutis' => JenisCuti::query()
-                ->sesuaiGender($karyawan->jenis_kelamin)
-                ->berlakuUntukTipe($karyawan->tipe_karyawan)
-                ->when($cutiBesarTerkunci, fn ($query) => $query->where('nama_jenis', '!=', JenisCuti::NAMA_CUTI_BESAR))
-                ->get(),
-            'cutiBesarTerkunci' => $cutiBesarTerkunci,
-            'alasanCutis' => AlasanCuti::all(),
-            'saldoCuti' => SaldoCuti::query()
-                ->with('jenisCuti')
-                ->where('karyawan_id', $karyawan->id)
-                ->aktif()
-                ->whereHas('jenisCuti', fn ($query) => $query->sesuaiGender($karyawan->jenis_kelamin)->berlakuUntukTipe($karyawan->tipe_karyawan))
-                ->get(),
-            'hariLibur' => HariLibur::query()
-                ->whereBetween('tanggal', [today()->toDateString(), today()->addYear()->toDateString()])
-                ->orderBy('tanggal')
-                ->pluck('tanggal')
-                ->map(fn ($tanggal) => $tanggal->toDateString()),
-        ];
+        return Inertia::render('cuti/ajukan-mendadak', $this->dataFormCuti($request->user()->karyawan, today()->subDay()));
     }
 
     public function store(StorePengajuanCutiRequest $request, PengajuanCutiService $service): RedirectResponse

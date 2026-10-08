@@ -194,6 +194,26 @@ class ApprovalService
     }
 
     /**
+     * Cuti yang dicatat HRD/Admin atas nama karyawan langsung disetujui
+     * tanpa alur bertingkat. Satu baris approval level HRD dibuat atas nama
+     * yang mencatat supaya riwayat approval tetap menunjukkan siapa yang
+     * memutuskan.
+     */
+    public function setujuiLangsung(PengajuanCuti $pengajuan, Karyawan $olehSiapa): void
+    {
+        Approval::query()->create([
+            'pengajuan_cuti_id' => $pengajuan->id,
+            'approver_id' => $olehSiapa->id,
+            'level' => self::LEVEL_HRD,
+            'status' => StatusApproval::Disetujui,
+            'tanggal_approval' => now(),
+            'catatan' => 'Dicatat langsung oleh HRD atas nama karyawan.',
+        ]);
+
+        $this->setujuiFinal($pengajuan);
+    }
+
+    /**
      * Approval final (Manager): potong saldo cuti & tandai pengajuan disetujui.
      */
     protected function setujuiFinal(PengajuanCuti $pengajuan): void

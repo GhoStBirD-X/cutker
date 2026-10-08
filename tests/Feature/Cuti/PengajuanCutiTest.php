@@ -12,6 +12,7 @@ use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
 use App\Models\Shift;
+use Carbon\CarbonInterface;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -807,6 +808,41 @@ class PengajuanCutiTest extends TestCase
             'jenis_cuti_id' => $jenisCuti->id,
             'is_mendadak' => true,
             'alasan_mendadak' => 'Orang tua masuk rumah sakit tiba-tiba.',
+        ]);
+    }
+
+    public function test_mendadak_request_may_start_yesterday_but_not_earlier(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id]);
+
+        $jenisCuti = JenisCuti::factory()->create(['minimal_hari_pengajuan' => 7]);
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+        $mendadak = fn (CarbonInterface $tanggal): array => [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => $tanggal->toDateString(),
+            'tanggal_selesai' => now()->toDateString(),
+            'alasan' => 'Sakit mendadak',
+            'mendadak' => true,
+            'alasan_mendadak' => 'Demam tinggi, baru sempat mengajukan hari ini.',
+        ];
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), $mendadak(now()->subDays(2)));
+        $response->assertSessionHasErrors(['tanggal_mulai' => 'Cuti mendadak paling cepat dimulai kemarin (H-1).']);
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), $mendadak(now()->subDay()));
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertDatabaseHas('pengajuan_cutis', [
+            'karyawan_id' => $karyawan->id,
+            'tanggal_mulai' => now()->subDay()->startOfDay(),
+            'is_mendadak' => true,
         ]);
     }
 

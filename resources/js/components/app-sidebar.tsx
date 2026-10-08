@@ -11,6 +11,7 @@ import {
     LayoutGrid,
     ListChecks,
     UserCheck,
+    UserPen,
     Wallet,
     Zap,
 } from 'lucide-react';
@@ -34,6 +35,7 @@ import {
     createMendadak as cutiCreateMendadak,
     index as cutiIndex,
 } from '@/routes/cuti';
+import { create as inputCutiKaryawanCreate } from '@/routes/cuti/input-karyawan';
 import { index as kompensasiIndex } from '@/routes/cuti/kompensasi';
 import { index as konfirmasiKontrakIndex } from '@/routes/cuti/konfirmasi-kontrak';
 import { index as cutiMassalIndex } from '@/routes/cuti/massal';
@@ -140,6 +142,11 @@ function buildNavGroups(roles: Role[]): NavGroup[] {
                     title: 'Kompensasi Cuti',
                     href: kompensasiIndex(),
                     icon: Banknote,
+                },
+                {
+                    title: 'Input Cuti Karyawan',
+                    href: inputCutiKaryawanCreate(),
+                    icon: UserPen,
                 },
                 {
                     title: 'Cuti Massal',

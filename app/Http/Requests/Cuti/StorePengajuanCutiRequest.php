@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Cuti;
 
 use App\Models\JenisCuti;
+use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Rules\BatasWaktuPengajuanCuti;
 use App\Rules\CutiBesarKhususKaryawanTetap;
@@ -30,15 +31,49 @@ class StorePengajuanCutiRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
+     * Cuti mendadak boleh dimulai paling cepat kemarin (H-1, mis. sakit
+     * mendadak yang baru sempat diajukan keesokan harinya); pengajuan biasa
+     * paling cepat hari ini.
+     *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        $karyawan = $this->user()->karyawan;
-        $karyawanId = $karyawan->id;
+        $mendadak = $this->boolean('mendadak');
+
+        return [
+            ...$this->aturanCuti($this->user()->karyawan, [
+                'after_or_equal:'.($mendadak ? 'yesterday' : 'today'),
+                new BatasWaktuPengajuanCuti($this->integer('jenis_cuti_id') ?: null, $mendadak),
+            ]),
+            'mendadak' => ['sometimes', 'boolean'],
+            'alasan_mendadak' => ['required_if:mendadak,true', 'nullable', 'string', 'max:500'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return $this->boolean('mendadak')
+            ? ['tanggal_mulai.after_or_equal' => 'Cuti mendadak paling cepat dimulai kemarin (H-1).']
+            : [];
+    }
+
+    /**
+     * Aturan pengajuan cuti untuk satu karyawan, dipakai bersama oleh
+     * pengajuan mandiri dan input cuti oleh HRD/Admin
+     * (StoreInputCutiKaryawanRequest) — yang berbeda hanya batas
+     * tanggal_mulai-nya.
+     *
+     * @param  array<int, ValidationRule|string>  $aturanTanggalMulai
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    protected function aturanCuti(Karyawan $karyawan, array $aturanTanggalMulai): array
+    {
         $tanggalMulai = (string) $this->input('tanggal_mulai');
         $alasanCutiId = $this->integer('alasan_cuti_id') ?: null;
-        $mendadak = $this->boolean('mendadak');
 
         return [
             'jenis_cuti_id' => [
@@ -56,24 +91,17 @@ class StorePengajuanCutiRequest extends FormRequest
                 'integer',
                 Rule::exists('alasan_cutis', 'id')->where('jenis_cuti_id', $this->input('jenis_cuti_id')),
             ],
-            'tanggal_mulai' => [
-                'required',
-                'date',
-                'after_or_equal:today',
-                new BatasWaktuPengajuanCuti($this->integer('jenis_cuti_id') ?: null, $mendadak),
-            ],
+            'tanggal_mulai' => ['required', 'date', ...$aturanTanggalMulai],
             'tanggal_selesai' => [
                 'required',
                 'date',
                 'after_or_equal:tanggal_mulai',
-                new TidakOverlapPengajuanCuti($karyawanId, $tanggalMulai),
-                new TidakBentrokJadwalShift($karyawanId, $tanggalMulai),
+                new TidakOverlapPengajuanCuti($karyawan->id, $tanggalMulai),
+                new TidakBentrokJadwalShift($karyawan->id, $tanggalMulai),
                 new SesuaiDurasiAlasanCuti($tanggalMulai, $alasanCutiId),
             ],
             'alasan' => ['required', 'string', 'max:255'],
             'lampiran' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'mendadak' => ['sometimes', 'boolean'],
-            'alasan_mendadak' => ['required_if:mendadak,true', 'nullable', 'string', 'max:500'],
         ];
     }
 }
