@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     Banknote,
     Building2,
@@ -15,6 +15,7 @@ import {
     Wallet,
     Zap,
 } from 'lucide-react';
+import { useEffect } from 'react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -27,6 +28,7 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as approvalIndex } from '@/routes/approval';
@@ -189,6 +191,11 @@ function buildNavGroups(roles: Role[]): NavGroup[] {
 export function AppSidebar() {
     const { auth } = usePage<{ auth: Auth }>().props;
     const navGroups = buildNavGroups(auth.roles ?? []);
+    const { setOpenMobile } = useSidebar();
+
+    useEffect(() => {
+        return router.on('start', () => setOpenMobile(false));
+    }, [setOpenMobile]);
 
     return (
         <Sidebar collapsible="icon" variant="inset">
