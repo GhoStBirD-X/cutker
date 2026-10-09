@@ -1,10 +1,11 @@
-import { Link } from '@inertiajs/react';
-import { Settings } from 'lucide-react';
+import { Link, router } from '@inertiajs/react';
+import { LogOut, Settings } from 'lucide-react';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { NotificationBell } from '@/components/notification-bell';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { logout } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
 import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
 
@@ -27,6 +28,18 @@ export function AppSidebarHeader({
                 </Button>
                 <ThemeToggle />
                 <NotificationBell />
+                <Button variant="ghost" size="icon" asChild>
+                    <Link
+                        href={logout()}
+                        as="button"
+                        onClick={() => router.flushAll()}
+                        aria-label="Keluar"
+                        title="Keluar"
+                        data-test="header-logout-button"
+                    >
+                        <LogOut className="size-5" />
+                    </Link>
+                </Button>
             </div>
         </header>
     );
