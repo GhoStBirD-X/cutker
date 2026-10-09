@@ -194,7 +194,7 @@ export function AppSidebar() {
     const { setOpenMobile } = useSidebar();
 
     useEffect(() => {
-        return router.on('start', () => setOpenMobile(false));
+        return router.on('navigate', () => setOpenMobile(false));
     }, [setOpenMobile]);
 
     return (
