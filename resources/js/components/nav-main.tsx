@@ -6,6 +6,14 @@ import {
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
     SidebarGroup,
     SidebarGroupLabel,
     SidebarMenu,
@@ -14,6 +22,7 @@ import {
     SidebarMenuSub,
     SidebarMenuSubButton,
     SidebarMenuSubItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import type { NavItem } from '@/types';
@@ -26,6 +35,8 @@ export function NavMain({
     label?: string;
 }) {
     const { isCurrentUrl } = useCurrentUrl();
+    const { state, isMobile } = useSidebar();
+    const isIconOnly = state === 'collapsed' && !isMobile;
 
     return (
         <SidebarGroup className="px-2 py-0">
@@ -36,6 +47,55 @@ export function NavMain({
                         const isChildActive = item.children.some((child) =>
                             isCurrentUrl(child.href),
                         );
+
+                        if (isIconOnly) {
+                            return (
+                                <SidebarMenuItem key={item.title}>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <SidebarMenuButton
+                                                isActive={isChildActive}
+                                                tooltip={{
+                                                    children: item.title,
+                                                }}
+                                            >
+                                                {item.icon && <item.icon />}
+                                                <span>{item.title}</span>
+                                            </SidebarMenuButton>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent
+                                            side="right"
+                                            align="start"
+                                            className="min-w-48"
+                                        >
+                                            <DropdownMenuLabel>
+                                                {item.title}
+                                            </DropdownMenuLabel>
+                                            <DropdownMenuSeparator />
+                                            {item.children.map((child) => (
+                                                <DropdownMenuItem
+                                                    key={child.title}
+                                                    asChild
+                                                    className={
+                                                        isCurrentUrl(child.href)
+                                                            ? 'bg-accent font-medium'
+                                                            : undefined
+                                                    }
+                                                >
+                                                    <Link
+                                                        href={child.href}
+                                                        prefetch
+                                                        className="w-full cursor-pointer"
+                                                    >
+                                                        {child.title}
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </SidebarMenuItem>
+                            );
+                        }
 
                         return (
                             <Collapsible
