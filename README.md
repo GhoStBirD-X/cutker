@@ -15,7 +15,7 @@ Aplikasi manajemen cuti karyawan pabrik berbasis web: pengajuan cuti, approval b
 - **Master Data** — HRD/Admin mengelola data karyawan, departemen, jabatan, jenis cuti, alasan cuti, shift, hari libur, dan saldo cuti. Semua daftar berpaginasi punya selektor jumlah baris per halaman (10/20/30/50).
 - **Laporan** — rekap data cuti yang bisa diekspor ke Excel dan PDF.
 - **Manajemen User & Role** — Admin mengelola akun pengguna dan hak akses (role) lewat spatie/laravel-permission.
-- **Notifikasi** — notifikasi in-app (lonceng di navbar) dan email untuk pengajuan baru, disetujui, dan ditolak.
+- **Notifikasi** — notifikasi in-app (lonceng di navbar), email, dan **WhatsApp** (lewat Evolution API) untuk pengajuan baru, diteruskan, disetujui, dan ditolak. Pesan WhatsApp yang gagal terkirim (mis. instance WhatsApp terputus) disimpan di antrian dan dikirim ulang otomatis begitu tersambung kembali.
 
 ## Role & Hak Akses
 
@@ -40,16 +40,13 @@ Aplikasi manajemen cuti karyawan pabrik berbasis web: pengajuan cuti, approval b
 
 ## Arsitektur Singkat
 
-- **Service classes** (`app/Services`) menampung seluruh logika bisnis inti — pengajuan cuti (`PengajuanCutiService`), approval berjenjang & potong saldo (`ApprovalService`), reset saldo tahunan & bootstrap saldo karyawan baru (`SaldoCutiService`), siklus periode cuti/konfirmasi kontrak (`PeriodeCutiService`), cuti massal (`CutiMassalService`), sinkronisasi hari libur nasional (`HariLiburService`). Controller tetap tipis dan hanya memvalidasi (Form Request) lalu memanggil service.
+- **Service classes** (`app/Services`) menampung seluruh logika bisnis inti — pengajuan cuti (`PengajuanCutiService`), approval berjenjang & potong saldo (`ApprovalService`), reset saldo tahunan & bootstrap saldo karyawan baru (`SaldoCutiService`), siklus periode cuti/konfirmasi kontrak (`PeriodeCutiService`), cuti massal (`CutiMassalService`), sinkronisasi hari libur nasional (`HariLiburService`), pengiriman & antrian WhatsApp (`AntrianWhatsappService`). Controller tetap tipis dan hanya memvalidasi (Form Request) lalu memanggil service.
 - **Selektor jumlah baris per halaman**: trait `HasPerPage` (`app/Http/Controllers/Concerns`) dipakai di semua controller `index()` yang berpaginasi, membatasi query string `per_page` ke pilihan yang tersedia (10/20/30/50) agar tidak disalahgunakan.
 - **Enum PHP native** (`app/Enums`) untuk status: `StatusPengajuan`, `StatusApproval`, `StatusKaryawan`, `StatusKonfirmasiKontrak`, `StatusKompensasiCuti`, dll.
 - **Alur approval**: karyawan mengajukan → dicek sisa saldo cuti → dibuat `Approval` level 1 untuk Kepala Bagian di departemen yang sama → disetujui → level 2 untuk HRD → disetujui → level 3 untuk Manager (final) → dalam satu `DB::transaction`, saldo cuti dipotong dan status pengajuan berubah jadi `disetujui` secara atomik. Penolakan di level manapun langsung mengubah status pengajuan jadi `ditolak`. Pemilihan approver HRD/Manager otomatis memilih yang beban approval pending-nya paling sedikit, agar merata.
 - **Otorisasi**: Policy (`PengajuanCutiPolicy`, `ApprovalPolicy`) untuk aksi per-record; middleware `role:` di route untuk halaman master data, laporan, jadwal shift, dan kelola user; middleware `karyawan.linked` memastikan user sudah terhubung ke data karyawan sebelum mengakses fitur cuti.
-- **Notifikasi**: `PengajuanCutiDiajukan`, `PengajuanCutiDisetujui`, `PengajuanCutiDitolak` — dikirim lewat channel `database` (muncul di aplikasi) dan `mail`.
-- **Job terjadwal** (`routes/console.php`):
-  - `cuti:reset-saldo-tahunan` — tiap 1 Januari, generate saldo cuti baru per karyawan aktif berdasarkan kuota default tiap jenis cuti.
-  - `cuti:proses-siklus-tahunan` — harian, menutup periode cuti tahunan/besar yang sudah lewat berdasarkan tanggal masuk kerja tiap karyawan.
-  - `libur:sync-nasional` — tiap 1 Januari (dan 1 Desember untuk tahun berikutnya), sinkronisasi hari libur nasional Indonesia.
+- **Notifikasi**: `PengajuanCutiDiajukan`, `PengajuanCutiDiteruskan`, `PengajuanCutiDisetujui`, `PengajuanCutiDitolak` — dikirim lewat channel `database` (muncul di aplikasi), `mail`, dan `WhatsAppChannel`. Notifikasi sengaja dikirim sinkron (tanpa queue worker); setiap pesan WhatsApp dicatat di tabel `antrian_whatsapps` dan yang gagal dikirim ulang oleh scheduler (lihat [Artisan Command](#artisan-command)).
+- **Job terjadwal** (`routes/console.php`): reset saldo tahunan, siklus periode cuti, sinkronisasi hari libur, dan antrian WhatsApp — detail lengkap di [Artisan Command](#artisan-command).
 - **Frontend** menggunakan Inertia + React (bukan Blade/Livewire) — halaman ada di `resources/js/pages`, dengan Wayfinder men-generate helper route/action TypeScript otomatis dari route & controller Laravel.
 
 ## Menjalankan Secara Lokal
@@ -62,7 +59,14 @@ php artisan key:generate
 touch database/database.sqlite
 php artisan migrate --seed
 php artisan storage:link
+php artisan libur:sync-nasional   # isi hari libur nasional tahun berjalan
 composer run dev   # menjalankan server, queue worker, log tail, dan Vite bersamaan
+```
+
+Job terjadwal (siklus cuti, antrian WhatsApp, dll.) **tidak** ikut berjalan lewat `composer run dev`. Jalankan scheduler di terminal terpisah bila diperlukan:
+
+```bash
+php artisan schedule:work
 ```
 
 Aplikasi berjalan di `http://localhost:8000`.
@@ -76,13 +80,167 @@ docker compose up --build
 
 - Aplikasi bisa diakses di `http://localhost:8080` (nginx).
 - Container `app` otomatis menjalankan migrasi dan `storage:link` saat start.
-- Container `scheduler` menjalankan `php artisan schedule:run` setiap menit (untuk reset saldo tahunan, siklus cuti, dan sinkronisasi hari libur).
+- Container `scheduler` menjalankan `php artisan schedule:run` setiap menit (untuk reset saldo tahunan, siklus cuti, sinkronisasi hari libur, dan pengiriman ulang antrian WhatsApp).
+- Container `evolution-api` (+ `evolution-db`) adalah gateway WhatsApp di port `8081` — lihat [Notifikasi WhatsApp](#notifikasi-whatsapp-evolution-api).
 - Database SQLite dan file `storage/` disimpan di Docker volume agar persisten antar restart.
 - Jalankan seeder data demo secara manual sekali setelah container pertama kali naik:
 
 ```bash
 docker compose exec app php artisan db:seed --force
 ```
+
+## Notifikasi WhatsApp (Evolution API)
+
+Notifikasi WhatsApp dikirim lewat [Evolution API](https://github.com/evolution-foundation/evolution-api) yang berjalan sebagai container Docker. Konfigurasi di `.env`:
+
+```env
+EVOLUTION_BASE_URL=http://localhost:8081   # alamat Evolution API, tanpa "/" di akhir
+EVOLUTION_INSTANCE=cutker                  # nama instance (huruf besar-kecil berpengaruh)
+EVOLUTION_API_KEY=                          # API key Evolution (AUTHENTICATION_API_KEY di docker-compose)
+EVOLUTION_DB_PASSWORD=                      # password Postgres milik Evolution
+```
+
+Nomor HP penerima diambil dari kolom `no_hp` data karyawan (format `08…` otomatis diubah ke `628…`). Karyawan tanpa nomor HP tetap menerima notifikasi in-app & email.
+
+**Cara kerja antrian:**
+
+1. Saat notifikasi dibuat, pesan langsung dicoba dikirim sekali, lalu dicatat di tabel `antrian_whatsapps` dengan status `terkirim` (berhasil) atau `pending` (gagal).
+2. Scheduler menjalankan `whatsapp:kirim-antrian` setiap menit. Pesan `pending` hanya dikirim bila instance berstatus `open`, dengan jeda acak 2–5 detik antar pesan (maks. 50 per putaran) agar nomor tidak dibatasi WhatsApp.
+3. Bila koneksi putus lagi di tengah pengiriman, proses berhenti dan dilanjutkan di putaran berikutnya.
+4. Pesan yang 10 kali gagal **saat instance tersambung** ditandai `gagal` dan tidak dicoba lagi.
+
+**Batasan:** Evolution membalas sukses (HTTP 201) sebelum WhatsApp benar-benar menerima pesan. Bila WhatsApp kemudian menolak (mis. error `463` — nomor dibatasi sementara karena dicurigai bot), pesan tetap tercatat `terkirim`. Untuk kasus ini gunakan `whatsapp:kirim-ulang-ditolak` (lihat di bawah).
+
+**Memantau antrian:**
+
+```bash
+php artisan tinker --execute 'echo App\Models\AntrianWhatsapp::query()->selectRaw("status, count(*) as jumlah")->groupBy("status")->get();'
+```
+
+## Artisan Command
+
+Command khusus aplikasi ini (di luar command bawaan Laravel). Daftar lengkap semua command: `php artisan list`; bantuan per command: `php artisan <command> --help`.
+
+### Ringkasan
+
+| Command | Fungsi | Jadwal otomatis |
+| --- | --- | --- |
+| `cuti:reset-saldo-tahunan` | Generate saldo cuti jenis kalender untuk tahun baru | 1 Januari, 00:00 |
+| `cuti:proses-siklus-tahunan` | Tutup periode cuti tahunan/besar yang sudah lewat | Setiap hari, 00:00 |
+| `kontrak:tinjau-siklus` | Masukkan karyawan kontrak yang telanjur melewati K5 ke Konfirmasi Kontrak | Manual |
+| `libur:sync-nasional` | Sinkronkan hari libur nasional Indonesia | 1 Januari (tahun berjalan) & 1 Desember (tahun berikutnya) |
+| `whatsapp:kirim-antrian` | Kirim ulang pesan WhatsApp yang tertunda | Setiap menit |
+| `whatsapp:kirim-ulang-ditolak` | Antrikan ulang notifikasi yang ditolak WhatsApp di suatu instance | Manual |
+
+Lihat semua jadwal beserta waktu jalan berikutnya:
+
+```bash
+php artisan schedule:list
+```
+
+### Cuti & Kontrak
+
+#### `cuti:reset-saldo-tahunan`
+
+```bash
+php artisan cuti:reset-saldo-tahunan [--tahun=2027]
+```
+
+Membuat saldo cuti baru untuk setiap karyawan aktif pada **jenis cuti bertipe kalender** (jenis cuti tanpa masa kerja minimal), dengan kuota sesuai `kuota_default` jenis cuti. Saldo tahun sebelumnya ditutup.
+
+- `--tahun` — tahun saldo yang dibuat, default tahun berjalan.
+- **Aman dijalankan ulang**: karyawan yang sudah punya saldo di tahun tersebut dilewati.
+- Jenis cuti bertipe periode (Cuti Tahunan, Cuti Besar) **tidak** diproses di sini — lihat `cuti:proses-siklus-tahunan`.
+
+#### `cuti:proses-siklus-tahunan`
+
+```bash
+php artisan cuti:proses-siklus-tahunan
+```
+
+Menutup setiap periode cuti bertipe periode (Cuti Tahunan, Cuti Besar) yang tanggal selesainya sudah lewat, berdasarkan `tanggal_masuk` masing-masing karyawan:
+
+- Periode yang ditutup diarsipkan ke riwayat saldo; sisa cuti > 0 otomatis dibuatkan pengajuan **Kompensasi Cuti**.
+- **Karyawan tetap** — langsung dilanjutkan ke periode berikutnya.
+- **Karyawan kontrak** — dibuatkan **Konfirmasi Kontrak** berstatus menunggu, untuk diputuskan HRD (diperpanjang / tidak).
+- Diulang sampai tidak ada periode yang tertinggal, jadi bila scheduler sempat mati beberapa hari, satu kali jalan sudah mengejar semuanya.
+
+#### `kontrak:tinjau-siklus`
+
+```bash
+php artisan kontrak:tinjau-siklus --simulasi   # tampilkan daftar saja
+php artisan kontrak:tinjau-siklus              # terapkan
+```
+
+Mencari karyawan kontrak yang telanjur melewati K5 (periode ke-6 dst., biasanya data lama sebelum aturan siklus K1–K5 berlaku) dan memasukkannya ke daftar **Konfirmasi Kontrak**. HRD kemudian memutuskan: angkat tetap, kontrak ulang ke K1 (wajib alasan), atau tidak diperpanjang.
+
+- `--simulasi` — hanya menampilkan tabel karyawan (NPK, nama, periode, posisi K, kuota, sisa) tanpa membuat konfirmasi. **Jalankan ini dulu.**
+- Tidak dijadwalkan; cukup dijalankan sekali saat dibutuhkan (mis. setelah impor data karyawan lama).
+
+### Hari Libur
+
+#### `libur:sync-nasional`
+
+```bash
+php artisan libur:sync-nasional [--tahun=2027]
+```
+
+Mengambil kalender hari libur nasional Indonesia dari sumber publik dan menyimpannya ke tabel `hari_liburs`. Hari libur dipakai untuk mengecualikan tanggal merah dari penghitungan jumlah hari cuti.
+
+- `--tahun` — tahun yang disinkronkan, default tahun berjalan.
+- **Aman dijalankan ulang**: tanggal yang sudah ada diperbarui, bukan diduplikasi.
+- Bila sumber tidak bisa diakses, command tidak error (hasil 0 tanggal); hari libur tetap bisa diisi manual lewat **Master Data → Hari Libur**.
+- **Wajib dijalankan manual** setelah setup environment baru, karena jadwal otomatisnya hanya setahun sekali — tanpa ini tabel kosong dan hari libur ikut terhitung sebagai hari cuti.
+
+### WhatsApp
+
+#### `whatsapp:kirim-antrian`
+
+```bash
+php artisan whatsapp:kirim-antrian
+```
+
+Mengirim ulang pesan berstatus `pending` di `antrian_whatsapps` (lihat [cara kerja antrian](#notifikasi-whatsapp-evolution-api)). Berjalan otomatis setiap menit; jalankan manual bila ingin langsung mengirim tanpa menunggu.
+
+- Output `Instance WhatsApp belum tersambung, antrian tidak diproses.` — instance belum `open`; cek di Evolution Manager.
+- Output `N pesan WhatsApp dari antrian berhasil terkirim.` — selesai (0 berarti tidak ada yang tertunda).
+
+#### `whatsapp:kirim-ulang-ditolak`
+
+```bash
+php artisan whatsapp:kirim-ulang-ditolak KKP --sejak=2026-10-12           # tampilkan daftar saja
+php artisan whatsapp:kirim-ulang-ditolak KKP --sejak=2026-10-12 --simpan  # masukkan ke antrian
+php artisan whatsapp:kirim-antrian                                         # kirim sekarang
+```
+
+Dipakai saat sebuah instance **ditolak/dibatasi WhatsApp** (pesan berstatus `ERROR` di Evolution, mis. error `463`) dan Anda sudah pindah ke instance/nomor lain. Command membaca riwayat pesan keluar instance tersebut di Evolution, lalu memasukkan ulang notifikasi yang ditolak ke antrian agar dikirim lewat instance yang aktif di `.env`.
+
+- `instance` (wajib) — nama instance tempat pesan ditolak (instance lama).
+- `--sejak=Y-m-d` — hanya pesan sejak tanggal ini, agar notifikasi lama yang sudah tidak relevan tidak ikut terkirim.
+- `--simpan` — benar-benar memasukkan ke antrian. Tanpa opsi ini hanya menampilkan tabel (waktu, nomor, judul pesan). **Periksa daftarnya dulu.**
+- Hanya notifikasi cutker yang diambil (teks diawali `Pengajuan Cuti …` / `Update Pengajuan Cuti`); pesan tes manual diabaikan, dan pesan identik ke nomor yang sama hanya diambil sekali.
+
+### Menjalankan Scheduler
+
+Semua jadwal di atas hanya berjalan bila `php artisan schedule:run` dipanggil setiap menit:
+
+| Environment | Cara |
+| --- | --- |
+| Server (systemd) | service `cutker-scheduler` — cek dengan `systemctl status cutker-scheduler` |
+| Docker Compose | container `scheduler` (otomatis) |
+| Lokal / development | `php artisan schedule:work` di terminal terpisah |
+
+### Setelah Update Kode di Server
+
+```bash
+git pull
+php artisan migrate --force          # bila ada migration baru
+php artisan optimize:clear
+sudo systemctl restart cutker cutker-scheduler
+php artisan schedule:list            # pastikan jadwal terdaftar
+```
+
+> Jalankan `migrate` sebagai user yang sama dengan service aplikasi agar kepemilikan file SQLite tidak berubah. Bila mengubah `.env` (mis. ganti `EVOLUTION_INSTANCE`), jalankan `optimize:clear` dan restart service agar nilai baru terbaca.
 
 ## Menjalankan Test
 
