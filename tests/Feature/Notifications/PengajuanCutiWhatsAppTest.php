@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Notifications;
 
+use App\Enums\StatusAntrianWhatsapp;
+use App\Models\AntrianWhatsapp;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\SaldoCuti;
@@ -82,6 +84,31 @@ class PengajuanCutiWhatsAppTest extends TestCase
 
         $this->assertDatabaseCount('pengajuan_cutis', 1);
         $this->assertDatabaseCount('approvals', 1);
+    }
+
+    public function test_message_is_queued_for_resending_when_whatsapp_gateway_fails(): void
+    {
+        Http::fake(['*/message/sendText/*' => Http::response(null, 500)]);
+
+        [$karyawan] = $this->ajukanCuti(noHpKepalaBagian: '081234567890');
+
+        $antrian = AntrianWhatsapp::sole();
+        $this->assertSame('6281234567890', $antrian->nomor);
+        $this->assertStringContainsString("*{$karyawan->nama}*", $antrian->pesan);
+        $this->assertSame(StatusAntrianWhatsapp::Pending, $antrian->status);
+        $this->assertSame(1, $antrian->percobaan);
+        $this->assertSame('HTTP 500', $antrian->error_terakhir);
+    }
+
+    public function test_successfully_sent_message_is_not_left_pending(): void
+    {
+        Http::fake(['*/message/sendText/*' => Http::response(['status' => 'PENDING'], 201)]);
+
+        $this->ajukanCuti();
+
+        $antrian = AntrianWhatsapp::sole();
+        $this->assertSame(StatusAntrianWhatsapp::Terkirim, $antrian->status);
+        $this->assertNotNull($antrian->terkirim_pada);
     }
 
     public function test_no_whatsapp_is_sent_when_kepala_bagian_has_no_phone_number(): void
