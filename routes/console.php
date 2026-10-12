@@ -12,3 +12,4 @@ Schedule::command('cuti:reset-saldo-tahunan')->yearlyOn(1, 1)->withoutOverlappin
 Schedule::command('cuti:proses-siklus-tahunan')->daily()->withoutOverlapping();
 Schedule::command('libur:sync-nasional')->yearlyOn(1, 1)->withoutOverlapping();
 Schedule::call(fn () => Artisan::call('libur:sync-nasional', ['--tahun' => now()->year + 1]))->yearlyOn(12, 1);
+Schedule::command('whatsapp:kirim-antrian')->everyMinute()->withoutOverlapping();
