@@ -52,7 +52,7 @@ class LaporanCutiController extends Controller
         $pdf = Pdf::loadView('laporan.cuti-pdf', [
             'pengajuans' => $pengajuans,
             'filters' => $this->filters($request),
-        ]);
+        ])->setPaper('a4', 'landscape');
 
         return $pdf->download('laporan-cuti-'.now()->format('Y-m-d').'.pdf');
     }
@@ -65,7 +65,7 @@ class LaporanCutiController extends Controller
         $filters = $this->filters($request);
 
         return PengajuanCuti::query()
-            ->with(['karyawan.departemen', 'jenisCuti'])
+            ->with(['karyawan.departemen', 'jenisCuti', 'alasanCuti'])
             ->when($filters['departemen_id'], fn ($query) => $query->whereHas('karyawan', fn ($q) => $q->where('departemen_id', $filters['departemen_id'])))
             ->when($filters['karyawan_id'], fn ($query) => $query->where('karyawan_id', $filters['karyawan_id']))
             ->when($filters['jenis_cuti_id'], fn ($query) => $query->where('jenis_cuti_id', $filters['jenis_cuti_id']))

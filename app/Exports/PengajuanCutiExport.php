@@ -51,7 +51,7 @@ class PengajuanCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, Wi
      */
     public function headings(): array
     {
-        return ['Nama Karyawan', 'Departemen', 'Jenis Cuti', 'Tanggal Mulai', 'Tanggal Selesai', 'Jumlah Hari', 'Status', 'Tanggal Pengajuan'];
+        return ['Nama Karyawan', 'Departemen', 'Jenis Cuti', 'Tanggal Mulai', 'Tanggal Selesai', 'Jumlah Hari', 'Status', 'Tanggal Pengajuan', 'Sub Alasan', 'Alasan', 'Mendadak', 'Alasan Mendadak'];
     }
 
     /**
@@ -71,6 +71,10 @@ class PengajuanCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, Wi
             $pengajuan->jumlah_hari,
             $pengajuan->status->label(),
             $pengajuan->tanggal_pengajuan->toDateTimeString(),
+            $pengajuan->alasanCuti?->nama_alasan ?? '-',
+            $pengajuan->alasan,
+            $pengajuan->is_mendadak ? 'Ya' : 'Tidak',
+            $pengajuan->alasan_mendadak ?? '-',
         ];
     }
 
@@ -78,8 +82,8 @@ class PengajuanCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, Wi
     {
         $highestRow = $sheet->getHighestRow();
 
-        ExcelStyler::header($sheet, 'A1:H1');
-        ExcelStyler::border($sheet, "A1:H{$highestRow}");
+        ExcelStyler::header($sheet, 'A1:L1');
+        ExcelStyler::border($sheet, "A1:L{$highestRow}");
 
         $sheet->getStyle(self::KOLOM_JUMLAH_HARI.'2:'.self::KOLOM_JUMLAH_HARI.$highestRow)
             ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
@@ -89,7 +93,7 @@ class PengajuanCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, Wi
             ExcelStyler::tandaiSel($sheet, self::KOLOM_STATUS.$baris, $warna['fill'], $warna['teks']);
         }
 
-        $sheet->setAutoFilter('A1:H1');
+        $sheet->setAutoFilter('A1:L1');
         $sheet->freezePane('A2');
 
         return null;

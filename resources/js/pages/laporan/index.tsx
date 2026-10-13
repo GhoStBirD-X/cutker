@@ -3,6 +3,7 @@ import { BarChart3, Download } from 'lucide-react';
 import { useState } from 'react';
 import { Pagination } from '@/components/pagination';
 import { StatusBadge } from '@/components/status-badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -216,9 +217,9 @@ export default function LaporanIndex() {
                         {pengajuans.data.map((pengajuan) => (
                             <div
                                 key={pengajuan.id}
-                                className="flex flex-col gap-2 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
+                                className="flex flex-col gap-2 p-4 text-sm sm:flex-row sm:items-start sm:justify-between"
                             >
-                                <div>
+                                <div className="min-w-0 flex-1">
                                     <div className="font-medium">
                                         {pengajuan.karyawan?.nama} &middot;{' '}
                                         {pengajuan.jenis_cuti?.nama_jenis}
@@ -234,8 +235,39 @@ export default function LaporanIndex() {
                                         {formatDate(pengajuan.tanggal_selesai)}{' '}
                                         ({pengajuan.jumlah_hari} hari)
                                     </div>
+                                    <div className="mt-2 rounded-md bg-muted/50 px-3 py-2">
+                                        <div className="text-xs font-medium text-muted-foreground">
+                                            Alasan
+                                            {pengajuan.alasan_cuti &&
+                                                ` · ${pengajuan.alasan_cuti.nama_alasan}`}
+                                        </div>
+                                        <p className="break-words whitespace-pre-line">
+                                            {pengajuan.alasan}
+                                        </p>
+                                    </div>
+                                    {pengajuan.is_mendadak &&
+                                        pengajuan.alasan_mendadak && (
+                                            <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-900 dark:bg-amber-950/40">
+                                                <div className="text-xs font-medium text-amber-800 dark:text-amber-300">
+                                                    Alasan Mendadak
+                                                </div>
+                                                <p className="break-words whitespace-pre-line">
+                                                    {pengajuan.alasan_mendadak}
+                                                </p>
+                                            </div>
+                                        )}
                                 </div>
-                                <StatusBadge status={pengajuan.status} />
+                                <div className="flex shrink-0 gap-2">
+                                    {pengajuan.is_mendadak && (
+                                        <Badge
+                                            variant="outline"
+                                            className="border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300"
+                                        >
+                                            Mendadak
+                                        </Badge>
+                                    )}
+                                    <StatusBadge status={pengajuan.status} />
+                                </div>
                             </div>
                         ))}
                     </CardContent>

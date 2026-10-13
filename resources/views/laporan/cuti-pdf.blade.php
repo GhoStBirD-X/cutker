@@ -10,6 +10,8 @@
         table { width: 100%; border-collapse: collapse; margin-top: 12px; }
         th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
         th { background-color: #f0f0f0; }
+        .sub-alasan { font-weight: bold; }
+        .mendadak { margin-top: 4px; color: #92400e; }
     </style>
 </head>
 <body>
@@ -30,6 +32,7 @@
                 <th>Tanggal Selesai</th>
                 <th>Jumlah Hari</th>
                 <th>Status</th>
+                <th>Alasan</th>
             </tr>
         </thead>
         <tbody>
@@ -42,10 +45,19 @@
                     <td>{{ $pengajuan->tanggal_selesai->toDateString() }}</td>
                     <td>{{ $pengajuan->jumlah_hari }}</td>
                     <td>{{ $pengajuan->status->label() }}</td>
+                    <td>
+                        @if ($pengajuan->alasanCuti)
+                            <div class="sub-alasan">{{ $pengajuan->alasanCuti->nama_alasan }}</div>
+                        @endif
+                        <div>{{ $pengajuan->alasan }}</div>
+                        @if ($pengajuan->is_mendadak)
+                            <div class="mendadak"><strong>Mendadak:</strong> {{ $pengajuan->alasan_mendadak }}</div>
+                        @endif
+                    </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7">Tidak ada data pengajuan cuti pada periode ini.</td>
+                    <td colspan="8">Tidak ada data pengajuan cuti pada periode ini.</td>
                 </tr>
             @endforelse
         </tbody>

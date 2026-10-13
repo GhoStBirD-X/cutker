@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Laporan;
 
+use App\Models\AlasanCuti;
 use App\Models\JadwalShift;
 use App\Models\JenisCuti;
 use App\Models\PengajuanCuti;
@@ -109,6 +110,30 @@ class LaporanCutiTest extends TestCase
         );
     }
 
+    public function test_pengajuan_rows_include_alasan_sub_alasan_and_alasan_mendadak(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $alasanCuti = AlasanCuti::factory()->create(['nama_alasan' => 'Menikah']);
+
+        PengajuanCuti::factory()->create([
+            'jenis_cuti_id' => $alasanCuti->jenis_cuti_id,
+            'alasan_cuti_id' => $alasanCuti->id,
+            'alasan' => 'Pernikahan sendiri',
+            'is_mendadak' => true,
+            'alasan_mendadak' => 'Tanggal akad dimajukan keluarga.',
+        ]);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.index'));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->where('pengajuans.data.0.alasan', 'Pernikahan sendiri')
+            ->where('pengajuans.data.0.alasan_cuti.nama_alasan', 'Menikah')
+            ->where('pengajuans.data.0.is_mendadak', true)
+            ->where('pengajuans.data.0.alasan_mendadak', 'Tanggal akad dimajukan keluarga.')
+        );
+    }
+
     public function test_karyawan_cannot_access_laporan_page(): void
     {
         $karyawan = $this->karyawanUser('karyawan');
@@ -131,5 +156,62 @@ class LaporanCutiTest extends TestCase
         $this->assertSame('FF4F46E5', $sheet->getStyle('A1')->getFill()->getStartColor()->getARGB());
         $this->assertSame('FFD1FAE5', $sheet->getStyle('G2')->getFill()->getStartColor()->getARGB());
         $this->assertSame('FF065F46', $sheet->getStyle('G2')->getFont()->getColor()->getARGB());
+    }
+
+    public function test_export_excel_includes_alasan_columns(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $alasanCuti = AlasanCuti::factory()->create(['nama_alasan' => 'Menikah']);
+        PengajuanCuti::factory()->create([
+            'jenis_cuti_id' => $alasanCuti->jenis_cuti_id,
+            'alasan_cuti_id' => $alasanCuti->id,
+            'alasan' => 'Pernikahan sendiri',
+            'is_mendadak' => true,
+            'alasan_mendadak' => 'Tanggal akad dimajukan keluarga.',
+        ]);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.export.excel'));
+
+        $response->assertOk();
+        $sheet = IOFactory::load($response->getFile()->getPathname())->getActiveSheet();
+
+        $this->assertSame(
+            ['Sub Alasan', 'Alasan', 'Mendadak', 'Alasan Mendadak'],
+            $sheet->rangeToArray('I1:L1')[0],
+        );
+        $this->assertSame(
+            ['Menikah', 'Pernikahan sendiri', 'Ya', 'Tanggal akad dimajukan keluarga.'],
+            $sheet->rangeToArray('I2:L2')[0],
+        );
+    }
+
+    public function test_pdf_view_shows_alasan_sub_alasan_and_alasan_mendadak(): void
+    {
+        $alasanCuti = AlasanCuti::factory()->create(['nama_alasan' => 'Menikah']);
+        PengajuanCuti::factory()->create([
+            'jenis_cuti_id' => $alasanCuti->jenis_cuti_id,
+            'alasan_cuti_id' => $alasanCuti->id,
+            'alasan' => 'Pernikahan sendiri',
+            'is_mendadak' => true,
+            'alasan_mendadak' => 'Tanggal akad dimajukan keluarga.',
+        ]);
+
+        $view = $this->view('laporan.cuti-pdf', [
+            'pengajuans' => PengajuanCuti::query()->with(['karyawan.departemen', 'jenisCuti', 'alasanCuti'])->get(),
+            'filters' => [],
+        ]);
+
+        $view->assertSeeInOrder(['Menikah', 'Pernikahan sendiri', 'Mendadak:', 'Tanggal akad dimajukan keluarga.']);
+    }
+
+    public function test_hrd_can_export_laporan_cuti_as_pdf(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        PengajuanCuti::factory()->create(['is_mendadak' => true, 'alasan_mendadak' => 'Sakit mendadak.']);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.export.pdf'));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
     }
 }
