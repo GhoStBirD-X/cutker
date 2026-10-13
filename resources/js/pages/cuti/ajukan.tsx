@@ -1,11 +1,19 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
-import { CalendarPlus } from 'lucide-react';
+import { CalendarPlus, Zap } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import PengajuanCutiController from '@/actions/App/Http/Controllers/Cuti/PengajuanCutiController';
 import InputError from '@/components/input-error';
 import { PratinjauHariCuti } from '@/components/pratinjau-hari-cuti';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -38,8 +46,11 @@ type PageProps = {
 export default function CutiAjukan() {
     const { jenisCutis, alasanCutis, saldoCuti, cutiBesarTerkunci, hariLibur } =
         usePage<PageProps>().props;
-    // Pengajuan biasa paling cepat dimulai besok (H+1).
+    // Pengajuan biasa paling cepat dimulai besok (H+1); tanggal mulai
+    // kemarin/hari ini diarahkan ke form cuti mendadak lewat dialog.
     const besok = tanggalHariIni(1);
+    const kemarin = tanggalHariIni(-1);
+    const [arahkanKeMendadak, setArahkanKeMendadak] = useState(false);
 
     const [jenisCutiId, setJenisCutiId] = useState('');
     const [alasanCutiId, setAlasanCutiId] = useState('');
@@ -49,6 +60,12 @@ export default function CutiAjukan() {
     const saldoTerpilih = saldoCuti.find(
         (saldo) => String(saldo.jenis_cuti_id) === jenisCutiId,
     );
+
+    const cekPerluCutiMendadak = () => {
+        if (tanggalMulai >= kemarin && tanggalMulai < besok) {
+            setArahkanKeMendadak(true);
+        }
+    };
 
     const alasanUntukJenisTerpilih = useMemo(
         () =>
@@ -73,6 +90,11 @@ export default function CutiAjukan() {
                             {...PengajuanCutiController.store.form()}
                             encType="multipart/form-data"
                             className="space-y-5"
+                            onError={(errors) => {
+                                if (errors.tanggal_mulai) {
+                                    cekPerluCutiMendadak();
+                                }
+                            }}
                         >
                             {({ processing, errors }) => (
                                 <>
@@ -208,6 +230,7 @@ export default function CutiAjukan() {
                                                         e.target.value,
                                                     )
                                                 }
+                                                onBlur={cekPerluCutiMendadak}
                                                 required
                                             />
                                             <InputError
@@ -293,6 +316,38 @@ export default function CutiAjukan() {
                     </CardContent>
                 </Card>
             </div>
+
+            <Dialog
+                open={arahkanKeMendadak}
+                onOpenChange={setArahkanKeMendadak}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Zap className="size-5 text-amber-600 dark:text-amber-400" />
+                            Gunakan Pengajuan Cuti Mendadak
+                        </DialogTitle>
+                        <DialogDescription>
+                            Cuti biasa paling cepat dimulai besok (H+1). Untuk
+                            cuti yang dimulai hari ini atau kemarin, ajukan
+                            lewat form Cuti Mendadak.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2">
+                        <Button
+                            variant="secondary"
+                            onClick={() => setArahkanKeMendadak(false)}
+                        >
+                            Ganti Tanggal
+                        </Button>
+                        <Button asChild>
+                            <Link href={cutiCreateMendadak()}>
+                                Ke Ajukan Cuti Mendadak
+                            </Link>
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
