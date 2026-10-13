@@ -71,6 +71,23 @@ class PengajuanCutiTest extends TestCase
         ]);
     }
 
+    public function test_start_date_messages_stay_indonesian_when_app_locale_is_english(): void
+    {
+        $this->app->setLocale('en');
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'tanggal_mulai' => now()->toDateString(),
+        ]);
+        $response->assertSessionHasErrors(['tanggal_mulai' => 'Tanggal mulai paling cepat besok (H+1).']);
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'tanggal_mulai' => now()->addDay()->toDateString(),
+            'mendadak' => true,
+        ]);
+        $response->assertSessionHasErrors(['tanggal_mulai' => 'Cuti mendadak hanya boleh dimulai kemarin (H-1) atau hari ini (H).']);
+    }
+
     public function test_regular_request_may_start_tomorrow(): void
     {
         $karyawan = $this->karyawanUser('karyawan')->karyawan;

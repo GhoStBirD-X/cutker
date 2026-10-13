@@ -51,6 +51,10 @@ class StorePengajuanCutiRequest extends FormRequest
     }
 
     /**
+     * Pesan batas tanggal mulai ditulis langsung di sini (bukan hanya di
+     * lang/id) supaya tetap berbahasa Indonesia walau APP_LOCALE server
+     * belum di-set ke `id`.
+     *
      * @return array<string, string>
      */
     public function messages(): array
@@ -60,7 +64,7 @@ class StorePengajuanCutiRequest extends FormRequest
                 'tanggal_mulai.after_or_equal' => 'Cuti mendadak hanya boleh dimulai kemarin (H-1) atau hari ini (H).',
                 'tanggal_mulai.before_or_equal' => 'Cuti mendadak hanya boleh dimulai kemarin (H-1) atau hari ini (H).',
             ]
-            : [];
+            : ['tanggal_mulai.after_or_equal' => 'Tanggal mulai paling cepat besok (H+1).'];
     }
 
     /**
