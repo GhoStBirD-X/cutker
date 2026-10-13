@@ -364,6 +364,27 @@ class KaryawanManagementTest extends TestCase
         $this->assertSame([$kompensasiDiproses->id], KompensasiCuti::query()->pluck('id')->all());
     }
 
+    public function test_koreksi_tanggal_masuk_karyawan_tetap_ke_tahun_setelah_lima_tahun_membuat_cuti_tahunan_nol(): void
+    {
+        $this->travelTo('2026-10-07');
+        $hrd = $this->karyawanUser('hrd');
+        $cutiTahunan = JenisCuti::factory()->create(['nama_jenis' => JenisCuti::NAMA_CUTI_TAHUNAN, 'kuota_default' => 12, 'masa_kerja_minimal_bulan' => 12]);
+        $karyawan = Karyawan::factory()->create(['tanggal_masuk' => '2023-03-26']);
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $cutiTahunan->id, 'periode_ke' => 4,
+            'periode_mulai' => '2026-03-26', 'periode_selesai' => '2027-03-25', 'kuota' => 12, 'terpakai' => 0, 'sisa' => 12,
+        ]);
+
+        $this->actingAs($hrd)
+            ->put(route('master.karyawan.update', $karyawan), $this->dataEditKaryawan($karyawan, ['tanggal_masuk' => '2021-03-26']))
+            ->assertSessionDoesntHaveErrors();
+
+        $saldo = SaldoCuti::query()->where('karyawan_id', $karyawan->id)->where('jenis_cuti_id', $cutiTahunan->id)->sole();
+        $this->assertSame(6, $saldo->periode_ke);
+        $this->assertSame(0, $saldo->kuota);
+        $this->assertSame(0, $saldo->sisa);
+    }
+
     public function test_edit_karyawan_tanpa_mengubah_tanggal_masuk_tidak_menghitung_ulang_periode(): void
     {
         $hrd = $this->karyawanUser('hrd');

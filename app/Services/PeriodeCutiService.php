@@ -495,9 +495,7 @@ class PeriodeCutiService
         $periodeMulaiBaru = $saldoLama->periode_selesai->copy()->addDay();
         $periodeSelesaiBaru = $periodeMulaiBaru->copy()->addMonths($jenisCuti->masa_kerja_minimal_bulan)->subDay();
         $periodeKeBaru = $saldoLama->periode_ke + 1;
-        $kembaliKeK1 = $saldoLama->karyawan->tipe_karyawan === TipeKaryawan::Kontrak
-            && SaldoCuti::urutanKontrakDariPeriode($periodeKeBaru) === 1;
-        $kuotaBaru = $tanpaKuota || $kembaliKeK1 ? 0 : $jenisCuti->kuota_default;
+        $kuotaBaru = $tanpaKuota ? 0 : $jenisCuti->kuotaAwalPeriode($periodeKeBaru, $saldoLama->karyawan->tipe_karyawan);
 
         SaldoCuti::query()->create([
             'karyawan_id' => $saldoLama->karyawan_id,

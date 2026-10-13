@@ -11,6 +11,7 @@ use App\Models\KonfirmasiKontrakCuti;
 use App\Models\SaldoCuti;
 use App\Services\PeriodeCutiService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
 class PeriodeCutiSiklusTest extends TestCase
@@ -233,10 +234,10 @@ class PeriodeCutiSiklusTest extends TestCase
     /**
      * @return array{karyawan: Karyawan, saldo: SaldoCuti}
      */
-    private function perpanjangKontrakDariPeriode(int $periodeKe, TipeKaryawan $tipe = TipeKaryawan::Kontrak): array
+    private function perpanjangKontrakDariPeriode(int $periodeKe, TipeKaryawan $tipe = TipeKaryawan::Kontrak, ?string $namaJenis = null): array
     {
         $karyawan = Karyawan::factory()->create(['tipe_karyawan' => $tipe]);
-        $jenisCuti = JenisCuti::factory()->create(['kuota_default' => 12, 'masa_kerja_minimal_bulan' => 12]);
+        $jenisCuti = JenisCuti::factory()->create(['kuota_default' => 12, 'masa_kerja_minimal_bulan' => 12, ...($namaJenis ? ['nama_jenis' => $namaJenis] : [])]);
 
         $saldoLama = SaldoCuti::factory()->create([
             'karyawan_id' => $karyawan->id,
@@ -283,9 +284,20 @@ class PeriodeCutiSiklusTest extends TestCase
         $this->assertSame(12, $saldo->sisa);
     }
 
-    public function test_karyawan_tetap_tidak_ikut_siklus_kontrak_dan_tetap_dapat_kuota_penuh_setelah_periode_kelima(): void
+    #[TestWith([5, 0])]
+    #[TestWith([6, 12])]
+    #[TestWith([10, 0])]
+    public function test_cuti_tahunan_karyawan_tetap_nol_di_tahun_setelah_kelipatan_lima_tahun(int $periodeLama, int $kuotaBaru): void
     {
-        ['saldo' => $saldo] = $this->perpanjangKontrakDariPeriode(5, TipeKaryawan::Tetap);
+        ['saldo' => $saldo] = $this->perpanjangKontrakDariPeriode($periodeLama, TipeKaryawan::Tetap, JenisCuti::NAMA_CUTI_TAHUNAN);
+
+        $this->assertSame($kuotaBaru, $saldo->kuota);
+        $this->assertSame($kuotaBaru, $saldo->sisa);
+    }
+
+    public function test_jenis_cuti_periode_selain_cuti_tahunan_karyawan_tetap_tetap_penuh_setelah_periode_kelima(): void
+    {
+        ['saldo' => $saldo] = $this->perpanjangKontrakDariPeriode(5, TipeKaryawan::Tetap, JenisCuti::NAMA_CUTI_BESAR);
 
         $this->assertSame(12, $saldo->kuota);
         $this->assertSame(12, $saldo->sisa);

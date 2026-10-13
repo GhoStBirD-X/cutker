@@ -226,8 +226,7 @@ class SaldoCutiService
      * tetap) dipindah ke posisi yang benar menurut tanggal_masuk baru, mis.
      * masuk 2019 → hari ini periode ke-8 (K3 siklus kedua).
      *
-     * Kuota mengikuti posisi baru (periode ke-1 dan K1 ulang setelah K5 = 0,
-     * selain itu kuota_default); hari yang sudah terpakai di periode
+     * Kuota mengikuti posisi baru (lihat JenisCuti::kuotaAwalPeriode()); hari yang sudah terpakai di periode
      * berjalan tetap dihitung. Riwayat dari tanggal masuk yang salah
      * (periode tertutup, arsip, konfirmasi kontrak, kompensasi yang belum
      * diproses) dihapus supaya tidak bentrok. Kompensasi yang sudah
@@ -259,10 +258,7 @@ class SaldoCutiService
             [$mulai, $selesai] = $this->hitungTanggalPeriode($karyawan, $jenisCuti, $periodeKe);
         }
 
-        $kuota = $periodeKe === 1
-            || ($karyawan->tipe_karyawan === TipeKaryawan::Kontrak && SaldoCuti::urutanKontrakDariPeriode($periodeKe) === 1)
-            ? 0
-            : $jenisCuti->kuota_default;
+        $kuota = $jenisCuti->kuotaAwalPeriode($periodeKe, $karyawan->tipe_karyawan);
 
         $saldoBerjalan = $this->untukPeriodeAktif($karyawan, $jenisCuti);
         $saldoIds = SaldoCuti::query()

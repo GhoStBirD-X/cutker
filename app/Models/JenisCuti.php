@@ -92,6 +92,23 @@ class JenisCuti extends Model
     }
 
     /**
+     * Kuota awal sebuah periode untuk jenis cuti bertipe periode. Kuotanya 0
+     * di periode ke-1 (masa kerja minimal) dan di periode pertama setiap
+     * siklus lima tahun (periode ke-6, 11, 16, …): untuk karyawan kontrak
+     * itu K1 ulang setelah K5, dan untuk Cuti Tahunan berlaku juga bagi
+     * karyawan tetap — tahun setelah kelipatan lima tahun masa kerja tidak
+     * mendapat Cuti Tahunan.
+     */
+    public function kuotaAwalPeriode(int $periodeKe, TipeKaryawan $tipeKaryawan): ?int
+    {
+        $awalSiklusLimaTahun = SaldoCuti::urutanKontrakDariPeriode($periodeKe) === 1;
+        $tanpaKuota = $periodeKe === 1
+            || ($awalSiklusLimaTahun && ($tipeKaryawan === TipeKaryawan::Kontrak || $this->nama_jenis === self::NAMA_CUTI_TAHUNAN));
+
+        return $tanpaKuota ? 0 : $this->kuota_default;
+    }
+
+    /**
      * Jenis cuti yang berlaku untuk tipe karyawan tertentu: karyawan
      * kontrak tidak mendapat Cuti Besar.
      *
