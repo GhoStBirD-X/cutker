@@ -70,12 +70,11 @@ export default function CutiAjukanMendadak() {
                                 Ajukan Cuti Mendadak
                             </p>
                             <p className="text-amber-800/80 dark:text-amber-300/80">
-                                Gunakan form ini hanya untuk kondisi mendesak
-                                yang tidak memenuhi batas waktu pengajuan
-                                normal. Tanggal mulai hanya boleh kemarin (H-1)
-                                atau hari ini (H). Pengajuan tetap harus
-                                disetujui atasan, dan alasan mendadak yang Anda
-                                isi akan ditampilkan ke approver.
+                                Gunakan form ini hanya untuk kondisi mendesak.
+                                Tanggal mulai hanya boleh kemarin (H-1) atau
+                                hari ini (H). Pengajuan tetap harus disetujui
+                                atasan, dan alasan mendadak yang Anda isi akan
+                                ditampilkan ke approver.
                             </p>
                         </div>
                     </CardContent>

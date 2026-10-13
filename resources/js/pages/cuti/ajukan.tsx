@@ -58,10 +58,6 @@ export default function CutiAjukan() {
         [alasanCutis, jenisCutiId],
     );
 
-    const jenisCutiTerpilih = jenisCutis.find(
-        (jenis) => String(jenis.id) === jenisCutiId,
-    );
-
     return (
         <>
             <Head title="Ajukan Cuti" />
@@ -241,24 +237,16 @@ export default function CutiAjukan() {
                                         </div>
                                     </div>
 
-                                    {jenisCutiTerpilih?.minimal_hari_pengajuan && (
-                                        <p className="-mt-3 text-xs text-muted-foreground">
-                                            {jenisCutiTerpilih.nama_jenis} harus
-                                            diajukan minimal{' '}
-                                            {
-                                                jenisCutiTerpilih.minimal_hari_pengajuan
-                                            }{' '}
-                                            hari sebelum tanggal mulai. Butuh
-                                            cuti mendadak?{' '}
-                                            <Link
-                                                href={cutiCreateMendadak()}
-                                                className="text-primary underline"
-                                            >
-                                                Ajukan di sini
-                                            </Link>
-                                            .
-                                        </p>
-                                    )}
+                                    <p className="-mt-3 text-xs text-muted-foreground">
+                                        Butuh cuti mulai hari ini atau kemarin?{' '}
+                                        <Link
+                                            href={cutiCreateMendadak()}
+                                            className="text-primary underline"
+                                        >
+                                            Ajukan cuti mendadak
+                                        </Link>
+                                        .
+                                    </p>
 
                                     <PratinjauHariCuti
                                         tanggalMulai={tanggalMulai}

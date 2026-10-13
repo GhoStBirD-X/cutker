@@ -5,7 +5,6 @@ namespace App\Http\Requests\Cuti;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
-use App\Rules\BatasWaktuPengajuanCuti;
 use App\Rules\CutiBesarKhususKaryawanTetap;
 use App\Rules\CutiBesarSetelahCutiTahunanHabis;
 use App\Rules\MasaKerjaMencukupi;
@@ -42,10 +41,10 @@ class StorePengajuanCutiRequest extends FormRequest
         $mendadak = $this->boolean('mendadak');
 
         return [
-            ...$this->aturanCuti($this->user()->karyawan, [
-                ...($mendadak ? ['after_or_equal:yesterday', 'before_or_equal:today'] : ['after_or_equal:tomorrow']),
-                new BatasWaktuPengajuanCuti($this->integer('jenis_cuti_id') ?: null, $mendadak),
-            ]),
+            ...$this->aturanCuti(
+                $this->user()->karyawan,
+                $mendadak ? ['after_or_equal:yesterday', 'before_or_equal:today'] : ['after_or_equal:tomorrow'],
+            ),
             'mendadak' => ['sometimes', 'boolean'],
             'alasan_mendadak' => ['required_if:mendadak,true', 'nullable', 'string', 'max:500'],
         ];
