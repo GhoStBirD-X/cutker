@@ -1,7 +1,7 @@
 /**
  * Tanggal hari ini (zona waktu lokal browser) dalam format YYYY-MM-DD untuk
- * atribut `min` input date. `geserHari` menggeser tanggalnya, mis. -1 untuk
- * kemarin (batas backdate cuti mendadak).
+ * atribut `min`/`max` input date. `geserHari` menggeser tanggalnya, mis. -1
+ * untuk kemarin (batas backdate cuti mendadak) atau 1 untuk besok.
  */
 export function tanggalHariIni(geserHari = 0): string {
     const sekarang = new Date();

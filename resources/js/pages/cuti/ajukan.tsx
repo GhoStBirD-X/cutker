@@ -38,7 +38,8 @@ type PageProps = {
 export default function CutiAjukan() {
     const { jenisCutis, alasanCutis, saldoCuti, cutiBesarTerkunci, hariLibur } =
         usePage<PageProps>().props;
-    const today = tanggalHariIni();
+    // Pengajuan biasa paling cepat dimulai besok (H+1).
+    const besok = tanggalHariIni(1);
 
     const [jenisCutiId, setJenisCutiId] = useState('');
     const [alasanCutiId, setAlasanCutiId] = useState('');
@@ -204,7 +205,7 @@ export default function CutiAjukan() {
                                                 id="tanggal_mulai"
                                                 type="date"
                                                 name="tanggal_mulai"
-                                                min={today}
+                                                min={besok}
                                                 value={tanggalMulai}
                                                 onChange={(e) =>
                                                     setTanggalMulai(
@@ -225,7 +226,7 @@ export default function CutiAjukan() {
                                                 id="tanggal_selesai"
                                                 type="date"
                                                 name="tanggal_selesai"
-                                                min={tanggalMulai || today}
+                                                min={tanggalMulai || besok}
                                                 value={tanggalSelesai}
                                                 onChange={(e) =>
                                                     setTanggalSelesai(

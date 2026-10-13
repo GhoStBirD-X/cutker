@@ -37,8 +37,9 @@ type PageProps = {
 export default function CutiAjukanMendadak() {
     const { jenisCutis, alasanCutis, saldoCuti, cutiBesarTerkunci, hariLibur } =
         usePage<PageProps>().props;
-    // Cuti mendadak boleh dimulai paling cepat kemarin (H-1).
+    // Cuti mendadak hanya boleh dimulai kemarin (H-1) atau hari ini (H).
     const kemarin = tanggalHariIni(-1);
+    const hariIni = tanggalHariIni();
 
     const [jenisCutiId, setJenisCutiId] = useState('');
     const [alasanCutiId, setAlasanCutiId] = useState('');
@@ -71,10 +72,10 @@ export default function CutiAjukanMendadak() {
                             <p className="text-amber-800/80 dark:text-amber-300/80">
                                 Gunakan form ini hanya untuk kondisi mendesak
                                 yang tidak memenuhi batas waktu pengajuan
-                                normal. Tanggal mulai boleh mundur sampai
-                                kemarin (H-1). Pengajuan tetap harus disetujui
-                                atasan, dan alasan mendadak yang Anda isi akan
-                                ditampilkan ke approver.
+                                normal. Tanggal mulai hanya boleh kemarin (H-1)
+                                atau hari ini (H). Pengajuan tetap harus
+                                disetujui atasan, dan alasan mendadak yang Anda
+                                isi akan ditampilkan ke approver.
                             </p>
                         </div>
                     </CardContent>
@@ -221,6 +222,7 @@ export default function CutiAjukanMendadak() {
                                                 type="date"
                                                 name="tanggal_mulai"
                                                 min={kemarin}
+                                                max={hariIni}
                                                 value={tanggalMulai}
                                                 onChange={(e) =>
                                                     setTanggalMulai(

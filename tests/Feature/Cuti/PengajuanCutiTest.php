@@ -56,18 +56,48 @@ class PengajuanCutiTest extends TestCase
         ]);
     }
 
-    public function test_past_start_date_and_end_before_start_are_rejected_with_clear_messages(): void
+    public function test_regular_request_starting_today_and_end_before_start_are_rejected_with_clear_messages(): void
     {
         $karyawan = $this->karyawanUser('karyawan')->karyawan;
 
         $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
-            'tanggal_mulai' => now()->subDay()->toDateString(),
-            'tanggal_selesai' => now()->subDays(2)->toDateString(),
+            'tanggal_mulai' => now()->toDateString(),
+            'tanggal_selesai' => now()->subDay()->toDateString(),
         ]);
 
         $response->assertSessionHasErrors([
-            'tanggal_mulai' => 'Tanggal mulai tidak boleh sebelum hari ini.',
+            'tanggal_mulai' => 'Tanggal mulai paling cepat besok (H+1).',
             'tanggal_selesai' => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
+        ]);
+    }
+
+    public function test_regular_request_may_start_tomorrow(): void
+    {
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id]);
+
+        $jenisCuti = JenisCuti::factory()->create(['minimal_hari_pengajuan' => null]);
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDay()->toDateString(),
+            'tanggal_selesai' => now()->addDay()->toDateString(),
+            'alasan' => 'Acara keluarga',
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertDatabaseHas('pengajuan_cutis', [
+            'karyawan_id' => $karyawan->id,
+            'tanggal_mulai' => now()->addDay()->startOfDay(),
+            'is_mendadak' => false,
         ]);
     }
 
@@ -793,8 +823,8 @@ class PengajuanCutiTest extends TestCase
 
         $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
             'jenis_cuti_id' => $jenisCuti->id,
-            'tanggal_mulai' => now()->addDay()->toDateString(),
-            'tanggal_selesai' => now()->addDay()->toDateString(),
+            'tanggal_mulai' => now()->toDateString(),
+            'tanggal_selesai' => now()->toDateString(),
             'alasan' => 'Sakit mendadak',
             'mendadak' => true,
             'alasan_mendadak' => 'Orang tua masuk rumah sakit tiba-tiba.',
@@ -811,7 +841,7 @@ class PengajuanCutiTest extends TestCase
         ]);
     }
 
-    public function test_mendadak_request_may_start_yesterday_but_not_earlier(): void
+    public function test_mendadak_request_may_only_start_yesterday_or_today(): void
     {
         $karyawan = $this->karyawanUser('karyawan')->karyawan;
         $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id]);
@@ -828,14 +858,17 @@ class PengajuanCutiTest extends TestCase
         $mendadak = fn (CarbonInterface $tanggal): array => [
             'jenis_cuti_id' => $jenisCuti->id,
             'tanggal_mulai' => $tanggal->toDateString(),
-            'tanggal_selesai' => now()->toDateString(),
+            'tanggal_selesai' => now()->addDay()->toDateString(),
             'alasan' => 'Sakit mendadak',
             'mendadak' => true,
             'alasan_mendadak' => 'Demam tinggi, baru sempat mengajukan hari ini.',
         ];
 
         $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), $mendadak(now()->subDays(2)));
-        $response->assertSessionHasErrors(['tanggal_mulai' => 'Cuti mendadak paling cepat dimulai kemarin (H-1).']);
+        $response->assertSessionHasErrors(['tanggal_mulai' => 'Cuti mendadak hanya boleh dimulai kemarin (H-1) atau hari ini (H).']);
+
+        $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), $mendadak(now()->addDay()));
+        $response->assertSessionHasErrors(['tanggal_mulai' => 'Cuti mendadak hanya boleh dimulai kemarin (H-1) atau hari ini (H).']);
 
         $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), $mendadak(now()->subDay()));
         $response->assertSessionDoesntHaveErrors();
@@ -863,8 +896,8 @@ class PengajuanCutiTest extends TestCase
 
         $response = $this->actingAs($karyawan->user)->post(route('cuti.store'), [
             'jenis_cuti_id' => $jenisCuti->id,
-            'tanggal_mulai' => now()->addDay()->toDateString(),
-            'tanggal_selesai' => now()->addDay()->toDateString(),
+            'tanggal_mulai' => now()->toDateString(),
+            'tanggal_selesai' => now()->toDateString(),
             'alasan' => 'Sakit mendadak',
             'mendadak' => true,
         ]);

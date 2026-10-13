@@ -31,9 +31,9 @@ class StorePengajuanCutiRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * Cuti mendadak boleh dimulai paling cepat kemarin (H-1, mis. sakit
-     * mendadak yang baru sempat diajukan keesokan harinya); pengajuan biasa
-     * paling cepat hari ini.
+     * Cuti mendadak hanya boleh dimulai kemarin (H-1, mis. sakit mendadak
+     * yang baru sempat diajukan keesokan harinya) atau hari ini (H);
+     * pengajuan biasa paling cepat besok (H+1).
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -43,7 +43,7 @@ class StorePengajuanCutiRequest extends FormRequest
 
         return [
             ...$this->aturanCuti($this->user()->karyawan, [
-                'after_or_equal:'.($mendadak ? 'yesterday' : 'today'),
+                ...($mendadak ? ['after_or_equal:yesterday', 'before_or_equal:today'] : ['after_or_equal:tomorrow']),
                 new BatasWaktuPengajuanCuti($this->integer('jenis_cuti_id') ?: null, $mendadak),
             ]),
             'mendadak' => ['sometimes', 'boolean'],
@@ -57,7 +57,10 @@ class StorePengajuanCutiRequest extends FormRequest
     public function messages(): array
     {
         return $this->boolean('mendadak')
-            ? ['tanggal_mulai.after_or_equal' => 'Cuti mendadak paling cepat dimulai kemarin (H-1).']
+            ? [
+                'tanggal_mulai.after_or_equal' => 'Cuti mendadak hanya boleh dimulai kemarin (H-1) atau hari ini (H).',
+                'tanggal_mulai.before_or_equal' => 'Cuti mendadak hanya boleh dimulai kemarin (H-1) atau hari ini (H).',
+            ]
             : [];
     }
 

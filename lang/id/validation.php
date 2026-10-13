@@ -176,7 +176,7 @@ return [
 
     'custom' => [
         'tanggal_mulai' => [
-            'after_or_equal' => 'Tanggal mulai tidak boleh sebelum hari ini.',
+            'after_or_equal' => 'Tanggal mulai paling cepat besok (H+1).',
         ],
         'tanggal_selesai' => [
             'after_or_equal' => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
