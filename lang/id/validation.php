@@ -217,7 +217,6 @@ return [
         'kuota_default' => 'kuota default',
         'lampiran' => 'lampiran',
         'masa_kerja_minimal_bulan' => 'masa kerja minimal',
-        'minimal_hari_pengajuan' => 'minimal hari pengajuan',
         'nama_alasan' => 'nama alasan',
         'nama_departemen' => 'nama departemen',
         'nama_jabatan' => 'nama jabatan',

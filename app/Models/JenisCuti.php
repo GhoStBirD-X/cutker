@@ -16,11 +16,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $nama_jenis
  * @property int|null $kuota_default
  * @property int|null $masa_kerja_minimal_bulan
- * @property int|null $minimal_hari_pengajuan
  * @property JenisKelamin|null $khusus_gender
  * @property string|null $keterangan
  */
-#[Fillable(['nama_jenis', 'kuota_default', 'masa_kerja_minimal_bulan', 'minimal_hari_pengajuan', 'khusus_gender', 'keterangan'])]
+#[Fillable(['nama_jenis', 'kuota_default', 'masa_kerja_minimal_bulan', 'khusus_gender', 'keterangan'])]
 class JenisCuti extends Model
 {
     /** @use HasFactory<JenisCutiFactory> */

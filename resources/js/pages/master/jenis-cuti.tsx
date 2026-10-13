@@ -29,7 +29,6 @@ export default function MasterJenisCuti() {
         nama_jenis: '',
         kuota_default: null as number | null,
         masa_kerja_minimal_bulan: null as number | null,
-        minimal_hari_pengajuan: null as number | null,
         khusus_gender: '' as '' | 'laki_laki' | 'perempuan',
         keterangan: '',
     });
@@ -40,7 +39,6 @@ export default function MasterJenisCuti() {
             nama_jenis: jenis.nama_jenis,
             kuota_default: jenis.kuota_default,
             masa_kerja_minimal_bulan: jenis.masa_kerja_minimal_bulan,
-            minimal_hari_pengajuan: jenis.minimal_hari_pengajuan,
             khusus_gender: jenis.khusus_gender ?? '',
             keterangan: jenis.keterangan ?? '',
         });
@@ -149,28 +147,6 @@ export default function MasterJenisCuti() {
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="minimal_hari_pengajuan">
-                                    Min. Pengajuan (H-, kosongkan = tanpa batas)
-                                </Label>
-                                <Input
-                                    id="minimal_hari_pengajuan"
-                                    type="number"
-                                    min={0}
-                                    value={data.minimal_hari_pengajuan ?? ''}
-                                    onChange={(e) =>
-                                        setData(
-                                            'minimal_hari_pengajuan',
-                                            e.target.value === ''
-                                                ? null
-                                                : Number(e.target.value),
-                                        )
-                                    }
-                                />
-                                <InputError
-                                    message={errors.minimal_hari_pengajuan}
-                                />
-                            </div>
-                            <div className="grid gap-2">
                                 <Label htmlFor="khusus_gender">
                                     Khusus Gender
                                 </Label>
@@ -264,14 +240,10 @@ export default function MasterJenisCuti() {
                                             </span>
                                         )}
                                         {(jenis.masa_kerja_minimal_bulan ||
-                                            jenis.minimal_hari_pengajuan ||
                                             jenis.keterangan) && (
                                             <span>
                                                 {jenis.masa_kerja_minimal_bulan
                                                     ? ` · Masa kerja min. ${jenis.masa_kerja_minimal_bulan} bulan`
-                                                    : ''}
-                                                {jenis.minimal_hari_pengajuan
-                                                    ? ` · Min. H-${jenis.minimal_hari_pengajuan} pengajuan`
                                                     : ''}
                                                 {jenis.keterangan
                                                     ? ` · ${jenis.keterangan}`

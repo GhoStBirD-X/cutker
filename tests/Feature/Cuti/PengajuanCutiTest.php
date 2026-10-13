@@ -71,12 +71,12 @@ class PengajuanCutiTest extends TestCase
         ]);
     }
 
-    public function test_regular_request_may_start_tomorrow_regardless_of_minimal_hari_pengajuan(): void
+    public function test_regular_request_may_start_tomorrow(): void
     {
         $karyawan = $this->karyawanUser('karyawan')->karyawan;
         $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id]);
 
-        $jenisCuti = JenisCuti::factory()->create(['minimal_hari_pengajuan' => 7]);
+        $jenisCuti = JenisCuti::factory()->create();
         SaldoCuti::factory()->create([
             'karyawan_id' => $karyawan->id,
             'jenis_cuti_id' => $jenisCuti->id,
@@ -759,7 +759,7 @@ class PengajuanCutiTest extends TestCase
         $karyawan = $this->karyawanUser('karyawan')->karyawan;
         $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id]);
 
-        $jenisCuti = JenisCuti::factory()->create(['minimal_hari_pengajuan' => 7]);
+        $jenisCuti = JenisCuti::factory()->create();
         SaldoCuti::factory()->create([
             'karyawan_id' => $karyawan->id,
             'jenis_cuti_id' => $jenisCuti->id,
@@ -794,7 +794,7 @@ class PengajuanCutiTest extends TestCase
         $karyawan = $this->karyawanUser('karyawan')->karyawan;
         $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id]);
 
-        $jenisCuti = JenisCuti::factory()->create(['minimal_hari_pengajuan' => 7]);
+        $jenisCuti = JenisCuti::factory()->create();
         SaldoCuti::factory()->create([
             'karyawan_id' => $karyawan->id,
             'jenis_cuti_id' => $jenisCuti->id,
@@ -832,7 +832,7 @@ class PengajuanCutiTest extends TestCase
         $karyawan = $this->karyawanUser('karyawan')->karyawan;
         $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id]);
 
-        $jenisCuti = JenisCuti::factory()->create(['minimal_hari_pengajuan' => 7]);
+        $jenisCuti = JenisCuti::factory()->create();
         SaldoCuti::factory()->create([
             'karyawan_id' => $karyawan->id,
             'jenis_cuti_id' => $jenisCuti->id,

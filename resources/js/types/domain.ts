@@ -18,7 +18,6 @@ export type JenisCuti = {
     nama_jenis: string;
     kuota_default: number | null;
     masa_kerja_minimal_bulan: number | null;
-    minimal_hari_pengajuan: number | null;
     khusus_gender: JenisKelamin | null;
     keterangan: string | null;
 };
