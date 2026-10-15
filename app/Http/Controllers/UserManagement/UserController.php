@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
 
 class UserController extends Controller
 {
@@ -106,6 +107,26 @@ class UserController extends Controller
                 : "Password {$users->count()} user berhasil direset menjadi NPK masing-masing."
                     .($dilewati > 0 ? " {$dilewati} user dilewati (tanpa NPK atau akun Anda sendiri)." : ''),
         ]);
+
+        return back();
+    }
+
+    /**
+     * Matikan 2FA user (misalnya HP-nya hilang dan kode pemulihan tidak ada),
+     * sehingga dia bisa login dengan password saja lalu mengaktifkan 2FA lagi.
+     * Akun admin sendiri dilewati; 2FA sendiri diatur di Pengaturan Keamanan.
+     */
+    public function resetTwoFactor(Request $request, User $user, DisableTwoFactorAuthentication $disableTwoFactor): RedirectResponse
+    {
+        if ($request->user()->is($user)) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Atur 2FA akun Anda sendiri lewat Pengaturan Keamanan.']);
+
+            return back();
+        }
+
+        $disableTwoFactor($user);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => "2FA {$user->name} berhasil direset. Dia bisa login dengan password lalu mengaktifkan 2FA lagi."]);
 
         return back();
     }

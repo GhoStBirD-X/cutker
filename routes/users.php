@@ -7,6 +7,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('users')->name('us
     Route::get('/', [UserController::class, 'index'])->name('index');
     Route::post('/', [UserController::class, 'store'])->name('store');
     Route::post('/reset-password-npk', [UserController::class, 'resetPasswordKeNpk'])->name('reset-password-npk');
+    Route::post('/{user}/reset-two-factor', [UserController::class, 'resetTwoFactor'])->name('reset-two-factor');
     Route::put('/{user}', [UserController::class, 'update'])->name('update');
     Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
 });

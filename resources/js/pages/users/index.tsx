@@ -15,14 +15,18 @@ import { NativeSelect } from '@/components/ui/native-select';
 import { roleLabel } from '@/lib/format';
 import { dashboard } from '@/routes';
 import { index as usersIndex } from '@/routes/users';
-import type { Paginated, Role, User } from '@/types';
+import type { Auth, Paginated, Role, User } from '@/types';
 
-type UserRow = User & { roles: { name: Role }[] };
+type UserRow = User & {
+    roles: { name: Role }[];
+    two_factor_confirmed_at: string | null;
+};
 
 type PageProps = {
     users: Paginated<UserRow>;
     karyawans: { id: number; nama: string; nip: string }[];
     filters: { search: string };
+    auth: Auth;
 };
 
 const ROLES: Role[] = [
@@ -35,7 +39,7 @@ const ROLES: Role[] = [
 ];
 
 export default function UsersIndex() {
-    const { users, karyawans, filters } = usePage<PageProps>().props;
+    const { users, karyawans, filters, auth } = usePage<PageProps>().props;
     const [editing, setEditing] = useState<UserRow | null>(null);
     const [search, setSearch] = useState(filters.search ?? '');
     const [dipilih, setDipilih] = useState<Set<number>>(new Set());
@@ -150,6 +154,24 @@ export default function UsersIndex() {
             })
         ) {
             router.delete(UserController.destroy.url(user.id));
+        }
+    };
+
+    const resetTwoFactor = async (user: UserRow) => {
+        if (
+            await konfirmasi({
+                title: `Reset 2FA ${user.name}?`,
+                description:
+                    'Autentikasi dua langkah dimatikan, sehingga dia bisa login dengan password saja. Gunakan ini kalau HP-nya hilang dan kode pemulihan tidak ada. Minta dia segera mengaktifkan 2FA lagi di Pengaturan Keamanan.',
+                confirmText: 'Reset 2FA',
+                destructive: true,
+            })
+        ) {
+            router.post(
+                UserController.resetTwoFactor.url(user.id),
+                {},
+                { preserveScroll: true },
+            );
         }
     };
 
@@ -338,6 +360,11 @@ export default function UsersIndex() {
                                                     {roleLabel(role.name)}
                                                 </Badge>
                                             ))}
+                                            {user.two_factor_confirmed_at && (
+                                                <Badge variant="outline">
+                                                    2FA aktif
+                                                </Badge>
+                                            )}
                                         </div>
                                         <div className="text-muted-foreground">
                                             {user.email}
@@ -360,6 +387,18 @@ export default function UsersIndex() {
                                             Reset ke NPK
                                         </Button>
                                     )}
+                                    {user.two_factor_confirmed_at &&
+                                        user.id !== auth.user.id && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() =>
+                                                    resetTwoFactor(user)
+                                                }
+                                            >
+                                                Reset 2FA
+                                            </Button>
+                                        )}
                                     <Button
                                         size="sm"
                                         variant="outline"

@@ -139,4 +139,49 @@ class UserManagementTest extends TestCase
 
         $this->assertFalse(Hash::check('100234', $karyawan->fresh()->password));
     }
+
+    public function test_admin_can_reset_another_users_two_factor_authentication(): void
+    {
+        $admin = $this->karyawanUser('admin');
+        $karyawan = $this->karyawanUser('karyawan');
+        $karyawan->forceFill([
+            'two_factor_secret' => encrypt('secret'),
+            'two_factor_recovery_codes' => encrypt(json_encode(['kode-1'])),
+            'two_factor_confirmed_at' => now(),
+        ])->save();
+
+        $this->actingAs($admin)->post(route('users.reset-two-factor', $karyawan))->assertRedirect();
+
+        $karyawan->refresh();
+        $this->assertFalse($karyawan->hasEnabledTwoFactorAuthentication());
+        $this->assertNull($karyawan->two_factor_recovery_codes);
+        $this->assertNull($karyawan->two_factor_confirmed_at);
+    }
+
+    public function test_admin_cannot_reset_their_own_two_factor_authentication_from_user_management(): void
+    {
+        $admin = $this->karyawanUser('admin');
+        $admin->forceFill([
+            'two_factor_secret' => encrypt('secret'),
+            'two_factor_confirmed_at' => now(),
+        ])->save();
+
+        $this->actingAs($admin)->post(route('users.reset-two-factor', $admin))->assertRedirect();
+
+        $this->assertTrue($admin->fresh()->hasEnabledTwoFactorAuthentication());
+    }
+
+    public function test_non_admin_cannot_reset_two_factor_authentication(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawan = $this->karyawanUser('karyawan');
+        $karyawan->forceFill([
+            'two_factor_secret' => encrypt('secret'),
+            'two_factor_confirmed_at' => now(),
+        ])->save();
+
+        $this->actingAs($hrd)->post(route('users.reset-two-factor', $karyawan))->assertForbidden();
+
+        $this->assertTrue($karyawan->fresh()->hasEnabledTwoFactorAuthentication());
+    }
 }
