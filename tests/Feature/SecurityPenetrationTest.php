@@ -8,6 +8,7 @@ use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -138,5 +139,33 @@ class SecurityPenetrationTest extends TestCase
         $this->get(route('dashboard'))->assertRedirect(route('login'));
         $this->get(route('users.index'))->assertRedirect(route('login'));
         $this->get(route('laporan.index'))->assertRedirect(route('login'));
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function ruteEkspor(): array
+    {
+        return [
+            ['laporan.export.excel'],
+            ['laporan.export.pdf'],
+            ['laporan.saldo-cuti.export.excel'],
+            ['laporan.saldo-cuti.export.pdf'],
+            ['master.saldo-cuti.export'],
+        ];
+    }
+
+    #[DataProvider('ruteEkspor')]
+    public function test_tamu_tidak_bisa_mengunduh_ekspor(string $namaRute): void
+    {
+        $this->get(route($namaRute))->assertRedirect(route('login'));
+    }
+
+    #[DataProvider('ruteEkspor')]
+    public function test_karyawan_biasa_tidak_bisa_mengunduh_ekspor(string $namaRute): void
+    {
+        $karyawan = $this->karyawanUser('karyawan');
+
+        $this->actingAs($karyawan)->get(route($namaRute))->assertForbidden();
     }
 }
