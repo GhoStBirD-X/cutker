@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NativeSelect } from '@/components/ui/native-select';
+import { formatDate } from '@/lib/format';
 import { saldoSeverity } from '@/lib/saldo-severity';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -158,7 +159,7 @@ export default function LaporanSaldoCuti() {
 
                 <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="overflow-x-auto p-0">
-                        <table className="w-full min-w-[960px] text-sm">
+                        <table className="w-full min-w-[1080px] text-sm">
                             <thead>
                                 <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
                                     <th
@@ -184,6 +185,12 @@ export default function LaporanSaldoCuti() {
                                         className="border-r px-3 py-2 text-left align-bottom"
                                     >
                                         Status
+                                    </th>
+                                    <th
+                                        rowSpan={2}
+                                        className="border-r px-3 py-2 text-left align-bottom whitespace-nowrap"
+                                    >
+                                        Akhir Kontrak
                                     </th>
                                     {KOLOM_JENIS_CUTI.map((nama) => (
                                         <th
@@ -213,7 +220,7 @@ export default function LaporanSaldoCuti() {
                                     <tr>
                                         <td
                                             colSpan={
-                                                4 + KOLOM_JENIS_CUTI.length * 2
+                                                5 + KOLOM_JENIS_CUTI.length * 2
                                             }
                                             className="p-4 text-center text-muted-foreground"
                                         >
@@ -239,6 +246,13 @@ export default function LaporanSaldoCuti() {
                                             <Badge variant="outline">
                                                 {karyawan.status_kontrak}
                                             </Badge>
+                                        </td>
+                                        <td className="border-r px-3 py-2 whitespace-nowrap text-muted-foreground">
+                                            {karyawan.tanggal_akhir_kontrak
+                                                ? formatDate(
+                                                      karyawan.tanggal_akhir_kontrak,
+                                                  )
+                                                : '—'}
                                         </td>
                                         {KOLOM_JENIS_CUTI.map((nama) => {
                                             const saldo = cariSaldo(

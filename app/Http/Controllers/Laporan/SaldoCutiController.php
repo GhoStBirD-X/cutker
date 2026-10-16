@@ -104,7 +104,7 @@ class SaldoCutiController extends Controller
      * karyawan tsb (khusus_gender tidak cocok) atau belum punya baris
      * saldo aktif diisi null supaya blade cukup menampilkan "—".
      *
-     * @return array{nama: string, nip: string, status_kontrak: string, kolom: list<array{terpakai: int, sisa: int|null, warna: string}|null>}
+     * @return array{nama: string, nip: string, status_kontrak: string, tanggal_akhir_kontrak: string|null, kolom: list<array{terpakai: int, sisa: int|null, warna: string}|null>}
      */
     private function barisLaporanPdf(Karyawan $karyawan): array
     {
@@ -112,6 +112,7 @@ class SaldoCutiController extends Controller
             'nama' => $karyawan->nama,
             'nip' => $karyawan->nip,
             'status_kontrak' => $this->statusKontrak($karyawan),
+            'tanggal_akhir_kontrak' => $karyawan->tanggal_akhir_kontrak?->translatedFormat('d M Y'),
             'kolom' => collect(self::KOLOM_JENIS_CUTI)
                 ->map(function (string $namaJenis) use ($karyawan) {
                     $saldo = $karyawan->saldoCutis->first(fn (SaldoCuti $saldo) => $saldo->jenisCuti?->nama_jenis === $namaJenis);

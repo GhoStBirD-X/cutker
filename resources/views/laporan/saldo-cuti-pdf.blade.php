@@ -33,6 +33,7 @@
                 <th rowspan="2">Nama</th>
                 <th rowspan="2">NPK</th>
                 <th rowspan="2">Status</th>
+                <th rowspan="2">Akhir Kontrak</th>
                 @foreach ($kolomJenisCuti as $nama)
                     <th colspan="2">{{ $nama }}</th>
                 @endforeach
@@ -50,6 +51,7 @@
                     <td class="nama">{{ $karyawan['nama'] }}</td>
                     <td class="center">{{ $karyawan['nip'] }}</td>
                     <td class="center"><span class="badge">{{ $karyawan['status_kontrak'] }}</span></td>
+                    <td class="center{{ $karyawan['tanggal_akhir_kontrak'] ? '' : ' muted' }}">{{ $karyawan['tanggal_akhir_kontrak'] ?? '—' }}</td>
                     @foreach ($karyawan['kolom'] as $kolom)
                         @if ($kolom === null)
                             <td class="center muted">&mdash;</td>
@@ -62,7 +64,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="{{ 3 + count($kolomJenisCuti) * 2 }}" class="center muted">Tidak ada karyawan pada filter ini.</td>
+                    <td colspan="{{ 4 + count($kolomJenisCuti) * 2 }}" class="center muted">Tidak ada karyawan pada filter ini.</td>
                 </tr>
             @endforelse
         </tbody>

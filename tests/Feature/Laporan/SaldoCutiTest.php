@@ -196,6 +196,20 @@ class SaldoCutiTest extends TestCase
         $response->assertInertia(fn ($page) => $page->where('karyawans.data.0.status_kontrak', 'K3'));
     }
 
+    public function test_report_includes_contract_end_date(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $karyawan = Karyawan::factory()->kontrak()->create(['tanggal_akhir_kontrak' => '2027-03-31']);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti', [
+            'search' => $karyawan->nip,
+        ]));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('karyawans.data.0.tanggal_akhir_kontrak', fn (string $tanggal) => str_starts_with($tanggal, '2027-03-31'))
+        );
+    }
+
     public function test_riwayat_shows_only_approved_pengajuan_within_saldo_period(): void
     {
         $hrd = $this->karyawanUser('hrd');
@@ -262,6 +276,24 @@ class SaldoCutiTest extends TestCase
         });
     }
 
+    public function test_export_excel_includes_contract_end_date(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $kontrak = Karyawan::factory()->kontrak()->create(['nip' => 'NPK-001', 'tanggal_akhir_kontrak' => '2027-03-31']);
+        SaldoCuti::factory()->create(['karyawan_id' => $kontrak->id]);
+        $tetap = Karyawan::factory()->create(['nip' => 'NPK-002']);
+        SaldoCuti::factory()->create(['karyawan_id' => $tetap->id]);
+
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti.export.excel', ['search' => 'NPK-']));
+
+        $response->assertOk();
+        $sheet = IOFactory::load($response->getFile()->getPathname())->getActiveSheet();
+
+        $this->assertSame('Akhir Kontrak', $sheet->getCell('E1')->getValue());
+        $this->assertSame('31 Mar 2027', $sheet->getCell('E2')->getValue());
+        $this->assertSame('-', $sheet->getCell('E3')->getValue());
+    }
+
     public function test_karyawan_cannot_export_saldo_cuti_excel(): void
     {
         $karyawan = $this->karyawanUser('karyawan');
@@ -281,8 +313,8 @@ class SaldoCutiTest extends TestCase
         $sheet = IOFactory::load($response->getFile()->getPathname())->getActiveSheet();
 
         $this->assertSame('FF4F46E5', $sheet->getStyle('A1')->getFill()->getStartColor()->getARGB());
-        $this->assertSame('FFFEE2E2', $sheet->getStyle('H2')->getFill()->getStartColor()->getARGB());
-        $this->assertSame('FF991B1B', $sheet->getStyle('H2')->getFont()->getColor()->getARGB());
+        $this->assertSame('FFFEE2E2', $sheet->getStyle('I2')->getFill()->getStartColor()->getARGB());
+        $this->assertSame('FF991B1B', $sheet->getStyle('I2')->getFont()->getColor()->getARGB());
     }
 
     public function test_hrd_can_export_saldo_cuti_as_pdf(): void

@@ -19,11 +19,11 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  */
 class SaldoCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
 {
-    private const KOLOM_KUOTA = 'F';
+    private const KOLOM_KUOTA = 'G';
 
-    private const KOLOM_TERPAKAI = 'G';
+    private const KOLOM_TERPAKAI = 'H';
 
-    private const KOLOM_SISA = 'H';
+    private const KOLOM_SISA = 'I';
 
     /**
      * Warna sel "Sisa" per baris (indeks 0 = baris data pertama), diisi
@@ -50,7 +50,7 @@ class SaldoCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMa
      */
     public function headings(): array
     {
-        return ['NPK', 'Nama Karyawan', 'Departemen', 'Jabatan', 'Jenis Cuti', 'Kuota', 'Terpakai', 'Sisa'];
+        return ['NPK', 'Nama Karyawan', 'Departemen', 'Jabatan', 'Akhir Kontrak', 'Jenis Cuti', 'Kuota', 'Terpakai', 'Sisa'];
     }
 
     /**
@@ -66,6 +66,7 @@ class SaldoCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMa
             $saldo->karyawan->nama,
             $saldo->karyawan->departemen->nama_departemen,
             $saldo->karyawan->jabatan->nama_jabatan,
+            $saldo->karyawan->tanggal_akhir_kontrak?->translatedFormat('d M Y') ?? '-',
             $saldo->jenisCuti->nama_jenis,
             $saldo->kuota ?? 'Tanpa Batas',
             $saldo->terpakai,
@@ -77,8 +78,8 @@ class SaldoCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMa
     {
         $highestRow = $sheet->getHighestRow();
 
-        ExcelStyler::header($sheet, 'A1:H1');
-        ExcelStyler::border($sheet, "A1:H{$highestRow}");
+        ExcelStyler::header($sheet, 'A1:I1');
+        ExcelStyler::border($sheet, "A1:I{$highestRow}");
 
         $sheet->getStyle(self::KOLOM_KUOTA.'2:'.self::KOLOM_SISA.$highestRow)
             ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
@@ -88,7 +89,7 @@ class SaldoCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMa
             ExcelStyler::tandaiSel($sheet, self::KOLOM_SISA.$baris, $warna['fill'], $warna['teks']);
         }
 
-        $sheet->setAutoFilter('A1:H1');
+        $sheet->setAutoFilter('A1:I1');
         $sheet->freezePane('A2');
 
         return null;
