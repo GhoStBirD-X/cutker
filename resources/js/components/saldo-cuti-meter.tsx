@@ -57,11 +57,7 @@ export function SaldoCutiMeter({
             </CardHeader>
             <CardContent>
                 <div className={cn('text-2xl font-bold', style.text)}>
-                    {sisa === null
-                        ? 'Tanpa batas'
-                        : style.severity === 'ineligible'
-                          ? style.label
-                          : `${sisa} hari`}
+                    {sisa === null ? 'Tanpa batas' : `${sisa} hari`}
                 </div>
                 <p className="text-xs text-muted-foreground">
                     {kuota === null

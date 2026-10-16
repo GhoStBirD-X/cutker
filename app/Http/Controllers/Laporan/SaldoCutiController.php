@@ -107,7 +107,7 @@ class SaldoCutiController extends Controller
      * karyawan tsb (khusus_gender tidak cocok) atau belum punya baris
      * saldo aktif diisi null supaya blade cukup menampilkan "—".
      *
-     * @return array{nama: string, nip: string, status_kontrak: string, tanggal_akhir_kontrak: string|null, kolom: list<array{terpakai: int, sisa: int|null, label: string|null, warna: string}|null>}
+     * @return array{nama: string, nip: string, status_kontrak: string, tanggal_akhir_kontrak: string|null, kolom: list<array{terpakai: int, sisa: int|null, warna: string}|null>}
      */
     private function barisLaporanPdf(Karyawan $karyawan): array
     {
@@ -129,13 +129,10 @@ class SaldoCutiController extends Controller
                         return null;
                     }
 
-                    $severity = SaldoSeverity::hitung($saldo->sisa, $saldo->kuota);
-
                     return [
                         'terpakai' => $saldo->terpakai,
                         'sisa' => $saldo->sisa,
-                        'label' => $severity === SaldoSeverity::INELIGIBLE ? 'Belum berhak' : null,
-                        'warna' => SaldoSeverity::warnaTeks($severity),
+                        'warna' => SaldoSeverity::warnaTeks(SaldoSeverity::hitung($saldo->sisa, $saldo->kuota)),
                     ];
                 })
                 ->all(),
