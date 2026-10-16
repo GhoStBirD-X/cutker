@@ -31,6 +31,10 @@ export function PratinjauHariCuti({
     const terbatas = saldo && saldo.kuota !== null && saldo.sisa !== null;
     const sisaSetelah = terbatas ? saldo.sisa! - rincian.hariKerja : null;
     const tidakCukup = sisaSetelah !== null && sisaSetelah < 0;
+    const kritis =
+        !tidakCukup &&
+        sisaSetelah !== null &&
+        saldoSeverity(sisaSetelah, saldo!.kuota).severity === 'critical';
 
     return (
         <div
@@ -39,7 +43,9 @@ export function PratinjauHariCuti({
                 'rounded-md border px-3 py-2 text-sm',
                 tidakCukup
                     ? 'border-destructive/50 bg-destructive/10'
-                    : 'bg-muted/40',
+                    : kritis
+                      ? 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/40'
+                      : 'bg-muted/40',
             )}
         >
             <div className="flex items-center gap-2 font-medium">
@@ -59,12 +65,17 @@ export function PratinjauHariCuti({
                         tidakCukup
                             ? 'font-medium text-destructive'
                             : saldoSeverity(sisaSetelah, saldo.kuota).text,
+                        kritis && 'font-medium',
                     )}
                 >
-                    {tidakCukup && <AlertTriangle className="size-3.5" />}
+                    {(tidakCukup || kritis) && (
+                        <AlertTriangle className="size-3.5 shrink-0" />
+                    )}
                     {tidakCukup
                         ? `Saldo tidak cukup: sisa ${saldo.sisa} hari, butuh ${rincian.hariKerja} hari.`
-                        : `Sisa saldo setelah pengajuan: ${sisaSetelah} dari ${saldo.kuota} hari.`}
+                        : kritis
+                          ? `Saldo kritis: setelah pengajuan ini sisa saldo tinggal ${sisaSetelah} dari ${saldo.kuota} hari.`
+                          : `Sisa saldo setelah pengajuan: ${sisaSetelah} dari ${saldo.kuota} hari.`}
                 </p>
             )}
         </div>

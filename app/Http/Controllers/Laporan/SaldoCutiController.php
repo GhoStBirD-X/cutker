@@ -52,6 +52,9 @@ class SaldoCutiController extends Controller
 
         return Inertia::render('laporan/saldo-cuti', [
             'karyawans' => $karyawans,
+            'jumlahKaryawanKritis' => $this->filteredKaryawanQuery($request, abaikanFilterKritis: true)
+                ->whereHas('saldoCutis', fn (Builder $query) => $this->saldoKritisYangTampil($query))
+                ->count(),
             'departemens' => Departemen::query()->orderBy('nama_departemen')->get(['id', 'nama_departemen']),
             'filters' => $this->filters($request),
         ]);
@@ -139,23 +142,40 @@ class SaldoCutiController extends Controller
     /**
      * @return Builder<Karyawan>
      */
-    protected function filteredKaryawanQuery(Request $request): Builder
+    protected function filteredKaryawanQuery(Request $request, bool $abaikanFilterKritis = false): Builder
     {
         $filters = $this->filters($request);
 
         return Karyawan::query()
             ->when($filters['search'], fn ($query) => $query->where(fn ($q) => $q->where('nama', 'like', "%{$filters['search']}%")->orWhere('nip', 'like', "%{$filters['search']}%")))
-            ->when($filters['departemen_id'], fn ($query) => $query->where('departemen_id', $filters['departemen_id']));
+            ->when($filters['departemen_id'], fn ($query) => $query->where('departemen_id', $filters['departemen_id']))
+            ->when($filters['hanya_kritis'] && ! $abaikanFilterKritis, fn ($query) => $query->whereHas('saldoCutis', fn (Builder $saldo) => $this->saldoKritisYangTampil($saldo)));
     }
 
     /**
-     * @return array{search: string, departemen_id: int|null}
+     * Saldo aktif berstatus kritis yang benar-benar tampil sebagai sel merah
+     * di matriks laporan: hanya kolom KOLOM_JENIS_CUTI dan jenis cuti yang
+     * relevan untuk gender karyawannya (sel lain ditampilkan "—").
+     *
+     * @param  Builder<SaldoCuti>  $query
+     * @return Builder<SaldoCuti>
+     */
+    private function saldoKritisYangTampil(Builder $query): Builder
+    {
+        return $query->aktif()->kritis()->whereHas('jenisCuti', fn (Builder $jenis) => $jenis
+            ->whereIn('nama_jenis', self::KOLOM_JENIS_CUTI)
+            ->where(fn (Builder $gender) => $gender->whereNull('khusus_gender')->orWhereColumn('jenis_cutis.khusus_gender', 'karyawans.jenis_kelamin')));
+    }
+
+    /**
+     * @return array{search: string, departemen_id: int|null, hanya_kritis: bool}
      */
     protected function filters(Request $request): array
     {
         return [
             'search' => (string) $request->string('search'),
             'departemen_id' => $request->integer('departemen_id') ?: null,
+            'hanya_kritis' => $request->boolean('hanya_kritis'),
         ];
     }
 

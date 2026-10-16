@@ -1,5 +1,6 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import {
+    AlertTriangle,
     CheckSquare,
     FileText,
     History,
@@ -13,6 +14,7 @@ import { konfirmasi } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
 import { RiwayatApprovalList } from '@/components/riwayat-approval-list';
 import { StatusBadge } from '@/components/status-badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -95,6 +97,10 @@ export default function ApprovalShow() {
     const sisaSetelahDisetujui =
         saldoKaryawan?.sisa != null && pengajuan
             ? saldoKaryawan.sisa - pengajuan.jumlah_hari
+            : null;
+    const severitySetelahDisetujui =
+        sisaSetelahDisetujui !== null && saldoKaryawan?.kuota != null
+            ? saldoSeverity(sisaSetelahDisetujui, saldoKaryawan.kuota).severity
             : null;
 
     return (
@@ -334,6 +340,21 @@ export default function ApprovalShow() {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
+                                {severitySetelahDisetujui === 'critical' && (
+                                    <Alert className="border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                                        <AlertTriangle />
+                                        <AlertTitle>
+                                            {sisaSetelahDisetujui! < 0
+                                                ? 'Saldo akan minus jika disetujui'
+                                                : 'Saldo akan kritis jika disetujui'}
+                                        </AlertTitle>
+                                        <AlertDescription className="text-red-700 dark:text-red-300/80">
+                                            {sisaSetelahDisetujui! < 0
+                                                ? `Pengajuan ini melebihi saldo: sisa ${pengajuan?.jenis_cuti?.nama_jenis} ${pengajuan?.karyawan?.nama} menjadi ${sisaSetelahDisetujui} hari.`
+                                                : `Sisa ${pengajuan?.jenis_cuti?.nama_jenis} ${pengajuan?.karyawan?.nama} tinggal ${sisaSetelahDisetujui} dari ${saldoKaryawan?.kuota} hari setelah pengajuan ini.`}
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
                                 <div className="grid gap-2">
                                     <Label htmlFor="catatan">
                                         {pengajuan?.is_mendadak

@@ -102,6 +102,22 @@ class SaldoCuti extends Model
     }
 
     /**
+     * Baris saldo berstatus "kritis" (merah): sisa <= 25% kuota atau minus.
+     * Kuota 0 dengan sisa 0 juga ikut kritis. Padanan SQL dari
+     * SaldoSeverity::hitung() — kalau ambang di sana berubah, sesuaikan juga.
+     *
+     * @param  Builder<SaldoCuti>  $query
+     * @return Builder<SaldoCuti>
+     */
+    public function scopeKritis(Builder $query): Builder
+    {
+        return $query
+            ->whereNotNull('kuota')
+            ->whereNotNull('sisa')
+            ->where(fn (Builder $q) => $q->whereRaw('sisa * 4 <= kuota')->orWhere('sisa', '<=', 0));
+    }
+
+    /**
      * Posisi periode ini dalam siklus kontrak K1–K5. `periode_ke` tetap
      * naik terus (6, 7, …) supaya arsip riwayat per periode tidak bentrok;
      * yang berulang hanya urutan kontraknya: periode ke-6 = K1, ke-7 = K2, dst.

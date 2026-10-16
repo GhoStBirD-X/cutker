@@ -3,6 +3,8 @@
 namespace Tests\Feature\Laporan;
 
 use App\Enums\JenisKelamin;
+use App\Models\Departemen;
+use App\Models\Jabatan;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\KonfirmasiKontrakCuti;
@@ -208,6 +210,43 @@ class SaldoCutiTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->where('karyawans.data.0.tanggal_akhir_kontrak', fn (string $tanggal) => str_starts_with($tanggal, '2027-03-31'))
         );
+    }
+
+    public function test_report_counts_and_filters_karyawan_with_critical_saldo(): void
+    {
+        $hrd = $this->karyawanUser('hrd');
+        $departemen = Departemen::factory()->create();
+        $jabatan = Jabatan::factory()->create();
+        $cutiTahunan = JenisCuti::factory()->create(['nama_jenis' => 'Cuti Tahunan']);
+        $cutiHamil = JenisCuti::factory()->create(['nama_jenis' => 'Cuti Hamil', 'khusus_gender' => JenisKelamin::Perempuan]);
+
+        $buatKaryawanDenganSaldo = function (string $nip, JenisCuti $jenisCuti, array $saldo) use ($departemen, $jabatan): Karyawan {
+            $karyawan = Karyawan::factory()->lakiLaki()->recycle([$departemen, $jabatan])->create(['nip' => $nip]);
+            SaldoCuti::factory()->create(['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $jenisCuti->id, ...$saldo]);
+
+            return $karyawan;
+        };
+
+        $kritis = $buatKaryawanDenganSaldo('NPK-001', $cutiTahunan, ['kuota' => 12, 'terpakai' => 9, 'sisa' => 3]);
+        $minus = $buatKaryawanDenganSaldo('NPK-002', $cutiTahunan, ['kuota' => 12, 'terpakai' => 13, 'sisa' => -1]);
+        $buatKaryawanDenganSaldo('NPK-003', $cutiTahunan, ['kuota' => 12, 'terpakai' => 8, 'sisa' => 4]);
+        $buatKaryawanDenganSaldo('NPK-004', $cutiTahunan, ['kuota' => 12, 'terpakai' => 12, 'sisa' => 0, 'ditutup_pada' => now()]);
+        $buatKaryawanDenganSaldo('NPK-005', $cutiHamil, ['kuota' => 90, 'terpakai' => 90, 'sisa' => 0]);
+
+        $this->actingAs($hrd)->get(route('laporan.saldo-cuti', ['search' => 'NPK-']))
+            ->assertInertia(fn ($page) => $page
+                ->where('jumlahKaryawanKritis', 2)
+                ->has('karyawans.data', 5)
+            );
+
+        $this->actingAs($hrd)->get(route('laporan.saldo-cuti', ['search' => 'NPK-', 'hanya_kritis' => 1]))
+            ->assertInertia(fn ($page) => $page
+                ->where('jumlahKaryawanKritis', 2)
+                ->where('filters.hanya_kritis', true)
+                ->has('karyawans.data', 2)
+                ->where('karyawans.data.0.id', $kritis->id)
+                ->where('karyawans.data.1.id', $minus->id)
+            );
     }
 
     public function test_riwayat_shows_only_approved_pengajuan_within_saldo_period(): void

@@ -9,7 +9,8 @@ namespace App\Support;
  * Ambang batas & warna di sini HARUS selalu sama dengan
  * resources/js/lib/saldo-severity.ts (severity) dan
  * resources/js/components/status-badge.tsx-style badge (warnaBadge) —
- * kalau salah satu berubah, sesuaikan juga yang lain.
+ * kalau salah satu berubah, sesuaikan juga yang lain, termasuk padanan
+ * SQL-nya di SaldoCuti::scopeKritis().
  */
 class SaldoSeverity
 {

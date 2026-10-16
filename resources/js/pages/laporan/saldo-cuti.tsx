@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Download, FileText } from 'lucide-react';
+import { AlertTriangle, Download, FileText } from 'lucide-react';
 import { Fragment, useState } from 'react';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
@@ -39,7 +39,12 @@ type KaryawanRow = Karyawan & {
 type PageProps = {
     karyawans: Paginated<KaryawanRow>;
     departemens: Departemen[];
-    filters: { search: string; departemen_id: number | null };
+    jumlahKaryawanKritis: number;
+    filters: {
+        search: string;
+        departemen_id: number | null;
+        hanya_kritis: boolean;
+    };
 };
 
 const KOLOM_JENIS_CUTI = [
@@ -65,17 +70,25 @@ function relevanUntukKaryawan(karyawan: KaryawanRow, saldo?: SaldoCutiRow) {
 }
 
 export default function LaporanSaldoCuti() {
-    const { karyawans, departemens, filters } = usePage<PageProps>().props;
+    const { karyawans, departemens, jumlahKaryawanKritis, filters } =
+        usePage<PageProps>().props;
     const [form, setForm] = useState({
         search: filters.search ?? '',
         departemen_id: filters.departemen_id
             ? String(filters.departemen_id)
             : '',
+        hanya_kritis: filters.hanya_kritis ? '1' : '',
     });
 
     const applyFilter = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(saldoCutiIndex.url(), form, { preserveState: true });
+    };
+
+    const toggleHanyaKritis = () => {
+        const next = { ...form, hanya_kritis: form.hanya_kritis ? '' : '1' };
+        setForm(next);
+        router.get(saldoCutiIndex.url(), next, { preserveState: true });
     };
 
     return (
@@ -156,6 +169,31 @@ export default function LaporanSaldoCuti() {
                         </form>
                     </CardContent>
                 </Card>
+
+                {(jumlahKaryawanKritis > 0 || filters.hanya_kritis) && (
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm dark:border-red-900 dark:bg-red-950/40">
+                        <div className="flex items-center gap-2 text-red-800 dark:text-red-300">
+                            <AlertTriangle className="size-4 shrink-0" />
+                            <span>
+                                <span className="font-semibold">
+                                    {jumlahKaryawanKritis} karyawan
+                                </span>{' '}
+                                memiliki saldo kritis (sisa &le; 25% kuota atau
+                                minus).
+                            </span>
+                        </div>
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={toggleHanyaKritis}
+                        >
+                            {filters.hanya_kritis
+                                ? 'Tampilkan semua karyawan'
+                                : 'Tampilkan yang kritis saja'}
+                        </Button>
+                    </div>
+                )}
 
                 <Card className="gap-0 overflow-hidden py-0">
                     <CardContent className="overflow-x-auto p-0">
