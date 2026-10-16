@@ -232,11 +232,12 @@ class SaldoCutiTest extends TestCase
         $buatKaryawanDenganSaldo('NPK-003', $cutiTahunan, ['kuota' => 12, 'terpakai' => 8, 'sisa' => 4]);
         $buatKaryawanDenganSaldo('NPK-004', $cutiTahunan, ['kuota' => 12, 'terpakai' => 12, 'sisa' => 0, 'ditutup_pada' => now()]);
         $buatKaryawanDenganSaldo('NPK-005', $cutiHamil, ['kuota' => 90, 'terpakai' => 90, 'sisa' => 0]);
+        $buatKaryawanDenganSaldo('NPK-006', $cutiTahunan, ['kuota' => 0, 'terpakai' => 0, 'sisa' => 0]);
 
         $this->actingAs($hrd)->get(route('laporan.saldo-cuti', ['search' => 'NPK-']))
             ->assertInertia(fn ($page) => $page
                 ->where('jumlahKaryawanKritis', 2)
-                ->has('karyawans.data', 5)
+                ->has('karyawans.data', 6)
             );
 
         $this->actingAs($hrd)->get(route('laporan.saldo-cuti', ['search' => 'NPK-', 'hanya_kritis' => 1]))

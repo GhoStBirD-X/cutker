@@ -41,14 +41,19 @@ class SaldoSeverityTest extends TestCase
         $this->assertSame(SaldoSeverity::SAFE, SaldoSeverity::hitung(5, 0));
     }
 
-    public function test_zero_kuota_with_zero_sisa_is_critical(): void
+    public function test_zero_kuota_with_zero_sisa_is_ineligible(): void
     {
-        $this->assertSame(SaldoSeverity::CRITICAL, SaldoSeverity::hitung(0, 0));
+        $this->assertSame(SaldoSeverity::INELIGIBLE, SaldoSeverity::hitung(0, 0));
+    }
+
+    public function test_zero_kuota_with_negative_sisa_is_critical(): void
+    {
+        $this->assertSame(SaldoSeverity::CRITICAL, SaldoSeverity::hitung(-2, 0));
     }
 
     public function test_warna_teks_and_badge_are_defined_for_every_severity(): void
     {
-        foreach ([SaldoSeverity::UNLIMITED, SaldoSeverity::SAFE, SaldoSeverity::WARNING, SaldoSeverity::CRITICAL] as $severity) {
+        foreach ([SaldoSeverity::UNLIMITED, SaldoSeverity::INELIGIBLE, SaldoSeverity::SAFE, SaldoSeverity::WARNING, SaldoSeverity::CRITICAL] as $severity) {
             $this->assertMatchesRegularExpression('/^[0-9A-F]{6}$/', SaldoSeverity::warnaTeks($severity));
 
             $badge = SaldoSeverity::warnaBadge($severity);

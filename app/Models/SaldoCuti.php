@@ -103,7 +103,8 @@ class SaldoCuti extends Model
 
     /**
      * Baris saldo berstatus "kritis" (merah): sisa <= 25% kuota atau minus.
-     * Kuota 0 dengan sisa 0 juga ikut kritis. Padanan SQL dari
+     * Kuota 0 dengan sisa 0 TIDAK termasuk (statusnya "belum berhak"),
+     * kecuali sisanya sudah minus. Padanan SQL dari
      * SaldoSeverity::hitung() — kalau ambang di sana berubah, sesuaikan juga.
      *
      * @param  Builder<SaldoCuti>  $query
@@ -114,7 +115,7 @@ class SaldoCuti extends Model
         return $query
             ->whereNotNull('kuota')
             ->whereNotNull('sisa')
-            ->where(fn (Builder $q) => $q->whereRaw('sisa * 4 <= kuota')->orWhere('sisa', '<=', 0));
+            ->where(fn (Builder $q) => $q->where('sisa', '<', 0)->orWhere(fn (Builder $q) => $q->where('kuota', '>', 0)->whereRaw('sisa * 4 <= kuota')));
     }
 
     /**

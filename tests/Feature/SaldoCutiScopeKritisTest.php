@@ -15,7 +15,7 @@ class SaldoCutiScopeKritisTest extends TestCase
 
     public function test_scope_kritis_matches_saldo_severity_critical(): void
     {
-        $kombinasi = [[3, 12], [0, 12], [-1, 12], [4, 12], [12, 12], [0, 0], [5, 0], [5, 22], [6, 22], [null, null], [5, null]];
+        $kombinasi = [[3, 12], [0, 12], [-1, 12], [4, 12], [12, 12], [0, 0], [-2, 0], [5, 0], [5, 22], [6, 22], [null, null], [5, null]];
 
         $karyawan = Karyawan::factory()->create();
         $jenisCuti = JenisCuti::factory()->create();

@@ -1,6 +1,7 @@
 import {
     AlertTriangle,
     CheckCircle2,
+    Hourglass,
     Infinity as InfinityIcon,
     TrendingDown,
 } from 'lucide-react';
@@ -10,6 +11,7 @@ import { cn } from '@/lib/utils';
 
 const ICONS = {
     unlimited: InfinityIcon,
+    ineligible: Hourglass,
     safe: CheckCircle2,
     warning: AlertTriangle,
     critical: TrendingDown,
@@ -25,7 +27,8 @@ type SaldoCutiMeterProps = {
 
 /**
  * Kartu ringkas satu jenis cuti, dengan warna yang mencerminkan urgensinya:
- * biru = aman, kuning = menipis (<=50% kuota), merah = kritis (<=25% kuota atau minus).
+ * biru = aman, kuning = menipis (<=50% kuota), merah = kritis (<=25% kuota atau minus),
+ * abu-abu = belum berhak (kuota & sisa 0).
  */
 export function SaldoCutiMeter({
     nama,
@@ -54,7 +57,11 @@ export function SaldoCutiMeter({
             </CardHeader>
             <CardContent>
                 <div className={cn('text-2xl font-bold', style.text)}>
-                    {sisa === null ? 'Tanpa batas' : `${sisa} hari`}
+                    {sisa === null
+                        ? 'Tanpa batas'
+                        : style.severity === 'ineligible'
+                          ? style.label
+                          : `${sisa} hari`}
                 </div>
                 <p className="text-xs text-muted-foreground">
                     {kuota === null

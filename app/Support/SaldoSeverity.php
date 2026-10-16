@@ -16,6 +16,8 @@ class SaldoSeverity
 {
     public const UNLIMITED = 'unlimited';
 
+    public const INELIGIBLE = 'ineligible';
+
     public const SAFE = 'safe';
 
     public const WARNING = 'warning';
@@ -24,12 +26,18 @@ class SaldoSeverity
 
     /**
      * Kuota/sisa null berarti jenis cuti tanpa batas — bukan "belum
-     * diisi", jadi tidak boleh dianggap warning/critical.
+     * diisi", jadi tidak boleh dianggap warning/critical. Kuota 0 dengan
+     * sisa 0 berarti belum berhak cuti (periode ke-1 = masa kerja minimal),
+     * bukan saldo kritis; kalau sisanya sudah minus tetap critical.
      */
     public static function hitung(?int $sisa, ?int $kuota): string
     {
         if ($sisa === null || $kuota === null) {
             return self::UNLIMITED;
+        }
+
+        if ($kuota === 0 && $sisa === 0) {
+            return self::INELIGIBLE;
         }
 
         $rasio = $kuota > 0 ? $sisa / $kuota : ($sisa > 0 ? 1 : 0);
@@ -50,6 +58,7 @@ class SaldoSeverity
     {
         return match ($severity) {
             self::UNLIMITED => '0369A1', // sky-700
+            self::INELIGIBLE => '71717A', // zinc-500
             self::SAFE => '1D4ED8', // blue-700
             self::WARNING => 'B45309', // amber-700
             self::CRITICAL => 'B91C1C', // red-700
@@ -67,6 +76,7 @@ class SaldoSeverity
     {
         return match ($severity) {
             self::UNLIMITED => ['fill' => 'E0F2FE', 'teks' => '075985'], // sky
+            self::INELIGIBLE => ['fill' => 'F4F4F5', 'teks' => '52525B'], // zinc
             self::SAFE => ['fill' => 'DBEAFE', 'teks' => '1E40AF'], // blue
             self::WARNING => ['fill' => 'FEF3C7', 'teks' => '92400E'], // amber
             self::CRITICAL => ['fill' => 'FEE2E2', 'teks' => '991B1B'], // red

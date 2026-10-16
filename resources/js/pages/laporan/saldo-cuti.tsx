@@ -339,7 +339,14 @@ export default function LaporanSaldoCuti() {
                                                             style.text,
                                                         )}
                                                     >
-                                                        {saldo.sisa ?? '∞'}
+                                                        {style.severity ===
+                                                        'ineligible' ? (
+                                                            <span className="text-xs font-normal whitespace-nowrap">
+                                                                {style.label}
+                                                            </span>
+                                                        ) : (
+                                                            (saldo.sisa ?? '∞')
+                                                        )}
                                                     </td>
                                                 </Fragment>
                                             );

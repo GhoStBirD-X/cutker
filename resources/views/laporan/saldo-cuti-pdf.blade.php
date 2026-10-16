@@ -58,7 +58,7 @@
                             <td class="center muted">&mdash;</td>
                         @else
                             <td class="center">{{ $kolom['terpakai'] }}</td>
-                            <td class="center sisa" style="color: #{{ $kolom['warna'] }};">{{ $kolom['sisa'] ?? 'Tanpa Batas' }}</td>
+                            <td class="center sisa" style="color: #{{ $kolom['warna'] }};">{{ $kolom['label'] ?? $kolom['sisa'] ?? 'Tanpa Batas' }}</td>
                         @endif
                     @endforeach
                 </tr>

@@ -1,4 +1,5 @@
-export type SaldoSeverity = 'unlimited' | 'safe' | 'warning' | 'critical';
+export type SaldoSeverity =
+    'unlimited' | 'ineligible' | 'safe' | 'warning' | 'critical';
 
 /**
  * Urutan urgensi (makin besar makin mendesak), dipakai untuk mengurutkan
@@ -6,6 +7,7 @@ export type SaldoSeverity = 'unlimited' | 'safe' | 'warning' | 'critical';
  */
 export const SEVERITY_RANK: Record<SaldoSeverity, number> = {
     unlimited: 0,
+    ineligible: 0,
     safe: 1,
     warning: 2,
     critical: 3,
@@ -29,6 +31,14 @@ const STYLES: Record<SaldoSeverity, Omit<SaldoSeverityStyle, 'severity'>> = {
         bar: 'bg-sky-500',
         border: 'border-sky-200 dark:border-sky-900',
         badge: 'border-sky-200 bg-sky-100 text-sky-800 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-300',
+    },
+    ineligible: {
+        label: 'Belum berhak',
+        dot: 'bg-zinc-400',
+        text: 'text-zinc-500 dark:text-zinc-400',
+        bar: 'bg-zinc-400',
+        border: 'border-zinc-200 dark:border-zinc-800',
+        badge: 'border-zinc-200 bg-zinc-100 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300',
     },
     safe: {
         label: 'Saldo aman',
@@ -58,7 +68,9 @@ const STYLES: Record<SaldoSeverity, Omit<SaldoSeverityStyle, 'severity'>> = {
 
 /**
  * Kuota/sisa null berarti jenis cuti tanpa batas (mis. cuti khusus) — bukan
- * "belum diisi", jadi tidak boleh dianggap warning/critical.
+ * "belum diisi", jadi tidak boleh dianggap warning/critical. Kuota 0 dengan
+ * sisa 0 berarti belum berhak cuti (periode ke-1 = masa kerja minimal),
+ * bukan saldo kritis; kalau sisanya sudah minus tetap critical.
  */
 export function saldoSeverity(
     sisa: number | null,
@@ -66,6 +78,10 @@ export function saldoSeverity(
 ): SaldoSeverityStyle {
     if (sisa === null || kuota === null) {
         return { severity: 'unlimited', ...STYLES.unlimited };
+    }
+
+    if (kuota === 0 && sisa === 0) {
+        return { severity: 'ineligible', ...STYLES.ineligible };
     }
 
     const ratio = kuota > 0 ? sisa / kuota : sisa > 0 ? 1 : 0;
