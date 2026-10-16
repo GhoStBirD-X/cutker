@@ -47,7 +47,7 @@ const STYLES: Record<SaldoSeverity, Omit<SaldoSeverityStyle, 'severity'>> = {
         badge: 'border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300',
     },
     critical: {
-        label: 'Saldo minus',
+        label: 'Saldo kritis',
         dot: 'bg-red-500',
         text: 'text-red-700 dark:text-red-400',
         bar: 'bg-red-500',
@@ -68,13 +68,13 @@ export function saldoSeverity(
         return { severity: 'unlimited', ...STYLES.unlimited };
     }
 
-    if (sisa < 0) {
+    const ratio = kuota > 0 ? sisa / kuota : sisa > 0 ? 1 : 0;
+
+    if (sisa < 0 || ratio <= 0.25) {
         return { severity: 'critical', ...STYLES.critical };
     }
 
-    const ratio = kuota > 0 ? sisa / kuota : sisa > 0 ? 1 : 0;
-
-    if (ratio <= 0.25) {
+    if (ratio <= 0.5) {
         return { severity: 'warning', ...STYLES.warning };
     }
 

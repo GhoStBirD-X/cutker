@@ -3,7 +3,7 @@
 namespace App\Support;
 
 /**
- * Klasifikasi urgensi satu baris saldo cuti (aman/menipis/minus/tanpa
+ * Klasifikasi urgensi satu baris saldo cuti (aman/menipis/kritis/tanpa
  * batas) beserta warnanya untuk dipakai di luar frontend (Excel, PDF).
  *
  * Ambang batas & warna di sini HARUS selalu sama dengan
@@ -31,13 +31,13 @@ class SaldoSeverity
             return self::UNLIMITED;
         }
 
-        if ($sisa < 0) {
-            return self::CRITICAL;
-        }
-
         $rasio = $kuota > 0 ? $sisa / $kuota : ($sisa > 0 ? 1 : 0);
 
-        return $rasio <= 0.25 ? self::WARNING : self::SAFE;
+        return match (true) {
+            $sisa < 0, $rasio <= 0.25 => self::CRITICAL,
+            $rasio <= 0.5 => self::WARNING,
+            default => self::SAFE,
+        };
     }
 
     /**

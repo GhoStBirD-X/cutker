@@ -25,7 +25,7 @@ type SaldoCutiMeterProps = {
 
 /**
  * Kartu ringkas satu jenis cuti, dengan warna yang mencerminkan urgensinya:
- * biru = aman, kuning = menipis (<=25% kuota), merah = minus.
+ * biru = aman, kuning = menipis (<=50% kuota), merah = kritis (<=25% kuota atau minus).
  */
 export function SaldoCutiMeter({
     nama,

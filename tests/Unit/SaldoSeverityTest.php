@@ -18,15 +18,21 @@ class SaldoSeverityTest extends TestCase
         $this->assertSame(SaldoSeverity::CRITICAL, SaldoSeverity::hitung(-1, 12));
     }
 
-    public function test_sisa_at_or_below_25_percent_of_kuota_is_warning(): void
+    public function test_sisa_at_or_below_25_percent_of_kuota_is_critical(): void
     {
-        $this->assertSame(SaldoSeverity::WARNING, SaldoSeverity::hitung(3, 12));
-        $this->assertSame(SaldoSeverity::WARNING, SaldoSeverity::hitung(0, 12));
+        $this->assertSame(SaldoSeverity::CRITICAL, SaldoSeverity::hitung(3, 12));
+        $this->assertSame(SaldoSeverity::CRITICAL, SaldoSeverity::hitung(0, 12));
     }
 
-    public function test_sisa_above_25_percent_of_kuota_is_safe(): void
+    public function test_sisa_above_25_up_to_50_percent_of_kuota_is_warning(): void
     {
-        $this->assertSame(SaldoSeverity::SAFE, SaldoSeverity::hitung(4, 12));
+        $this->assertSame(SaldoSeverity::WARNING, SaldoSeverity::hitung(4, 12));
+        $this->assertSame(SaldoSeverity::WARNING, SaldoSeverity::hitung(6, 12));
+    }
+
+    public function test_sisa_above_50_percent_of_kuota_is_safe(): void
+    {
+        $this->assertSame(SaldoSeverity::SAFE, SaldoSeverity::hitung(7, 12));
         $this->assertSame(SaldoSeverity::SAFE, SaldoSeverity::hitung(12, 12));
     }
 
@@ -35,9 +41,9 @@ class SaldoSeverityTest extends TestCase
         $this->assertSame(SaldoSeverity::SAFE, SaldoSeverity::hitung(5, 0));
     }
 
-    public function test_zero_kuota_with_zero_sisa_is_warning(): void
+    public function test_zero_kuota_with_zero_sisa_is_critical(): void
     {
-        $this->assertSame(SaldoSeverity::WARNING, SaldoSeverity::hitung(0, 0));
+        $this->assertSame(SaldoSeverity::CRITICAL, SaldoSeverity::hitung(0, 0));
     }
 
     public function test_warna_teks_and_badge_are_defined_for_every_severity(): void
