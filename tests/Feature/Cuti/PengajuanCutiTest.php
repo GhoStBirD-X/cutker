@@ -12,10 +12,12 @@ use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
 use App\Models\Shift;
+use App\Notifications\PengajuanCutiDibatalkan;
 use Carbon\CarbonInterface;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Concerns\InteractsWithKaryawan;
@@ -737,6 +739,61 @@ class PengajuanCutiTest extends TestCase
         ]);
         $approveResponse->assertInertiaFlash('toast.message', 'Pengajuan ini sudah dibatalkan oleh pengaju.');
         $this->assertSame(StatusApproval::Dibatalkan, $approval->fresh()->status);
+    }
+
+    public function test_cancelling_pending_leave_request_notifies_the_pending_kepala_bagian(): void
+    {
+        Notification::fake();
+
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $kepalaBagian = $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id])->karyawan;
+        $hrd = $this->karyawanUser('hrd');
+        $pengajuan = $this->ajukanCutiDuaHari($karyawan);
+
+        $this->actingAs($karyawan->user)->patch(route('cuti.batalkan', $pengajuan))->assertRedirect();
+
+        Notification::assertSentTo($kepalaBagian->user, PengajuanCutiDibatalkan::class);
+        Notification::assertNotSentTo([$karyawan->user, $hrd], PengajuanCutiDibatalkan::class);
+    }
+
+    public function test_cancelling_leave_request_pending_at_hrd_notifies_all_hrd_and_the_kepala_bagian_who_approved(): void
+    {
+        Notification::fake();
+
+        $karyawan = $this->karyawanUser('karyawan')->karyawan;
+        $kepalaBagian = $this->karyawanUser('kepala_bagian', ['departemen_id' => $karyawan->departemen_id])->karyawan;
+        $hrdPertama = $this->karyawanUser('hrd');
+        $hrdKedua = $this->karyawanUser('hrd');
+        $manager = $this->karyawanUser('manager');
+        $pengajuan = $this->ajukanCutiDuaHari($karyawan);
+
+        $this->actingAs($kepalaBagian->user)->post(route('approval.approve', $pengajuan->approvals()->firstOrFail()), ['catatan' => null]);
+        $this->actingAs($karyawan->user)->patch(route('cuti.batalkan', $pengajuan))->assertRedirect();
+
+        Notification::assertSentTo([$hrdPertama, $hrdKedua, $kepalaBagian->user], PengajuanCutiDibatalkan::class);
+        Notification::assertNotSentTo([$manager, $karyawan->user], PengajuanCutiDibatalkan::class);
+    }
+
+    private function ajukanCutiDuaHari(Karyawan $karyawan): PengajuanCuti
+    {
+        $jenisCuti = JenisCuti::factory()->create();
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tahun' => now()->year,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $this->actingAs($karyawan->user)->post(route('cuti.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(7)->toDateString(),
+            'tanggal_selesai' => now()->addDays(8)->toDateString(),
+            'alasan' => 'Acara keluarga',
+        ]);
+
+        return PengajuanCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail();
     }
 
     public function test_leave_request_is_rejected_when_it_conflicts_with_shift_schedule(): void

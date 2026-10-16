@@ -95,10 +95,16 @@ class PengajuanCutiService
     /**
      * Karyawan membatalkan pengajuannya sendiri. Approval level yang masih
      * pending ikut ditandai dibatalkan supaya tidak lagi muncul di daftar
-     * approval milik approver-nya dan tidak bisa diproses lebih lanjut.
+     * approval milik approver-nya dan tidak bisa diproses lebih lanjut,
+     * lalu approver-nya dikabari lewat ApprovalService::kabariPembatalan().
      */
     public function batalkan(PengajuanCuti $pengajuanCuti): void
     {
+        $approvalPending = $pengajuanCuti->approvals()
+            ->where('status', StatusApproval::Pending)
+            ->with('approver.user')
+            ->get();
+
         DB::transaction(function () use ($pengajuanCuti) {
             $pengajuanCuti->update(['status' => StatusPengajuan::Dibatalkan]);
 
@@ -106,6 +112,8 @@ class PengajuanCutiService
                 ->where('status', StatusApproval::Pending)
                 ->update(['status' => StatusApproval::Dibatalkan]);
         });
+
+        $this->approvalService->kabariPembatalan($pengajuanCuti, $approvalPending);
     }
 
     /**

@@ -11,10 +11,13 @@ use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
 use App\Models\User;
 use App\Notifications\PengajuanCutiDiajukan;
+use App\Notifications\PengajuanCutiDibatalkan;
 use App\Notifications\PengajuanCutiDisetujui;
 use App\Notifications\PengajuanCutiDiteruskan;
 use App\Notifications\PengajuanCutiDitolak;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class ApprovalService
 {
@@ -191,6 +194,37 @@ class ApprovalService
         User::role($role)->get()->each(
             fn (User $user) => $user->notify(new PengajuanCutiDiajukan($pengajuan))
         );
+    }
+
+    /**
+     * Mengabari approver bahwa pengaju membatalkan pengajuannya: penerima
+     * notifikasi "pengajuan masuk" untuk level yang tadinya masih pending
+     * (Kepala Bagian yang ditugaskan, atau seluruh kolam HRD/Manager) dan
+     * approver yang sebelumnya sudah menyetujui level di bawahnya.
+     *
+     * @param  Collection<int, Approval>  $approvalYangDibatalkan  approval yang statusnya masih pending sesaat sebelum dibatalkan
+     */
+    public function kabariPembatalan(PengajuanCuti $pengajuan, Collection $approvalYangDibatalkan): void
+    {
+        $penerimaLevelPending = $approvalYangDibatalkan->flatMap(fn (Approval $approval) => match ($approval->level) {
+            self::LEVEL_HRD => User::role('hrd')->get(),
+            self::LEVEL_MANAGER => User::role('manager')->get(),
+            default => [$approval->approver?->user],
+        });
+
+        $penerimaYangSudahMenyetujui = $pengajuan->approvals()
+            ->where('status', StatusApproval::Disetujui)
+            ->with('approver.user')
+            ->get()
+            ->map(fn (Approval $approval) => $approval->approver?->user);
+
+        $penerima = $penerimaLevelPending
+            ->merge($penerimaYangSudahMenyetujui)
+            ->filter()
+            ->unique('id')
+            ->reject(fn (User $user) => $user->karyawan_id === $pengajuan->karyawan_id);
+
+        Notification::send($penerima, new PengajuanCutiDibatalkan($pengajuan));
     }
 
     /**
