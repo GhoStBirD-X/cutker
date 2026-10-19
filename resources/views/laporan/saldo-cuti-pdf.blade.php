@@ -33,7 +33,7 @@
                 <th rowspan="2">Nama</th>
                 <th rowspan="2">NPK</th>
                 <th rowspan="2">Status</th>
-                <th rowspan="2">Akhir Kontrak</th>
+                <th rowspan="2">Akhir Masa Cuti</th>
                 @foreach ($kolomJenisCuti as $nama)
                     <th colspan="2">{{ $nama }}</th>
                 @endforeach
@@ -51,7 +51,7 @@
                     <td class="nama">{{ $karyawan['nama'] }}</td>
                     <td class="center">{{ $karyawan['nip'] }}</td>
                     <td class="center"><span class="badge">{{ $karyawan['status_kontrak'] }}</span></td>
-                    <td class="center{{ $karyawan['tanggal_akhir_kontrak'] ? '' : ' muted' }}">{{ $karyawan['tanggal_akhir_kontrak'] ?? '—' }}</td>
+                    <td class="center{{ $karyawan['akhir_masa_cuti'] ? '' : ' muted' }}">{{ $karyawan['akhir_masa_cuti'] ?? '—' }}</td>
                     @foreach ($karyawan['kolom'] as $kolom)
                         @if ($kolom === null)
                             <td class="center muted">&mdash;</td>

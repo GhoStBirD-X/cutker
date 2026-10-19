@@ -198,18 +198,21 @@ class SaldoCutiTest extends TestCase
         $response->assertInertia(fn ($page) => $page->where('karyawans.data.0.status_kontrak', 'K3'));
     }
 
-    public function test_report_includes_contract_end_date(): void
+    public function test_report_includes_cuti_tahunan_period_end_date(): void
     {
         $hrd = $this->karyawanUser('hrd');
-        $karyawan = Karyawan::factory()->kontrak()->create(['tanggal_akhir_kontrak' => '2027-03-31']);
+        $cutiTahunan = JenisCuti::factory()->create(['nama_jenis' => 'Cuti Tahunan']);
+        $cutiBesar = JenisCuti::factory()->create(['nama_jenis' => 'Cuti Besar']);
+        $karyawan = Karyawan::factory()->create();
+        SaldoCuti::factory()->create(['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $cutiBesar->id, 'periode_selesai' => '2030-01-31']);
+        SaldoCuti::factory()->create(['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $cutiTahunan->id, 'periode_selesai' => '2027-03-31']);
+        $tanpaSaldo = Karyawan::factory()->create();
 
-        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti', [
-            'search' => $karyawan->nip,
-        ]));
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti', ['search' => $karyawan->nip]));
+        $response->assertInertia(fn ($page) => $page->where('karyawans.data.0.akhir_masa_cuti', '2027-03-31'));
 
-        $response->assertInertia(fn ($page) => $page
-            ->where('karyawans.data.0.tanggal_akhir_kontrak', fn (string $tanggal) => str_starts_with($tanggal, '2027-03-31'))
-        );
+        $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti', ['search' => $tanpaSaldo->nip]));
+        $response->assertInertia(fn ($page) => $page->where('karyawans.data.0.akhir_masa_cuti', null));
     }
 
     public function test_report_counts_and_filters_karyawan_with_critical_saldo(): void
@@ -316,20 +319,20 @@ class SaldoCutiTest extends TestCase
         });
     }
 
-    public function test_export_excel_includes_contract_end_date(): void
+    public function test_export_excel_includes_period_end_date(): void
     {
         $hrd = $this->karyawanUser('hrd');
-        $kontrak = Karyawan::factory()->kontrak()->create(['nip' => 'NPK-001', 'tanggal_akhir_kontrak' => '2027-03-31']);
-        SaldoCuti::factory()->create(['karyawan_id' => $kontrak->id]);
-        $tetap = Karyawan::factory()->create(['nip' => 'NPK-002']);
-        SaldoCuti::factory()->create(['karyawan_id' => $tetap->id]);
+        $denganPeriode = Karyawan::factory()->create(['nip' => 'NPK-001']);
+        SaldoCuti::factory()->create(['karyawan_id' => $denganPeriode->id, 'periode_selesai' => '2027-03-31']);
+        $tanpaPeriode = Karyawan::factory()->create(['nip' => 'NPK-002']);
+        SaldoCuti::factory()->create(['karyawan_id' => $tanpaPeriode->id, 'periode_selesai' => null]);
 
         $response = $this->actingAs($hrd)->get(route('laporan.saldo-cuti.export.excel', ['search' => 'NPK-']));
 
         $response->assertOk();
         $sheet = IOFactory::load($response->getFile()->getPathname())->getActiveSheet();
 
-        $this->assertSame('Akhir Kontrak', $sheet->getCell('E1')->getValue());
+        $this->assertSame('Akhir Masa Cuti', $sheet->getCell('E1')->getValue());
         $this->assertSame('31 Mar 2027', $sheet->getCell('E2')->getValue());
         $this->assertSame('-', $sheet->getCell('E3')->getValue());
     }

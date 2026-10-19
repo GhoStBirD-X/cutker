@@ -48,6 +48,7 @@ class SaldoCutiController extends Controller
         $karyawans->through(fn (Karyawan $karyawan) => [
             ...$karyawan->toArray(),
             'status_kontrak' => $this->statusKontrak($karyawan),
+            'akhir_masa_cuti' => $this->saldoCutiTahunan($karyawan)?->periode_selesai?->toDateString(),
         ]);
 
         return Inertia::render('laporan/saldo-cuti', [
@@ -107,7 +108,7 @@ class SaldoCutiController extends Controller
      * karyawan tsb (khusus_gender tidak cocok) atau belum punya baris
      * saldo aktif diisi null supaya blade cukup menampilkan "—".
      *
-     * @return array{nama: string, nip: string, status_kontrak: string, tanggal_akhir_kontrak: string|null, kolom: list<array{terpakai: int, sisa: int|null, warna: string}|null>}
+     * @return array{nama: string, nip: string, status_kontrak: string, akhir_masa_cuti: string|null, kolom: list<array{terpakai: int, sisa: int|null, warna: string}|null>}
      */
     private function barisLaporanPdf(Karyawan $karyawan): array
     {
@@ -115,7 +116,7 @@ class SaldoCutiController extends Controller
             'nama' => $karyawan->nama,
             'nip' => $karyawan->nip,
             'status_kontrak' => $this->statusKontrak($karyawan),
-            'tanggal_akhir_kontrak' => $karyawan->tanggal_akhir_kontrak?->translatedFormat('d M Y'),
+            'akhir_masa_cuti' => $this->saldoCutiTahunan($karyawan)?->periode_selesai?->translatedFormat('d M Y'),
             'kolom' => collect(self::KOLOM_JENIS_CUTI)
                 ->map(function (string $namaJenis) use ($karyawan) {
                     $saldo = $karyawan->saldoCutis->first(fn (SaldoCuti $saldo) => $saldo->jenisCuti?->nama_jenis === $namaJenis);
@@ -218,9 +219,16 @@ class SaldoCutiController extends Controller
             return 'KT';
         }
 
-        $cutiTahunan = $karyawan->saldoCutis
-            ->first(fn (SaldoCuti $saldo) => $saldo->jenisCuti?->nama_jenis === 'Cuti Tahunan');
+        return 'K'.($this->saldoCutiTahunan($karyawan)?->urutanKontrak() ?? 1);
+    }
 
-        return 'K'.($cutiTahunan?->urutanKontrak() ?? 1);
+    /**
+     * Saldo Cuti Tahunan yang aktif — acuan status kontrak dan kolom
+     * "Akhir Masa Cuti" (periode_selesai = tanggal saldo diperbarui).
+     */
+    private function saldoCutiTahunan(Karyawan $karyawan): ?SaldoCuti
+    {
+        return $karyawan->saldoCutis
+            ->first(fn (SaldoCuti $saldo) => $saldo->jenisCuti?->nama_jenis === 'Cuti Tahunan');
     }
 }

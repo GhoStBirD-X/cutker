@@ -50,7 +50,7 @@ class SaldoCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMa
      */
     public function headings(): array
     {
-        return ['NPK', 'Nama Karyawan', 'Departemen', 'Jabatan', 'Akhir Kontrak', 'Jenis Cuti', 'Kuota', 'Terpakai', 'Sisa'];
+        return ['NPK', 'Nama Karyawan', 'Departemen', 'Jabatan', 'Akhir Masa Cuti', 'Jenis Cuti', 'Kuota', 'Terpakai', 'Sisa'];
     }
 
     /**
@@ -66,7 +66,7 @@ class SaldoCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMa
             $saldo->karyawan->nama,
             $saldo->karyawan->departemen->nama_departemen,
             $saldo->karyawan->jabatan->nama_jabatan,
-            $saldo->karyawan->tanggal_akhir_kontrak?->translatedFormat('d M Y') ?? '-',
+            $saldo->periode_selesai?->translatedFormat('d M Y') ?? '-',
             $saldo->jenisCuti->nama_jenis,
             $saldo->kuota ?? 'Tanpa Batas',
             $saldo->terpakai,

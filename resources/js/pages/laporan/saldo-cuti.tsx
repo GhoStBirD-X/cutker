@@ -33,6 +33,7 @@ type SaldoCutiRow = SaldoCuti & { jenis_cuti?: JenisCuti };
 
 type KaryawanRow = Karyawan & {
     status_kontrak: string;
+    akhir_masa_cuti: string | null;
     saldo_cutis: SaldoCutiRow[];
 };
 
@@ -228,7 +229,7 @@ export default function LaporanSaldoCuti() {
                                         rowSpan={2}
                                         className="border-r px-3 py-2 text-left align-bottom whitespace-nowrap"
                                     >
-                                        Akhir Kontrak
+                                        Akhir Masa Cuti
                                     </th>
                                     {KOLOM_JENIS_CUTI.map((nama) => (
                                         <th
@@ -286,9 +287,9 @@ export default function LaporanSaldoCuti() {
                                             </Badge>
                                         </td>
                                         <td className="border-r px-3 py-2 whitespace-nowrap text-muted-foreground">
-                                            {karyawan.tanggal_akhir_kontrak
+                                            {karyawan.akhir_masa_cuti
                                                 ? formatDate(
-                                                      karyawan.tanggal_akhir_kontrak,
+                                                      karyawan.akhir_masa_cuti,
                                                   )
                                                 : '—'}
                                         </td>
