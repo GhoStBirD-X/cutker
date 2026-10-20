@@ -13,6 +13,8 @@ use Illuminate\Notifications\Notification;
  */
 class PengajuanCutiDiajukan extends Notification
 {
+    public const KETERANGAN_LAMPIRAN = 'Lampiran: Ada — silakan lihat di aplikasi.';
+
     public function __construct(
         public PengajuanCuti $pengajuanCuti,
     ) {}
@@ -29,24 +31,34 @@ class PengajuanCutiDiajukan extends Notification
     {
         $pengajuan = $this->pengajuanCuti;
 
-        return (new MailMessage)
+        $mail = (new MailMessage)
             ->subject('Pengajuan Cuti Menunggu Persetujuan Anda')
             ->line("{$pengajuan->karyawan->nama} mengajukan {$pengajuan->jenisCuti->nama_jenis} selama {$pengajuan->jumlah_hari} hari.")
             ->line("Tanggal: {$pengajuan->tanggal_mulai->toDateString()} s/d {$pengajuan->tanggal_selesai->toDateString()}")
-            ->line("Alasan: {$pengajuan->alasan}")
-            ->action('Tinjau Pengajuan', url('/approval'));
+            ->line("Alasan: {$pengajuan->alasan}");
+
+        if ($pengajuan->lampiran) {
+            $mail->line(self::KETERANGAN_LAMPIRAN);
+        }
+
+        return $mail->action('Tinjau Pengajuan', url('/approval'));
     }
 
     public function toWhatsApp(object $notifiable): string
     {
         $pengajuan = $this->pengajuanCuti;
 
-        return "Pengajuan Cuti Baru\n\n".
+        $pesan = "Pengajuan Cuti Baru\n\n".
             "Karyawan: *{$pengajuan->karyawan->nama}*\n".
             "Jenis Cuti: {$pengajuan->jenisCuti->nama_jenis}\n".
             "Tanggal: {$pengajuan->tanggal_mulai->toDateString()} s/d {$pengajuan->tanggal_selesai->toDateString()}\n".
-            "Alasan: {$pengajuan->alasan}\n\n".
-            'Tinjau: '.url('/approval');
+            "Alasan: {$pengajuan->alasan}\n";
+
+        if ($pengajuan->lampiran) {
+            $pesan .= self::KETERANGAN_LAMPIRAN."\n";
+        }
+
+        return $pesan."\n".'Tinjau: '.url('/approval');
     }
 
     /**

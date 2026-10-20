@@ -6,11 +6,15 @@ use App\Enums\StatusAntrianWhatsapp;
 use App\Models\AntrianWhatsapp;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
+use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
+use App\Notifications\PengajuanCutiDiajukan;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -33,7 +37,7 @@ class PengajuanCutiWhatsAppTest extends TestCase
     /**
      * @return array{0: Karyawan, 1: JenisCuti}
      */
-    protected function ajukanCuti(string $noHpKepalaBagian = '081234567890'): array
+    protected function ajukanCuti(string $noHpKepalaBagian = '081234567890', ?UploadedFile $lampiran = null): array
     {
         $karyawan = $this->karyawanUser('karyawan')->karyawan;
         $this->karyawanUser('kepala_bagian', [
@@ -56,6 +60,7 @@ class PengajuanCutiWhatsAppTest extends TestCase
             'tanggal_mulai' => now()->addDays(7)->toDateString(),
             'tanggal_selesai' => now()->addDays(8)->toDateString(),
             'alasan' => 'Acara keluarga',
+            'lampiran' => $lampiran,
         ]);
 
         return [$karyawan, $jenisCuti];
@@ -118,5 +123,36 @@ class PengajuanCutiWhatsAppTest extends TestCase
         $this->ajukanCuti(noHpKepalaBagian: '');
 
         Http::assertNothingSent();
+    }
+
+    public function test_whatsapp_message_mentions_attachment_when_leave_has_one(): void
+    {
+        Storage::fake('public');
+        Http::fake(['*/message/sendText/*' => Http::response(['status' => 'PENDING'], 201)]);
+
+        $this->ajukanCuti(lampiran: UploadedFile::fake()->create('surat-dokter.pdf', 100, 'application/pdf'));
+
+        Http::assertSent(fn (Request $request) => str_contains($request['text'], PengajuanCutiDiajukan::KETERANGAN_LAMPIRAN));
+    }
+
+    public function test_whatsapp_message_does_not_mention_attachment_when_leave_has_none(): void
+    {
+        Http::fake(['*/message/sendText/*' => Http::response(['status' => 'PENDING'], 201)]);
+
+        $this->ajukanCuti();
+
+        Http::assertSent(fn (Request $request) => ! str_contains($request['text'], 'Lampiran'));
+    }
+
+    public function test_email_mentions_attachment_when_leave_has_one(): void
+    {
+        Storage::fake('public');
+        Http::fake(['*/message/sendText/*' => Http::response(['status' => 'PENDING'], 201)]);
+
+        [$karyawan] = $this->ajukanCuti(lampiran: UploadedFile::fake()->create('surat-dokter.pdf', 100, 'application/pdf'));
+
+        $mail = (new PengajuanCutiDiajukan(PengajuanCuti::sole()))->toMail($karyawan);
+
+        $this->assertContains(PengajuanCutiDiajukan::KETERANGAN_LAMPIRAN, $mail->introLines);
     }
 }
