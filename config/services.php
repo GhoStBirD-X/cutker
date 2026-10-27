@@ -36,6 +36,7 @@ return [
     ],
 
     'evolution' => [
+        'enabled' => (bool) env('NOTIFIKASI_WHATSAPP', true),
         'base_url' => env('EVOLUTION_BASE_URL', 'http://localhost:8081'),
         'instance' => env('EVOLUTION_INSTANCE', 'cutker'),
         'api_key' => env('EVOLUTION_API_KEY'),

@@ -10,6 +10,9 @@ use Illuminate\Notifications\Notification;
  * .ai/rules/notifications.md) — tidak boleh menggagalkan pengajuan cuti atau
  * channel notifikasi lain (database/mail). Pesan yang gagal masuk antrian dan
  * dikirim ulang oleh scheduler, lihat AntrianWhatsappService.
+ *
+ * Seluruh channel dimatikan lewat NOTIFIKASI_WHATSAPP=false untuk server tanpa
+ * Evolution API (mis. hosting cPanel) — notifikasi hanya lewat database + email.
  */
 class WhatsAppChannel
 {
@@ -17,7 +20,7 @@ class WhatsAppChannel
 
     public function send(object $notifiable, Notification $notification): void
     {
-        if (! method_exists($notification, 'toWhatsApp')) {
+        if (! config('services.evolution.enabled') || ! method_exists($notification, 'toWhatsApp')) {
             return;
         }
 

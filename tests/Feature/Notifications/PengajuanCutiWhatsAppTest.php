@@ -116,6 +116,18 @@ class PengajuanCutiWhatsAppTest extends TestCase
         $this->assertNotNull($antrian->terkirim_pada);
     }
 
+    public function test_no_whatsapp_is_sent_or_queued_when_whatsapp_notifications_are_disabled(): void
+    {
+        config(['services.evolution.enabled' => false]);
+        Http::fake();
+
+        $this->ajukanCuti();
+
+        Http::assertNothingSent();
+        $this->assertDatabaseCount('antrian_whatsapps', 0);
+        $this->assertDatabaseCount('notifications', 1);
+    }
+
     public function test_no_whatsapp_is_sent_when_kepala_bagian_has_no_phone_number(): void
     {
         Http::fake();

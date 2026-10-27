@@ -38,6 +38,20 @@ class KirimAntrianWhatsappTest extends TestCase
         return ['instance' => ['instanceName' => 'cutker', 'state' => $state]];
     }
 
+    public function test_skips_the_queue_without_contacting_evolution_when_whatsapp_notifications_are_disabled(): void
+    {
+        config(['services.evolution.enabled' => false]);
+        Http::fake();
+        $antrian = AntrianWhatsapp::factory()->create();
+
+        $this->artisan('whatsapp:kirim-antrian')
+            ->expectsOutput('Notifikasi WhatsApp dimatikan (NOTIFIKASI_WHATSAPP=false), antrian tidak diproses.')
+            ->assertExitCode(0);
+
+        Http::assertNothingSent();
+        $this->assertSame(StatusAntrianWhatsapp::Pending, $antrian->fresh()->status);
+    }
+
     public function test_sends_pending_messages_with_a_pause_between_them_when_connected(): void
     {
         Sleep::fake();

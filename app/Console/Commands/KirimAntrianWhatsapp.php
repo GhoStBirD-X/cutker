@@ -16,6 +16,12 @@ class KirimAntrianWhatsapp extends Command
      */
     public function handle(AntrianWhatsappService $antrianWhatsappService): int
     {
+        if (! config('services.evolution.enabled')) {
+            $this->info('Notifikasi WhatsApp dimatikan (NOTIFIKASI_WHATSAPP=false), antrian tidak diproses.');
+
+            return self::SUCCESS;
+        }
+
         $terkirim = $antrianWhatsappService->prosesAntrian();
 
         if ($terkirim === null) {
