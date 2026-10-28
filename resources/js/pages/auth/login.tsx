@@ -13,10 +13,9 @@ import { request } from '@/routes/password';
 
 type Props = {
     status?: string;
-    canResetPassword: boolean;
 };
 
-export default function Login({ status, canResetPassword }: Props) {
+export default function Login({ status }: Props) {
     return (
         <>
             <Head title="Masuk" />
@@ -49,15 +48,13 @@ export default function Login({ status, canResetPassword }: Props) {
                             <div className="grid gap-2">
                                 <div className="flex items-center">
                                     <Label htmlFor="password">Password</Label>
-                                    {canResetPassword && (
-                                        <TextLink
-                                            href={request()}
-                                            className="ml-auto text-sm"
-                                            tabIndex={5}
-                                        >
-                                            Lupa password?
-                                        </TextLink>
-                                    )}
+                                    <TextLink
+                                        href={request()}
+                                        className="ml-auto text-sm"
+                                        tabIndex={5}
+                                    >
+                                        Lupa password?
+                                    </TextLink>
                                 </div>
                                 <PasswordInput
                                     id="password"

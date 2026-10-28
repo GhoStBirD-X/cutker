@@ -163,7 +163,8 @@ return [
     'features' => [
         // Registrasi mandiri dimatikan: akun karyawan hanya dibuat oleh
         // admin lewat halaman Kelola User, bukan pendaftaran publik.
-        Features::resetPasswords(),
+        // Reset password via email dimatikan karena email karyawan dummy;
+        // halaman lupa password mengarahkan ke admin/HR (routes/web.php).
         Features::emailVerification(),
         Features::twoFactorAuthentication([
             'confirm' => true,
