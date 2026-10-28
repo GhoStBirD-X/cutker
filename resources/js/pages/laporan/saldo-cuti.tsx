@@ -179,8 +179,9 @@ export default function LaporanSaldoCuti() {
                                 <span className="font-semibold">
                                     {jumlahKaryawanKritis} karyawan
                                 </span>{' '}
-                                memiliki saldo kritis (sisa &le; 25% kuota atau
-                                minus).
+                                memiliki saldo kritis (Cuti Tahunan/Cuti Besar
+                                sisa &le; 25% kuota atau minus, dan tidak ada
+                                yang masih aman).
                             </span>
                         </div>
                         <Button

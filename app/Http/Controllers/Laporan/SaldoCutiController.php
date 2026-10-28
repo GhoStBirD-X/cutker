@@ -8,6 +8,7 @@ use App\Exports\SaldoCutiExport;
 use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
 use App\Models\Departemen;
+use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
@@ -53,9 +54,7 @@ class SaldoCutiController extends Controller
 
         return Inertia::render('laporan/saldo-cuti', [
             'karyawans' => $karyawans,
-            'jumlahKaryawanKritis' => $this->filteredKaryawanQuery($request, abaikanFilterKritis: true)
-                ->whereHas('saldoCutis', fn (Builder $query) => $this->saldoKritisYangTampil($query))
-                ->count(),
+            'jumlahKaryawanKritis' => $this->karyawanKritis($this->filteredKaryawanQuery($request, abaikanFilterKritis: true))->count(),
             'departemens' => Departemen::query()->orderBy('nama_departemen')->get(['id', 'nama_departemen']),
             'filters' => $this->filters($request),
         ]);
@@ -150,22 +149,35 @@ class SaldoCutiController extends Controller
         return Karyawan::query()
             ->when($filters['search'], fn ($query) => $query->where(fn ($q) => $q->where('nama', 'like', "%{$filters['search']}%")->orWhere('nip', 'like', "%{$filters['search']}%")))
             ->when($filters['departemen_id'], fn ($query) => $query->where('departemen_id', $filters['departemen_id']))
-            ->when($filters['hanya_kritis'] && ! $abaikanFilterKritis, fn ($query) => $query->whereHas('saldoCutis', fn (Builder $saldo) => $this->saldoKritisYangTampil($saldo)));
+            ->when($filters['hanya_kritis'] && ! $abaikanFilterKritis, fn ($query) => $this->karyawanKritis($query));
     }
 
     /**
-     * Saldo aktif berstatus kritis yang benar-benar tampil sebagai sel merah
-     * di matriks laporan: hanya kolom KOLOM_JENIS_CUTI dan jenis cuti yang
-     * relevan untuk gender karyawannya (sel lain ditampilkan "—").
+     * Karyawan kritis dinilai dari Cuti Tahunan & Cuti Besar yang sudah
+     * berhak (bukan kuota 0 sisa 0): minimal satu kritis dan tidak ada yang
+     * masih aman. Jadi Cuti Besar kritis tapi Tahunan masih banyak (atau
+     * sebaliknya) = tidak kritis; kalau hanya punya salah satu, ikut yang itu.
      *
+     * @param  Builder<Karyawan>  $query
+     * @return Builder<Karyawan>
+     */
+    private function karyawanKritis(Builder $query): Builder
+    {
+        return $query
+            ->whereHas('saldoCutis', fn (Builder $saldo) => $this->saldoTahunanAtauBesar($saldo)->kritis())
+            ->whereDoesntHave('saldoCutis', fn (Builder $saldo) => $this->saldoTahunanAtauBesar($saldo)
+                ->whereNot(fn (Builder $q) => $q->kritis())
+                ->whereNot(fn (Builder $q) => $q->where('kuota', 0)->where('sisa', 0)));
+    }
+
+    /**
      * @param  Builder<SaldoCuti>  $query
      * @return Builder<SaldoCuti>
      */
-    private function saldoKritisYangTampil(Builder $query): Builder
+    private function saldoTahunanAtauBesar(Builder $query): Builder
     {
-        return $query->aktif()->kritis()->whereHas('jenisCuti', fn (Builder $jenis) => $jenis
-            ->whereIn('nama_jenis', self::KOLOM_JENIS_CUTI)
-            ->where(fn (Builder $gender) => $gender->whereNull('khusus_gender')->orWhereColumn('jenis_cutis.khusus_gender', 'karyawans.jenis_kelamin')));
+        return $query->aktif()->whereHas('jenisCuti', fn (Builder $jenis) => $jenis
+            ->whereIn('nama_jenis', [JenisCuti::NAMA_CUTI_TAHUNAN, JenisCuti::NAMA_CUTI_BESAR]));
     }
 
     /**

@@ -221,35 +221,45 @@ class SaldoCutiTest extends TestCase
         $departemen = Departemen::factory()->create();
         $jabatan = Jabatan::factory()->create();
         $cutiTahunan = JenisCuti::factory()->create(['nama_jenis' => 'Cuti Tahunan']);
+        $cutiBesar = JenisCuti::factory()->create(['nama_jenis' => 'Cuti Besar']);
         $cutiHamil = JenisCuti::factory()->create(['nama_jenis' => 'Cuti Hamil', 'khusus_gender' => JenisKelamin::Perempuan]);
 
-        $buatKaryawanDenganSaldo = function (string $nip, JenisCuti $jenisCuti, array $saldo) use ($departemen, $jabatan): Karyawan {
+        $kritisSisa3 = ['kuota' => 12, 'terpakai' => 9, 'sisa' => 3];
+        $aman = ['kuota' => 12, 'terpakai' => 2, 'sisa' => 10];
+        $belumBerhak = ['kuota' => 0, 'terpakai' => 0, 'sisa' => 0];
+
+        $buatKaryawan = function (string $nip, array $saldoPerJenis) use ($departemen, $jabatan): Karyawan {
             $karyawan = Karyawan::factory()->lakiLaki()->recycle([$departemen, $jabatan])->create(['nip' => $nip]);
-            SaldoCuti::factory()->create(['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $jenisCuti->id, ...$saldo]);
+            foreach ($saldoPerJenis as [$jenisCuti, $saldo]) {
+                SaldoCuti::factory()->create(['karyawan_id' => $karyawan->id, 'jenis_cuti_id' => $jenisCuti->id, ...$saldo]);
+            }
 
             return $karyawan;
         };
 
-        $kritis = $buatKaryawanDenganSaldo('NPK-001', $cutiTahunan, ['kuota' => 12, 'terpakai' => 9, 'sisa' => 3]);
-        $minus = $buatKaryawanDenganSaldo('NPK-002', $cutiTahunan, ['kuota' => 12, 'terpakai' => 13, 'sisa' => -1]);
-        $buatKaryawanDenganSaldo('NPK-003', $cutiTahunan, ['kuota' => 12, 'terpakai' => 8, 'sisa' => 4]);
-        $buatKaryawanDenganSaldo('NPK-004', $cutiTahunan, ['kuota' => 12, 'terpakai' => 12, 'sisa' => 0, 'ditutup_pada' => now()]);
-        $buatKaryawanDenganSaldo('NPK-005', $cutiHamil, ['kuota' => 90, 'terpakai' => 90, 'sisa' => 0]);
-        $buatKaryawanDenganSaldo('NPK-006', $cutiTahunan, ['kuota' => 0, 'terpakai' => 0, 'sisa' => 0]);
+        $tahunanKritis = $buatKaryawan('NPK-001', [[$cutiTahunan, $kritisSisa3]]);
+        $tahunanMinus = $buatKaryawan('NPK-002', [[$cutiTahunan, ['kuota' => 12, 'terpakai' => 13, 'sisa' => -1]]]);
+        $buatKaryawan('NPK-003', [[$cutiTahunan, ['kuota' => 12, 'terpakai' => 8, 'sisa' => 4]]]);
+        $buatKaryawan('NPK-004', [[$cutiTahunan, ['kuota' => 12, 'terpakai' => 12, 'sisa' => 0, 'ditutup_pada' => now()]]]);
+        $buatKaryawan('NPK-005', [[$cutiHamil, ['kuota' => 90, 'terpakai' => 90, 'sisa' => 0]]]);
+        $buatKaryawan('NPK-006', [[$cutiTahunan, $belumBerhak]]);
+        $buatKaryawan('NPK-007', [[$cutiTahunan, $aman], [$cutiBesar, $kritisSisa3]]);
+        $buatKaryawan('NPK-008', [[$cutiTahunan, $kritisSisa3], [$cutiBesar, $aman]]);
+        $keduanyaKritis = $buatKaryawan('NPK-009', [[$cutiTahunan, $kritisSisa3], [$cutiBesar, $kritisSisa3]]);
+        $besarKritisSaja = $buatKaryawan('NPK-010', [[$cutiTahunan, $belumBerhak], [$cutiBesar, $kritisSisa3]]);
+        $buatKaryawan('NPK-011', [[$cutiBesar, $aman]]);
 
         $this->actingAs($hrd)->get(route('laporan.saldo-cuti', ['search' => 'NPK-']))
             ->assertInertia(fn ($page) => $page
-                ->where('jumlahKaryawanKritis', 2)
-                ->has('karyawans.data', 6)
+                ->where('jumlahKaryawanKritis', 4)
+                ->has('karyawans.data', 11)
             );
 
         $this->actingAs($hrd)->get(route('laporan.saldo-cuti', ['search' => 'NPK-', 'hanya_kritis' => 1]))
             ->assertInertia(fn ($page) => $page
-                ->where('jumlahKaryawanKritis', 2)
+                ->where('jumlahKaryawanKritis', 4)
                 ->where('filters.hanya_kritis', true)
-                ->has('karyawans.data', 2)
-                ->where('karyawans.data.0.id', $kritis->id)
-                ->where('karyawans.data.1.id', $minus->id)
+                ->where('karyawans.data', fn ($data) => collect($data)->pluck('id')->all() === [$tahunanKritis->id, $tahunanMinus->id, $keduanyaKritis->id, $besarKritisSaja->id])
             );
     }
 
