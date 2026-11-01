@@ -3,19 +3,19 @@
 namespace Tests\Feature\Cuti;
 
 use App\Enums\JenisKelamin;
-use App\Enums\StatusAntrianWhatsapp;
 use App\Enums\TipeKaryawan;
-use App\Models\AntrianWhatsapp;
 use App\Models\CutiMassal;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
+use App\Notifications\CutiMassalDibatalkan;
 use App\Services\CutiMassalService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -78,7 +78,7 @@ class CutiMassalTest extends TestCase
         ]);
     }
 
-    public function test_whatsapp_notifications_are_queued_instead_of_sent_immediately(): void
+    public function test_mass_leave_notifies_via_database_without_whatsapp(): void
     {
         config(['services.evolution.enabled' => true]);
         Http::fake();
@@ -107,15 +107,9 @@ class CutiMassalTest extends TestCase
         ])->assertSessionDoesntHaveErrors();
 
         Http::assertNothingSent();
-
-        $antrian = AntrianWhatsapp::query()->orderBy('id')->get();
-        $this->assertSame(['6281111111111', '6282222222222'], $antrian->pluck('nomor')->all());
-
-        foreach ($antrian as $item) {
-            $this->assertSame(StatusAntrianWhatsapp::Pending, $item->status);
-            $this->assertSame(0, $item->percobaan);
-            $this->assertStringStartsWith('Pengajuan Cuti Disetujui', $item->pesan);
-        }
+        $this->assertDatabaseCount('antrian_whatsapps', 0);
+        $this->assertSame(1, $karyawanA->user->notifications()->count());
+        $this->assertSame(1, $karyawanB->user->notifications()->count());
     }
 
     public function test_balance_is_deducted_correctly_for_employees_with_sufficient_balance(): void
@@ -636,6 +630,50 @@ class CutiMassalTest extends TestCase
             'pengajuan_cuti_id' => $pengajuan->id,
             'status' => 'dibatalkan',
         ]);
+    }
+
+    public function test_cancelling_a_batch_notifies_each_employee_without_whatsapp(): void
+    {
+        config(['services.evolution.enabled' => true]);
+        Http::fake();
+
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+        $jenisCuti = JenisCuti::factory()->create();
+        $karyawan = $this->karyawanUser('karyawan', ['no_hp' => '081111111111'])->karyawan;
+
+        SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $this->actingAs($hrd->user)->post(route('cuti.massal.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(10)->toDateString(),
+            'tanggal_selesai' => now()->addDays(11)->toDateString(),
+            'alasan' => 'Cuti bersama',
+            'karyawan_ids' => [$karyawan->id],
+        ]);
+
+        $cutiMassal = CutiMassal::query()->firstOrFail();
+        $pengajuan = PengajuanCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail();
+
+        Notification::fake();
+
+        $this->actingAs($hrd->user)->patch(route('cuti.massal.batalkan', $cutiMassal), [
+            'catatan_pembatalan' => 'Salah tanggal',
+        ])->assertRedirect();
+
+        Notification::assertSentTo(
+            $karyawan->user,
+            CutiMassalDibatalkan::class,
+            fn (CutiMassalDibatalkan $notification, array $channels) => $notification->pengajuanCuti->is($pengajuan)
+                && $notification->catatan === 'Salah tanggal'
+                && $channels === ['database', 'mail'],
+        );
+        Http::assertNothingSent();
     }
 
     public function test_cancelling_an_already_cancelled_batch_is_rejected(): void

@@ -15,6 +15,7 @@ use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
+use App\Notifications\CutiMassalDibatalkan;
 use App\Notifications\PengajuanCutiDisetujui;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
@@ -156,9 +157,9 @@ class CutiMassalService
      * lihat hitungPotongan(). Karyawan yang konflik (gender, overlap
      * pengajuan lain, bentrok jadwal shift, atau tidak punya baris saldo
      * aktif) dilewati dengan alasan tercatat, bukan menggagalkan seluruh
-     * batch. Notifikasi WhatsApp tidak dikirim langsung tapi diantrikan dan
-     * dicicil `whatsapp:kirim-antrian` dengan jeda antar pesan — kiriman
-     * beruntun ke banyak nomor sekaligus memicu pembatasan WhatsApp.
+     * batch. Notifikasi hanya lewat database + email, tanpa WhatsApp —
+     * kiriman ke puluhan nomor sekaligus membuat nomor WhatsApp kantor
+     * di-suspend (kejadian 29 Okt 2026).
      *
      * @param  array{jenis_cuti_id: int, tanggal_mulai: string, tanggal_selesai: string, alasan: string, karyawan_ids: int[]}  $data
      */
@@ -249,7 +250,7 @@ class CutiMassalService
                     'sisa' => $potongan['sisa'],
                 ]);
 
-                $karyawan->user?->notify(new PengajuanCutiDisetujui($pengajuan, lewatAntrianWhatsapp: true));
+                $karyawan->user?->notify(new PengajuanCutiDisetujui($pengajuan, tanpaWhatsapp: true));
 
                 $diproses++;
             }
@@ -301,7 +302,8 @@ class CutiMassalService
      * Saldo dikembalikan ke baris yang sedang aktif saat ini (bukan
      * dilacak per baris asli) — jika saldo karyawan sudah pindah
      * periode/disesuaikan manual sejak batch dibuat, koreksi diterapkan ke
-     * baris yang aktif sekarang, bukan baris asli.
+     * baris yang aktif sekarang, bukan baris asli. Tiap karyawan diberi tahu
+     * lewat database + email (tanpa WhatsApp) setelah transaksi selesai.
      */
     public function batalkan(CutiMassal $cutiMassal, Karyawan $olehSiapa, ?string $catatan = null): void
     {
@@ -309,10 +311,10 @@ class CutiMassalService
             throw new CutiMassalSudahDibatalkanException;
         }
 
-        DB::transaction(function () use ($cutiMassal, $olehSiapa, $catatan) {
+        $pengajuanCutis = DB::transaction(function () use ($cutiMassal, $olehSiapa, $catatan) {
             $pengajuanCutis = $cutiMassal->pengajuanCutis()
                 ->where('status', StatusPengajuan::Disetujui)
-                ->with('karyawan', 'jenisCuti')
+                ->with('karyawan.user', 'jenisCuti')
                 ->get();
 
             foreach ($pengajuanCutis as $pengajuan) {
@@ -346,6 +348,12 @@ class CutiMassalService
                 'dibatalkan_pada' => now(),
                 'catatan_pembatalan' => $catatan,
             ]);
+
+            return $pengajuanCutis;
         });
+
+        foreach ($pengajuanCutis as $pengajuan) {
+            $pengajuan->karyawan->user?->notify(new CutiMassalDibatalkan($pengajuan, $catatan));
+        }
     }
 }

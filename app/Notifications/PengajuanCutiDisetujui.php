@@ -14,11 +14,11 @@ use Illuminate\Notifications\Notification;
 class PengajuanCutiDisetujui extends Notification
 {
     /**
-     * @param  bool  $lewatAntrianWhatsapp  true untuk kiriman massal (Cuti Massal) — WA diantrikan & dicicil scheduler, bukan dikirim langsung
+     * @param  bool  $tanpaWhatsapp  true untuk kiriman massal (Cuti Massal) — puluhan WA sekaligus membuat nomor kantor di-suspend WhatsApp
      */
     public function __construct(
         public PengajuanCuti $pengajuanCuti,
-        public bool $lewatAntrianWhatsapp = false,
+        public bool $tanpaWhatsapp = false,
     ) {}
 
     /**
@@ -26,6 +26,10 @@ class PengajuanCutiDisetujui extends Notification
      */
     public function via(object $notifiable): array
     {
+        if ($this->tanpaWhatsapp) {
+            return ['database', 'mail'];
+        }
+
         return ['database', 'mail', WhatsAppChannel::class];
     }
 
