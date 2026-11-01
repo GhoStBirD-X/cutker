@@ -24,10 +24,13 @@ export default function CutiShow() {
     const { auth, pengajuan, alasanBelumBisaDiajukanUlang } =
         usePage<PageProps>().props;
 
-    const milikSendiri = pengajuan.karyawan_id === auth.user.karyawan_id;
     const ditampung = pengajuan.status === 'ditampung';
+    // Penampungan Cuti Massal diproses HRD, bukan oleh karyawan sendiri.
+    const milikSendiri =
+        pengajuan.karyawan_id === auth.user.karyawan_id &&
+        pengajuan.cuti_massal_id === null;
     const bisaBatalkan =
-        (pengajuan.status === 'pending' || ditampung) && milikSendiri;
+        milikSendiri && (pengajuan.status === 'pending' || ditampung);
     const [membatalkan, setMembatalkan] = useState(false);
     const [mengajukan, setMengajukan] = useState(false);
 

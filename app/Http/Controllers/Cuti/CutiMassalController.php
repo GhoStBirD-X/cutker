@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cuti;
 
 use App\Enums\StatusCutiMassal;
+use App\Enums\StatusPengajuan;
 use App\Exceptions\CutiMassalSudahDibatalkanException;
 use App\Http\Controllers\Concerns\HasPerPage;
 use App\Http\Controllers\Controller;
@@ -76,7 +77,12 @@ class CutiMassalController extends Controller
         ], $request->user()->karyawan);
 
         $jumlahDilewati = count($cutiMassal->dilewati ?? []);
+        $jumlahDitampung = $cutiMassal->pengajuanCutis()->where('status', StatusPengajuan::Ditampung)->count();
         $pesan = "Cuti massal berhasil dibuat untuk {$cutiMassal->jumlah_karyawan} karyawan.";
+
+        if ($jumlahDitampung > 0) {
+            $pesan .= " {$jumlahDitampung} karyawan ditampung menunggu periode saldo baru.";
+        }
 
         if ($jumlahDilewati > 0) {
             $pesan .= " {$jumlahDilewati} karyawan dilewati, lihat detail untuk alasannya.";
@@ -96,7 +102,31 @@ class CutiMassalController extends Controller
             'karyawanBaru' => $cuti_massal->status === StatusCutiMassal::Aktif
                 ? $service->previewKaryawanBaruUntukBatch($cuti_massal)
                 : [],
+            'penampungan' => $cuti_massal->status === StatusCutiMassal::Aktif
+                ? $service->penampungan($cuti_massal)
+                : [],
         ]);
+    }
+
+    /**
+     * Proses pengajuan yang ditampung di batch ini setelah periode saldo
+     * karyawannya diperbarui — yang belum siap tetap ditampung.
+     */
+    public function prosesPenampungan(Request $request, CutiMassal $cuti_massal, CutiMassalService $service): RedirectResponse
+    {
+        try {
+            $diproses = $service->prosesPenampungan($cuti_massal, $request->user()->karyawan);
+        } catch (CutiMassalSudahDibatalkanException $e) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => $e->getMessage()]);
+
+            return back();
+        }
+
+        Inertia::flash('toast', $diproses > 0
+            ? ['type' => 'success', 'message' => "{$diproses} cuti massal yang ditampung berhasil diproses."]
+            : ['type' => 'info', 'message' => 'Belum ada cuti massal yang ditampung yang siap diproses.']);
+
+        return back();
     }
 
     /**

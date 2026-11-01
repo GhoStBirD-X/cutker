@@ -9,7 +9,6 @@ use App\Exceptions\SaldoCutiTidakCukupException;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
-use App\Models\SaldoCuti;
 use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Http\UploadedFile;
@@ -46,7 +45,7 @@ class PengajuanCutiService
         $jenisCuti = JenisCuti::query()->findOrFail($data['jenis_cuti_id']);
         $saldo = $this->saldoCutiService->untukPeriodeAktif($karyawan, $jenisCuti);
 
-        if ($saldo && $this->melewatiAkhirPeriode($saldo, Carbon::parse($data['tanggal_selesai']))) {
+        if ($saldo?->berakhirSebelum(Carbon::parse($data['tanggal_selesai']))) {
             return $this->buat($karyawan, $data, $lampiran, StatusPengajuan::Ditampung);
         }
 
@@ -99,13 +98,17 @@ class PengajuanCutiService
             return 'Pengajuan ini tidak berada di penampungan.';
         }
 
+        if ($pengajuan->cuti_massal_id !== null) {
+            return 'Cuti massal ini akan diproses HRD setelah periode saldo cuti Anda diperbarui.';
+        }
+
         if (! $pengajuan->tanggal_mulai->isAfter(today())) {
             return 'Tanggal mulai cuti sudah lewat, pengajuan ini tidak bisa diajukan lagi.';
         }
 
         $saldo = $this->saldoCutiService->untukPeriodeAktif($pengajuan->karyawan, $pengajuan->jenisCuti);
 
-        if (! $saldo || $this->melewatiAkhirPeriode($saldo, $pengajuan->tanggal_selesai)) {
+        if (! $saldo || $saldo->berakhirSebelum($pengajuan->tanggal_selesai)) {
             return 'Periode saldo cuti belum diperbarui. Pengajuan bisa diajukan setelah periode saldo yang baru aktif.';
         }
 
@@ -123,20 +126,17 @@ class PengajuanCutiService
     /**
      * Batalkan pengajuan di penampungan yang tanggal mulainya sudah lewat —
      * tidak mungkin lagi diajukan, mis. karena periode saldo tidak pernah
-     * diperbarui (kontrak tidak diperpanjang). Dipanggil harian lewat
-     * scheduler.
+     * diperbarui (kontrak tidak diperpanjang). Penampungan Cuti Massal
+     * tidak ikut: HRD tetap bisa memprosesnya setelah tanggalnya lewat.
+     * Dipanggil harian lewat scheduler.
      */
     public function batalkanPenampunganKedaluwarsa(): int
     {
         return PengajuanCuti::query()
             ->where('status', StatusPengajuan::Ditampung)
+            ->whereNull('cuti_massal_id')
             ->whereDate('tanggal_mulai', '<=', today())
             ->update(['status' => StatusPengajuan::Dibatalkan]);
-    }
-
-    public function melewatiAkhirPeriode(SaldoCuti $saldo, CarbonInterface $tanggalSelesai): bool
-    {
-        return $saldo->periode_selesai !== null && $tanggalSelesai->greaterThan($saldo->periode_selesai);
     }
 
     /**

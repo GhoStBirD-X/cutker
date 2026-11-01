@@ -3,6 +3,7 @@
 namespace Tests\Feature\Cuti;
 
 use App\Enums\JenisKelamin;
+use App\Enums\StatusPengajuan;
 use App\Enums\TipeKaryawan;
 use App\Models\CutiMassal;
 use App\Models\JenisCuti;
@@ -10,7 +11,9 @@ use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
 use App\Notifications\CutiMassalDibatalkan;
+use App\Notifications\PenampunganCutiMassalSiapDiproses;
 use App\Services\CutiMassalService;
+use App\Services\PeriodeCutiService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -676,6 +679,76 @@ class CutiMassalTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_employee_whose_saldo_period_ends_before_mass_leave_is_held_without_deduction(): void
+    {
+        [$hrd, $karyawan, $saldoLama, $cutiMassal] = $this->cutiMassalDenganPenampungan();
+
+        $pengajuan = PengajuanCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail();
+        $this->assertSame(StatusPengajuan::Ditampung, $pengajuan->status);
+        $this->assertSame(0, $pengajuan->approvals()->count());
+        $this->assertSame(12, $saldoLama->fresh()->sisa);
+        $this->assertSame(1, $cutiMassal->jumlah_karyawan);
+    }
+
+    public function test_held_mass_leave_is_processed_by_hrd_only_after_new_saldo_period_is_active(): void
+    {
+        [$hrd, $karyawan, $saldoLama, $cutiMassal] = $this->cutiMassalDenganPenampungan();
+
+        $this->actingAs($hrd->user)->post(route('cuti.massal.proses-penampungan', $cutiMassal))->assertRedirect();
+        $this->assertSame(StatusPengajuan::Ditampung, PengajuanCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail()->status);
+
+        $saldoLama->update(['ditutup_pada' => now()]);
+        $saldoBaru = SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $saldoLama->jenis_cuti_id,
+            'periode_ke' => 3,
+            'periode_mulai' => '2026-10-11',
+            'periode_selesai' => '2027-10-10',
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $this->actingAs($hrd->user)->post(route('cuti.massal.proses-penampungan', $cutiMassal))->assertRedirect();
+
+        $pengajuan = PengajuanCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail();
+        $this->assertSame(StatusPengajuan::Disetujui, $pengajuan->status);
+        $this->assertSame(3, $pengajuan->approvals()->where('status', 'disetujui')->count());
+        $this->assertSame(10, $saldoBaru->fresh()->sisa);
+        $this->assertSame(12, $saldoLama->fresh()->sisa);
+    }
+
+    public function test_hrd_is_notified_when_saldo_period_renewal_makes_held_mass_leave_ready(): void
+    {
+        [$hrd, $karyawan, $saldoLama] = $this->cutiMassalDenganPenampungan();
+        Notification::fake();
+
+        $this->travelTo(Carbon::parse('2026-10-11'));
+        app(PeriodeCutiService::class)->prosesSemuaKaryawan();
+
+        Notification::assertSentTo($hrd->user, PenampunganCutiMassalSiapDiproses::class);
+        Notification::assertNotSentTo($karyawan->user, PenampunganCutiMassalSiapDiproses::class);
+    }
+
+    public function test_employee_cannot_resubmit_or_cancel_their_held_mass_leave(): void
+    {
+        [$hrd, $karyawan] = $this->cutiMassalDenganPenampungan();
+        $pengajuan = PengajuanCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail();
+
+        $this->actingAs($karyawan->user)->patch(route('cuti.ajukan-ulang', $pengajuan))->assertForbidden();
+        $this->actingAs($karyawan->user)->patch(route('cuti.batalkan', $pengajuan))->assertForbidden();
+    }
+
+    public function test_cancelling_a_batch_also_cancels_its_held_mass_leave(): void
+    {
+        [$hrd, $karyawan, $saldoLama, $cutiMassal] = $this->cutiMassalDenganPenampungan();
+
+        $this->actingAs($hrd->user)->patch(route('cuti.massal.batalkan', $cutiMassal))->assertRedirect();
+
+        $this->assertSame(StatusPengajuan::Dibatalkan, PengajuanCuti::query()->where('karyawan_id', $karyawan->id)->firstOrFail()->status);
+        $this->assertSame(12, $saldoLama->fresh()->sisa);
+    }
+
     public function test_cancelling_an_already_cancelled_batch_is_rejected(): void
     {
         $hrd = $this->karyawanUser('hrd')->karyawan;
@@ -902,5 +975,38 @@ class CutiMassalTest extends TestCase
             'kuota' => 3,
             'sisa' => 0,
         ]);
+    }
+
+    /**
+     * Karyawan tetap yang periode saldonya berakhir 10 Okt, dengan Cuti
+     * Massal 13–14 Okt (sesudah periodenya berakhir) — pengajuannya ditampung.
+     *
+     * @return array{0: Karyawan, 1: Karyawan, 2: SaldoCuti, 3: CutiMassal}
+     */
+    protected function cutiMassalDenganPenampungan(): array
+    {
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+        $jenisCuti = JenisCuti::factory()->create(['kuota_default' => 12, 'masa_kerja_minimal_bulan' => 12]);
+        $karyawan = $this->karyawanUser('karyawan', ['tipe_karyawan' => TipeKaryawan::Tetap])->karyawan;
+        $saldo = SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => $jenisCuti->id,
+            'periode_ke' => 2,
+            'periode_mulai' => '2025-10-11',
+            'periode_selesai' => '2026-10-10',
+            'kuota' => 12,
+            'terpakai' => 0,
+            'sisa' => 12,
+        ]);
+
+        $this->actingAs($hrd->user)->post(route('cuti.massal.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => '2026-10-13',
+            'tanggal_selesai' => '2026-10-14',
+            'alasan' => 'Cuti bersama',
+            'karyawan_ids' => [$karyawan->id],
+        ])->assertSessionDoesntHaveErrors();
+
+        return [$hrd, $karyawan, $saldo, CutiMassal::query()->firstOrFail()];
     }
 }

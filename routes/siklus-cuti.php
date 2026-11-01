@@ -24,5 +24,6 @@ Route::middleware(['auth', 'verified', 'role:hrd|admin', 'karyawan.linked'])->pr
     Route::post('massal', [CutiMassalController::class, 'store'])->name('massal.store');
     Route::get('massal/{cuti_massal}', [CutiMassalController::class, 'show'])->name('massal.show');
     Route::post('massal/{cuti_massal}/tambah-karyawan-baru', [CutiMassalController::class, 'tambahKaryawanBaru'])->name('massal.tambah-karyawan-baru');
+    Route::post('massal/{cuti_massal}/proses-penampungan', [CutiMassalController::class, 'prosesPenampungan'])->name('massal.proses-penampungan');
     Route::patch('massal/{cuti_massal}/batalkan', [CutiMassalController::class, 'batalkan'])->name('massal.batalkan');
 });

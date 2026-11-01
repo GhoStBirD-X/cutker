@@ -15,9 +15,12 @@ use App\Models\KonfirmasiKontrakCuti;
 use App\Models\PengajuanCuti;
 use App\Models\RiwayatSaldoCuti;
 use App\Models\SaldoCuti;
+use App\Models\User;
+use App\Notifications\PenampunganCutiMassalSiapDiproses;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class PeriodeCutiService
 {
@@ -511,7 +514,7 @@ class PeriodeCutiService
         $periodeKeBaru = $saldoLama->periode_ke + 1;
         $kuotaBaru = $tanpaKuota ? 0 : $jenisCuti->kuotaAwalPeriode($periodeKeBaru, $saldoLama->karyawan->tipe_karyawan);
 
-        SaldoCuti::query()->create([
+        $saldoBaru = SaldoCuti::query()->create([
             'karyawan_id' => $saldoLama->karyawan_id,
             'jenis_cuti_id' => $saldoLama->jenis_cuti_id,
             'tahun' => $periodeMulaiBaru->year,
@@ -522,6 +525,38 @@ class PeriodeCutiService
             'terpakai' => 0,
             'sisa' => $kuotaBaru,
         ]);
+
+        $this->kabariHrdPenampunganCutiMassal($saldoBaru);
+    }
+
+    /**
+     * Cuti Massal yang ditampung karena melewati periode lama dan kini
+     * tercakup periode baru — HRD diberi tahu untuk memprosesnya. Dikirim
+     * setelah transaksi selesai supaya tidak ada notifikasi untuk periode
+     * yang batal dibuat.
+     */
+    protected function kabariHrdPenampunganCutiMassal(SaldoCuti $saldoBaru): void
+    {
+        $siapDiproses = PengajuanCuti::query()
+            ->with('karyawan', 'jenisCuti')
+            ->where('karyawan_id', $saldoBaru->karyawan_id)
+            ->where('jenis_cuti_id', $saldoBaru->jenis_cuti_id)
+            ->where('status', StatusPengajuan::Ditampung)
+            ->whereNotNull('cuti_massal_id')
+            ->get()
+            ->reject(fn (PengajuanCuti $pengajuan) => $saldoBaru->berakhirSebelum($pengajuan->tanggal_selesai));
+
+        if ($siapDiproses->isEmpty()) {
+            return;
+        }
+
+        DB::afterCommit(function () use ($siapDiproses) {
+            $hrd = User::role('hrd')->get();
+
+            foreach ($siapDiproses as $pengajuan) {
+                Notification::send($hrd, new PenampunganCutiMassalSiapDiproses($pengajuan));
+            }
+        });
     }
 
     protected function buatKompensasi(SaldoCuti $saldo, ?RiwayatSaldoCuti $riwayat): void

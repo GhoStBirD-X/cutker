@@ -68,6 +68,7 @@ export type PengajuanCuti = {
     jenis_cuti_id: number;
     alasan_cuti_id: number | null;
     cuti_massal_id: number | null;
+    siap_diproses?: boolean;
     tanggal_mulai: string;
     tanggal_selesai: string;
     jumlah_hari: number;
@@ -119,6 +120,7 @@ export type KaryawanEligiblePreview = {
     saldo: SaldoCuti | null;
     akan_minus: boolean;
     akan_dapat_bonus: boolean;
+    akan_ditampung: boolean;
 };
 
 export type HariLibur = {

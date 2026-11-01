@@ -53,7 +53,7 @@ class CutiMassalService
      * pertama — lihat hitungPotongan()) jika cuti massal ini jadi diajukan,
      * untuk preview sebelum HRD submit.
      *
-     * @return SupportCollection<int, array{karyawan: Karyawan, saldo: ?SaldoCuti, akan_minus: bool, akan_dapat_bonus: bool}>
+     * @return SupportCollection<int, array{karyawan: Karyawan, saldo: ?SaldoCuti, akan_minus: bool, akan_dapat_bonus: bool, akan_ditampung: bool}>
      */
     public function previewKaryawan(JenisCuti $jenisCuti, Carbon $mulai, Carbon $selesai): SupportCollection
     {
@@ -63,13 +63,15 @@ class CutiMassalService
 
         foreach ($this->eligibleKaryawan($jenisCuti) as $karyawan) {
             $saldo = $this->saldoCutiService->untukPeriodeAktif($karyawan, $jenisCuti);
-            $potongan = $saldo ? $this->hitungPotongan($saldo, $karyawan, $jumlahHari) : null;
+            $akanDitampung = $saldo?->berakhirSebelum($selesai) ?? false;
+            $potongan = $saldo && ! $akanDitampung ? $this->hitungPotongan($saldo, $karyawan, $jumlahHari) : null;
 
             $preview[] = [
                 'karyawan' => $karyawan,
                 'saldo' => $saldo,
-                'akan_minus' => $saldo !== null && $saldo->kuota !== null && ($saldo->sisa - $jumlahHari) < 0 && ($potongan['bonus'] ?? 0) === 0,
+                'akan_minus' => $potongan !== null && $saldo->kuota !== null && ($saldo->sisa - $jumlahHari) < 0 && $potongan['bonus'] === 0,
                 'akan_dapat_bonus' => ($potongan['bonus'] ?? 0) > 0,
+                'akan_ditampung' => $akanDitampung,
             ];
         }
 
@@ -83,7 +85,7 @@ class CutiMassalService
      * ke batch yang sudah berjalan tanpa mengulang isi jenis cuti/
      * tanggal/alasan dari awal.
      *
-     * @return SupportCollection<int, array{karyawan: Karyawan, saldo: ?SaldoCuti, akan_minus: bool, akan_dapat_bonus: bool}>
+     * @return SupportCollection<int, array{karyawan: Karyawan, saldo: ?SaldoCuti, akan_minus: bool, akan_dapat_bonus: bool, akan_ditampung: bool}>
      */
     public function previewKaryawanBaruUntukBatch(CutiMassal $cutiMassal): SupportCollection
     {
@@ -157,7 +159,10 @@ class CutiMassalService
      * lihat hitungPotongan(). Karyawan yang konflik (gender, overlap
      * pengajuan lain, bentrok jadwal shift, atau tidak punya baris saldo
      * aktif) dilewati dengan alasan tercatat, bukan menggagalkan seluruh
-     * batch. Notifikasi hanya lewat database + email, tanpa WhatsApp —
+     * batch. Karyawan yang periode saldonya berakhir sebelum tanggal selesai
+     * cuti massal tidak dipotong dari periode lama: pengajuannya ditampung
+     * (status Ditampung) dan diproses HRD lewat prosesPenampungan() setelah
+     * periode barunya aktif. Notifikasi hanya lewat database + email, tanpa WhatsApp —
      * kiriman ke puluhan nomor sekaligus membuat nomor WhatsApp kantor
      * di-suspend (kejadian 29 Okt 2026).
      *
@@ -217,8 +222,6 @@ class CutiMassalService
                     continue;
                 }
 
-                $potongan = $this->hitungPotongan($saldo, $karyawan, $jumlahHari);
-
                 $pengajuan = PengajuanCuti::query()->create([
                     'cuti_massal_id' => $cutiMassal->id,
                     'karyawan_id' => $karyawan->id,
@@ -227,30 +230,14 @@ class CutiMassalService
                     'tanggal_selesai' => $selesai,
                     'jumlah_hari' => $jumlahHari,
                     'jumlah_hari_kalender' => $jumlahHariKalender,
-                    'bonus_kuota_kontrak_pertama' => $potongan['bonus'],
                     'alasan' => $data['alasan'],
-                    'status' => StatusPengajuan::Disetujui,
+                    'status' => StatusPengajuan::Ditampung,
                     'tanggal_pengajuan' => now(),
                 ]);
 
-                foreach ([1, 2, 3] as $level) {
-                    Approval::query()->create([
-                        'pengajuan_cuti_id' => $pengajuan->id,
-                        'approver_id' => $olehSiapa->id,
-                        'level' => $level,
-                        'status' => StatusApproval::Disetujui,
-                        'tanggal_approval' => now(),
-                        'catatan' => 'Disetujui otomatis melalui Cuti Massal',
-                    ]);
+                if (! $saldo->berakhirSebelum($selesai)) {
+                    $this->setujui($pengajuan, $saldo, $karyawan, $olehSiapa);
                 }
-
-                $saldo->update([
-                    'kuota' => $potongan['kuota'],
-                    'terpakai' => $potongan['terpakai'],
-                    'sisa' => $potongan['sisa'],
-                ]);
-
-                $karyawan->user?->notify(new PengajuanCutiDisetujui($pengajuan, tanpaWhatsapp: true));
 
                 $diproses++;
             }
@@ -275,7 +262,7 @@ class CutiMassalService
 
         $overlap = PengajuanCuti::query()
             ->where('karyawan_id', $karyawan->id)
-            ->whereIn('status', [StatusPengajuan::Pending, StatusPengajuan::Disetujui])
+            ->whereIn('status', [StatusPengajuan::Pending, StatusPengajuan::Disetujui, StatusPengajuan::Ditampung])
             ->whereDate('tanggal_mulai', '<=', $selesai)
             ->whereDate('tanggal_selesai', '>=', $mulai)
             ->exists();
@@ -297,6 +284,104 @@ class CutiMassalService
     }
 
     /**
+     * HRD memproses pengajuan yang ditampung di batch ini: yang periode
+     * saldonya sudah diperbarui (periode aktif mencakup tanggal cuti)
+     * disetujui & dipotong dari periode baru, sisanya tetap ditampung.
+     *
+     * @return int Jumlah pengajuan yang berhasil diproses
+     */
+    public function prosesPenampungan(CutiMassal $cutiMassal, Karyawan $olehSiapa): int
+    {
+        if ($cutiMassal->status !== StatusCutiMassal::Aktif) {
+            throw new CutiMassalSudahDibatalkanException;
+        }
+
+        return DB::transaction(function () use ($cutiMassal, $olehSiapa) {
+            $diproses = 0;
+
+            $penampungan = $cutiMassal->pengajuanCutis()
+                ->where('status', StatusPengajuan::Ditampung)
+                ->with('karyawan.user')
+                ->get();
+
+            foreach ($penampungan as $pengajuan) {
+                $saldo = $this->saldoSiapDipotong($pengajuan, lock: true);
+
+                if ($saldo === null) {
+                    continue;
+                }
+
+                $this->setujui($pengajuan, $saldo, $pengajuan->karyawan, $olehSiapa);
+                $diproses++;
+            }
+
+            return $diproses;
+        });
+    }
+
+    /**
+     * Pengajuan yang ditampung di batch ini, masing-masing dengan penanda
+     * `siap_diproses` (periode saldo barunya sudah aktif) untuk halaman
+     * detail Cuti Massal — hanya untuk ditampilkan, jangan di-save().
+     *
+     * @return Collection<int, PengajuanCuti>
+     */
+    public function penampungan(CutiMassal $cutiMassal): Collection
+    {
+        return $cutiMassal->pengajuanCutis()
+            ->where('status', StatusPengajuan::Ditampung)
+            ->with('karyawan.user', 'jenisCuti')
+            ->get()
+            ->each(fn (PengajuanCuti $pengajuan) => $pengajuan->setAttribute('siap_diproses', $this->saldoSiapDipotong($pengajuan) !== null));
+    }
+
+    protected function saldoSiapDipotong(PengajuanCuti $pengajuan, bool $lock = false): ?SaldoCuti
+    {
+        $saldo = SaldoCuti::query()
+            ->where('karyawan_id', $pengajuan->karyawan_id)
+            ->where('jenis_cuti_id', $pengajuan->jenis_cuti_id)
+            ->aktif()
+            ->when($lock, fn ($query) => $query->lockForUpdate())
+            ->latest('id')
+            ->first();
+
+        return $saldo && ! $saldo->berakhirSebelum($pengajuan->tanggal_selesai) ? $saldo : null;
+    }
+
+    /**
+     * Setujui satu pengajuan cuti massal: 3 Approval langsung Disetujui,
+     * saldo dipotong (lihat hitungPotongan()), lalu karyawan diberi tahu.
+     */
+    protected function setujui(PengajuanCuti $pengajuan, SaldoCuti $saldo, Karyawan $karyawan, Karyawan $olehSiapa): void
+    {
+        $potongan = $this->hitungPotongan($saldo, $karyawan, $pengajuan->jumlah_hari);
+
+        $pengajuan->update([
+            'status' => StatusPengajuan::Disetujui,
+            'bonus_kuota_kontrak_pertama' => $potongan['bonus'],
+        ]);
+
+        foreach ([1, 2, 3] as $level) {
+            Approval::query()->create([
+                'pengajuan_cuti_id' => $pengajuan->id,
+                'approver_id' => $olehSiapa->id,
+                'level' => $level,
+                'status' => StatusApproval::Disetujui,
+                'tanggal_approval' => now(),
+                'catatan' => 'Disetujui otomatis melalui Cuti Massal',
+            ]);
+        }
+
+        $saldo->update([
+            'kuota' => $potongan['kuota'],
+            'terpakai' => $potongan['terpakai'],
+            'sisa' => $potongan['sisa'],
+        ]);
+
+        $karyawan->user?->notify(new PengajuanCutiDisetujui($pengajuan, tanpaWhatsapp: true));
+    }
+
+    /**
      * Batalkan satu batch cuti massal: kembalikan saldo & tandai
      * Dibatalkan untuk setiap PengajuanCuti+Approval yang masih Disetujui.
      * Saldo dikembalikan ke baris yang sedang aktif saat ini (bukan
@@ -304,6 +389,8 @@ class CutiMassalService
      * periode/disesuaikan manual sejak batch dibuat, koreksi diterapkan ke
      * baris yang aktif sekarang, bukan baris asli. Tiap karyawan diberi tahu
      * lewat database + email (tanpa WhatsApp) setelah transaksi selesai.
+     * Pengajuan yang masih ditampung ikut dibatalkan tanpa notifikasi —
+     * saldonya belum pernah dipotong.
      */
     public function batalkan(CutiMassal $cutiMassal, Karyawan $olehSiapa, ?string $catatan = null): void
     {
@@ -341,6 +428,10 @@ class CutiMassalService
                 $pengajuan->update(['status' => StatusPengajuan::Dibatalkan]);
                 $pengajuan->approvals()->update(['status' => StatusApproval::Dibatalkan]);
             }
+
+            $cutiMassal->pengajuanCutis()
+                ->where('status', StatusPengajuan::Ditampung)
+                ->update(['status' => StatusPengajuan::Dibatalkan]);
 
             $cutiMassal->update([
                 'status' => StatusCutiMassal::Dibatalkan,

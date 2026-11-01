@@ -39,21 +39,24 @@ class PengajuanCutiPolicy
     /**
      * Karyawan hanya boleh membatalkan pengajuan miliknya sendiri selama
      * masih berstatus pending (belum diproses approval manapun) atau masih
-     * di penampungan.
+     * di penampungan. Penampungan Cuti Massal dikelola HRD, bukan karyawan.
      */
     public function cancel(User $user, PengajuanCuti $pengajuanCuti): bool
     {
         return $user->karyawan?->id === $pengajuanCuti->karyawan_id
-            && in_array($pengajuanCuti->status, [StatusPengajuan::Pending, StatusPengajuan::Ditampung], true);
+            && ($pengajuanCuti->status === StatusPengajuan::Pending
+                || ($pengajuanCuti->status === StatusPengajuan::Ditampung && $pengajuanCuti->cuti_massal_id === null));
     }
 
     /**
      * Pengajuan di penampungan hanya bisa diajukan ulang oleh pemiliknya
      * sendiri — kecukupan periode & saldo dicek di PengajuanCutiService.
+     * Penampungan Cuti Massal diproses HRD dari halaman Cuti Massal.
      */
     public function ajukanUlang(User $user, PengajuanCuti $pengajuanCuti): bool
     {
         return $user->karyawan?->id === $pengajuanCuti->karyawan_id
-            && $pengajuanCuti->status === StatusPengajuan::Ditampung;
+            && $pengajuanCuti->status === StatusPengajuan::Ditampung
+            && $pengajuanCuti->cuti_massal_id === null;
     }
 }

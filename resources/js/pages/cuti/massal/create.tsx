@@ -324,6 +324,11 @@ export default function CutiMassalCreate() {
                                                                 Dapat bonus cuti
                                                             </Badge>
                                                         )}
+                                                        {row.akan_ditampung && (
+                                                            <Badge className="border-sky-200 bg-sky-100 text-sky-800 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-300">
+                                                                Akan ditampung
+                                                            </Badge>
+                                                        )}
                                                     </div>
                                                 </label>
                                             ))}

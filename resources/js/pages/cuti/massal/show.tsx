@@ -2,6 +2,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import CutiMassalController from '@/actions/App/Http/Controllers/Cuti/CutiMassalController';
 import { konfirmasi } from '@/components/confirm-dialog';
+import { StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,15 +13,35 @@ import { formatDate } from '@/lib/format';
 import { saldoSeverity } from '@/lib/saldo-severity';
 import { dashboard } from '@/routes';
 import { index as cutiMassalIndex } from '@/routes/cuti/massal';
-import type { CutiMassal, KaryawanEligiblePreview } from '@/types';
+import type {
+    CutiMassal,
+    KaryawanEligiblePreview,
+    PengajuanCuti,
+} from '@/types';
 
 type PageProps = {
     cutiMassal: CutiMassal;
     karyawanBaru: KaryawanEligiblePreview[];
+    penampungan: PengajuanCuti[];
 };
 
 export default function CutiMassalShow() {
-    const { cutiMassal, karyawanBaru } = usePage<PageProps>().props;
+    const { cutiMassal, karyawanBaru, penampungan } =
+        usePage<PageProps>().props;
+    const jumlahSiapDiproses = penampungan.filter(
+        (pengajuan) => pengajuan.siap_diproses,
+    ).length;
+    const [prosesPenampunganProcessing, setProsesPenampunganProcessing] =
+        useState(false);
+
+    const prosesPenampungan = () => {
+        setProsesPenampunganProcessing(true);
+        router.post(
+            CutiMassalController.prosesPenampungan.url(cutiMassal.id),
+            {},
+            { onFinish: () => setProsesPenampunganProcessing(false) },
+        );
+    };
 
     const { data, setData, patch, processing } = useForm({
         catatan_pembatalan: '',
@@ -126,9 +147,14 @@ export default function CutiMassalShow() {
                             {cutiMassal.pengajuan_cutis?.map((pengajuan) => (
                                 <div
                                     key={pengajuan.id}
-                                    className="px-4 py-2 text-sm"
+                                    className="flex items-center justify-between gap-2 px-4 py-2 text-sm"
                                 >
                                     {pengajuan.karyawan?.nama}
+                                    {pengajuan.status === 'ditampung' && (
+                                        <StatusBadge
+                                            status={pengajuan.status}
+                                        />
+                                    )}
                                 </div>
                             ))}
                             {(!cutiMassal.pengajuan_cutis ||
@@ -140,6 +166,56 @@ export default function CutiMassalShow() {
                         </div>
                     </CardContent>
                 </Card>
+
+                {penampungan.length > 0 && (
+                    <Card className="max-w-3xl gap-0 overflow-hidden py-0">
+                        <CardContent className="space-y-3 p-0">
+                            <div className="px-4 pt-4">
+                                <h2 className="text-sm font-semibold">
+                                    Ditampung ({penampungan.length})
+                                </h2>
+                                <p className="text-xs text-muted-foreground">
+                                    Periode saldo karyawan ini berakhir sebelum
+                                    tanggal cuti massal, jadi saldonya belum
+                                    dipotong. Proses setelah periode saldo
+                                    barunya aktif — HRD akan mendapat notifikasi
+                                    saat itu.
+                                </p>
+                            </div>
+                            <div className="divide-y border-t">
+                                {penampungan.map((pengajuan) => (
+                                    <div
+                                        key={pengajuan.id}
+                                        className="flex items-center justify-between gap-2 px-4 py-2 text-sm"
+                                    >
+                                        {pengajuan.karyawan?.nama}
+                                        {pengajuan.siap_diproses ? (
+                                            <Badge className="border-emerald-200 bg-emerald-100 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300">
+                                                Siap diproses
+                                            </Badge>
+                                        ) : (
+                                            <span className="text-muted-foreground">
+                                                Menunggu periode baru
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="px-4 pb-4">
+                                <Button
+                                    size="sm"
+                                    disabled={
+                                        prosesPenampunganProcessing ||
+                                        jumlahSiapDiproses === 0
+                                    }
+                                    onClick={prosesPenampungan}
+                                >
+                                    Proses {jumlahSiapDiproses} yang Siap
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 {cutiMassal.dilewati && cutiMassal.dilewati.length > 0 && (
                     <Card className="max-w-3xl gap-0 overflow-hidden py-0">
@@ -247,6 +323,11 @@ export default function CutiMassalShow() {
                                             {row.akan_dapat_bonus && (
                                                 <Badge className="border-blue-200 bg-blue-100 text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300">
                                                     Dapat bonus cuti
+                                                </Badge>
+                                            )}
+                                            {row.akan_ditampung && (
+                                                <Badge className="border-sky-200 bg-sky-100 text-sky-800 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-300">
+                                                    Akan ditampung
                                                 </Badge>
                                             )}
                                         </div>

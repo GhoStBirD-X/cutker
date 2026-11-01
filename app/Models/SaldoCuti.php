@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Database\Factories\SaldoCutiFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -87,6 +88,16 @@ class SaldoCuti extends Model
     public function diubahOleh(): BelongsTo
     {
         return $this->belongsTo(Karyawan::class, 'diubah_oleh_id');
+    }
+
+    /**
+     * Periode saldo ini sudah berakhir sebelum $tanggal — cuti sampai
+     * tanggal itu tidak bisa dipotong dari baris ini dan masuk penampungan.
+     * Saldo tanpa periode (reset kalender) tidak pernah dianggap berakhir.
+     */
+    public function berakhirSebelum(CarbonInterface $tanggal): bool
+    {
+        return $this->periode_selesai !== null && $tanggal->greaterThan($this->periode_selesai);
     }
 
     /**
