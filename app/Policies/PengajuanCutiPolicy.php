@@ -38,11 +38,22 @@ class PengajuanCutiPolicy
 
     /**
      * Karyawan hanya boleh membatalkan pengajuan miliknya sendiri selama
-     * masih berstatus pending (belum diproses approval manapun).
+     * masih berstatus pending (belum diproses approval manapun) atau masih
+     * di penampungan.
      */
     public function cancel(User $user, PengajuanCuti $pengajuanCuti): bool
     {
         return $user->karyawan?->id === $pengajuanCuti->karyawan_id
-            && $pengajuanCuti->status === StatusPengajuan::Pending;
+            && in_array($pengajuanCuti->status, [StatusPengajuan::Pending, StatusPengajuan::Ditampung], true);
+    }
+
+    /**
+     * Pengajuan di penampungan hanya bisa diajukan ulang oleh pemiliknya
+     * sendiri — kecukupan periode & saldo dicek di PengajuanCutiService.
+     */
+    public function ajukanUlang(User $user, PengajuanCuti $pengajuanCuti): bool
+    {
+        return $user->karyawan?->id === $pengajuanCuti->karyawan_id
+            && $pengajuanCuti->status === StatusPengajuan::Ditampung;
     }
 }

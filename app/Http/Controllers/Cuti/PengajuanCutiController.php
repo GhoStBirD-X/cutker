@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cuti;
 
 use App\Enums\StatusPengajuan;
+use App\Exceptions\PengajuanDitampungBelumBisaDiajukanException;
 use App\Exceptions\SaldoCutiTidakCukupException;
 use App\Http\Controllers\Concerns\DataFormPengajuanCuti;
 use App\Http\Controllers\Concerns\HasPerPage;
@@ -81,12 +82,14 @@ class PengajuanCutiController extends Controller
             return back()->withErrors(['tanggal_selesai' => $e->getMessage()])->withInput();
         }
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Pengajuan cuti berhasil diajukan.']);
+        Inertia::flash('toast', $pengajuan->status === StatusPengajuan::Ditampung
+            ? ['type' => 'info', 'message' => 'Tanggal cuti melewati akhir periode saldo, pengajuan masuk penampungan.']
+            : ['type' => 'success', 'message' => 'Pengajuan cuti berhasil diajukan.']);
 
         return to_route('cuti.show', $pengajuan);
     }
 
-    public function show(Request $request, PengajuanCuti $pengajuan): Response
+    public function show(Request $request, PengajuanCuti $pengajuan, PengajuanCutiService $service): Response
     {
         $this->authorize('view', $pengajuan);
 
@@ -94,7 +97,27 @@ class PengajuanCutiController extends Controller
 
         return Inertia::render('cuti/show', [
             'pengajuan' => $pengajuan,
+            'alasanBelumBisaDiajukanUlang' => $pengajuan->status === StatusPengajuan::Ditampung
+                ? $service->alasanBelumBisaDiajukanUlang($pengajuan)
+                : null,
         ]);
+    }
+
+    public function ajukanUlang(Request $request, PengajuanCuti $pengajuan, PengajuanCutiService $service): RedirectResponse
+    {
+        $this->authorize('ajukanUlang', $pengajuan);
+
+        try {
+            $service->ajukanUlang($pengajuan);
+        } catch (PengajuanDitampungBelumBisaDiajukanException|SaldoCutiTidakCukupException $e) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => $e->getMessage()]);
+
+            return back();
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Pengajuan cuti berhasil diajukan.']);
+
+        return back();
     }
 
     public function batalkan(Request $request, PengajuanCuti $pengajuan, PengajuanCutiService $service): RedirectResponse

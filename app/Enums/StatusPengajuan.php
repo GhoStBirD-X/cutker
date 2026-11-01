@@ -9,6 +9,13 @@ enum StatusPengajuan: string
     case Ditolak = 'ditolak';
     case Dibatalkan = 'dibatalkan';
 
+    /**
+     * Tanggal cuti melewati akhir periode saldo aktif — belum masuk alur
+     * approval & belum memotong saldo. Karyawan mengajukan ulang sendiri
+     * setelah periode saldo diperbarui.
+     */
+    case Ditampung = 'ditampung';
+
     public function label(): string
     {
         return match ($this) {
@@ -16,6 +23,7 @@ enum StatusPengajuan: string
             self::Disetujui => 'Disetujui',
             self::Ditolak => 'Ditolak',
             self::Dibatalkan => 'Dibatalkan',
+            self::Ditampung => 'Ditampung',
         };
     }
 }

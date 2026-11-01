@@ -10,4 +10,5 @@ Route::middleware(['auth', 'verified', 'karyawan.linked'])->prefix('cuti')->name
     Route::post('/', [PengajuanCutiController::class, 'store'])->name('store');
     Route::get('/{pengajuan}', [PengajuanCutiController::class, 'show'])->name('show');
     Route::patch('/{pengajuan}/batalkan', [PengajuanCutiController::class, 'batalkan'])->name('batalkan');
+    Route::patch('/{pengajuan}/ajukan-ulang', [PengajuanCutiController::class, 'ajukanUlang'])->name('ajukan-ulang');
 });

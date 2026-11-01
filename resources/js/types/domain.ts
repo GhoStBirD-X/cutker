@@ -39,7 +39,7 @@ export type Shift = {
 };
 
 export type StatusPengajuan =
-    'pending' | 'disetujui' | 'ditolak' | 'dibatalkan';
+    'pending' | 'disetujui' | 'ditolak' | 'dibatalkan' | 'ditampung';
 export type StatusApproval = 'pending' | 'disetujui' | 'ditolak' | 'dibatalkan';
 
 export type SaldoCuti = {

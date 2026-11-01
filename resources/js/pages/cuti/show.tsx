@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { FileText, History, Paperclip } from 'lucide-react';
+import { Archive, FileText, History, Paperclip } from 'lucide-react';
 import { useState } from 'react';
 import PengajuanCutiController from '@/actions/App/Http/Controllers/Cuti/PengajuanCutiController';
 import { konfirmasi } from '@/components/confirm-dialog';
@@ -17,15 +17,26 @@ import type { Auth, PengajuanCuti } from '@/types';
 type PageProps = {
     auth: Auth;
     pengajuan: PengajuanCuti;
+    alasanBelumBisaDiajukanUlang: string | null;
 };
 
 export default function CutiShow() {
-    const { auth, pengajuan } = usePage<PageProps>().props;
+    const { auth, pengajuan, alasanBelumBisaDiajukanUlang } =
+        usePage<PageProps>().props;
 
+    const milikSendiri = pengajuan.karyawan_id === auth.user.karyawan_id;
+    const ditampung = pengajuan.status === 'ditampung';
     const bisaBatalkan =
-        pengajuan.status === 'pending' &&
-        pengajuan.karyawan_id === auth.user.karyawan_id;
+        (pengajuan.status === 'pending' || ditampung) && milikSendiri;
     const [membatalkan, setMembatalkan] = useState(false);
+    const [mengajukan, setMengajukan] = useState(false);
+
+    const ajukanUlang = () => {
+        router.visit(PengajuanCutiController.ajukanUlang(pengajuan.id), {
+            onStart: () => setMengajukan(true),
+            onFinish: () => setMengajukan(false),
+        });
+    };
 
     const batalkan = async () => {
         const yakin = await konfirmasi({
@@ -71,6 +82,39 @@ export default function CutiShow() {
                         <StatusBadge status={pengajuan.status} />
                     </div>
                 </div>
+
+                {ditampung && (
+                    <Card className="border-sky-200 bg-sky-50 dark:border-sky-900 dark:bg-sky-950">
+                        <CardContent className="flex flex-col gap-3 text-sm text-sky-900 sm:flex-row sm:items-center sm:justify-between dark:text-sky-200">
+                            <div className="flex gap-2">
+                                <Archive className="mt-0.5 size-4 shrink-0" />
+                                <div>
+                                    <p className="font-medium">
+                                        Pengajuan ada di penampungan
+                                    </p>
+                                    <p>
+                                        {alasanBelumBisaDiajukanUlang ??
+                                            'Periode saldo sudah diperbarui. Pengajuan ini sekarang bisa diajukan.'}
+                                    </p>
+                                </div>
+                            </div>
+                            {milikSendiri && (
+                                <Button
+                                    type="button"
+                                    className="w-fit shrink-0"
+                                    disabled={
+                                        mengajukan ||
+                                        alasanBelumBisaDiajukanUlang !== null
+                                    }
+                                    onClick={ajukanUlang}
+                                >
+                                    {mengajukan && <Spinner />}
+                                    Ajukan Sekarang
+                                </Button>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card>
                     <CardHeader>

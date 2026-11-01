@@ -17,7 +17,7 @@ class TidakOverlapPengajuanCuti implements ValidationRule
 
     /**
      * Menolak jika rentang tanggal bertabrakan dengan pengajuan cuti aktif
-     * (pending/disetujui) lain milik karyawan yang sama.
+     * (pending/disetujui/ditampung) lain milik karyawan yang sama.
      *
      * @param  Closure(string, ?string=): PotentiallyTranslatedString  $fail
      */
@@ -30,7 +30,7 @@ class TidakOverlapPengajuanCuti implements ValidationRule
         // sebagai "Y-m-d H:i:s" oleh grammar koneksi, bukan "Y-m-d" polos).
         $bentrok = PengajuanCuti::query()
             ->where('karyawan_id', $this->karyawanId)
-            ->whereIn('status', [StatusPengajuan::Pending, StatusPengajuan::Disetujui])
+            ->whereIn('status', [StatusPengajuan::Pending, StatusPengajuan::Disetujui, StatusPengajuan::Ditampung])
             ->whereDate('tanggal_mulai', '<=', $tanggalSelesai)
             ->whereDate('tanggal_selesai', '>=', $this->tanggalMulai)
             ->exists();

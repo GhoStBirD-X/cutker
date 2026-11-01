@@ -7,6 +7,7 @@ const LABELS: Record<StatusPengajuan | StatusApproval, string> = {
     disetujui: 'Disetujui',
     ditolak: 'Ditolak',
     dibatalkan: 'Dibatalkan',
+    ditampung: 'Ditampung',
 };
 
 const CLASSES: Record<StatusPengajuan | StatusApproval, string> = {
@@ -17,6 +18,8 @@ const CLASSES: Record<StatusPengajuan | StatusApproval, string> = {
     ditolak:
         'bg-red-100 text-red-800 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-900',
     dibatalkan: 'bg-muted text-muted-foreground border-transparent',
+    ditampung:
+        'bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-900',
 };
 
 export function StatusBadge({

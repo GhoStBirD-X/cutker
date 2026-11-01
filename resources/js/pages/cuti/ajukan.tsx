@@ -1,5 +1,5 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
-import { CalendarPlus, Zap } from 'lucide-react';
+import { Archive, CalendarPlus, Zap } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import PengajuanCutiController from '@/actions/App/Http/Controllers/Cuti/PengajuanCutiController';
 import InputError from '@/components/input-error';
@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { formatDate } from '@/lib/format';
 import { tanggalHariIni } from '@/lib/hari-kerja';
 import { saldoSeverity } from '@/lib/saldo-severity';
 import { dashboard } from '@/routes';
@@ -60,6 +61,11 @@ export default function CutiAjukan() {
     const saldoTerpilih = saldoCuti.find(
         (saldo) => String(saldo.jenis_cuti_id) === jenisCutiId,
     );
+    const akhirPeriode = saldoTerpilih?.periode_selesai?.slice(0, 10);
+    const masukPenampungan =
+        akhirPeriode !== undefined &&
+        tanggalSelesai !== '' &&
+        tanggalSelesai > akhirPeriode;
 
     const cekPerluCutiMendadak = () => {
         if (tanggalMulai >= kemarin && tanggalMulai < besok) {
@@ -270,6 +276,23 @@ export default function CutiAjukan() {
                                         </Link>
                                         .
                                     </p>
+
+                                    {masukPenampungan && (
+                                        <div className="flex gap-2 rounded-md border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-200">
+                                            <Archive className="mt-0.5 size-4 shrink-0" />
+                                            <p>
+                                                Tanggal selesai melewati akhir
+                                                periode saldo (
+                                                {formatDate(akhirPeriode)}).
+                                                Pengajuan ini belum bisa
+                                                diajukan dan akan masuk{' '}
+                                                <strong>penampungan</strong>.
+                                                Ajukan ulang dari Riwayat Cuti
+                                                setelah periode saldo
+                                                diperbarui.
+                                            </p>
+                                        </div>
+                                    )}
 
                                     <PratinjauHariCuti
                                         tanggalMulai={tanggalMulai}

@@ -25,6 +25,7 @@ const OPSI_STATUS: { value: StatusPengajuan; label: string }[] = [
     { value: 'disetujui', label: 'Disetujui' },
     { value: 'ditolak', label: 'Ditolak' },
     { value: 'dibatalkan', label: 'Dibatalkan' },
+    { value: 'ditampung', label: 'Ditampung' },
 ];
 
 export default function CutiIndex() {

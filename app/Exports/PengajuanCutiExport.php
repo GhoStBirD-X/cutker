@@ -109,6 +109,7 @@ class PengajuanCutiExport implements FromQuery, ShouldAutoSize, WithHeadings, Wi
             StatusPengajuan::Disetujui => ['fill' => 'D1FAE5', 'teks' => '065F46'], // emerald
             StatusPengajuan::Ditolak => ['fill' => 'FEE2E2', 'teks' => '991B1B'], // red
             StatusPengajuan::Dibatalkan => ['fill' => 'F3F4F6', 'teks' => '4B5563'], // abu-abu
+            StatusPengajuan::Ditampung => ['fill' => 'E0F2FE', 'teks' => '075985'], // sky
         };
     }
 }

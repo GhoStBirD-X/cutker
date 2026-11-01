@@ -132,6 +132,7 @@ class PeriodeCutiService
             }
 
             $konfirmasi->karyawan->update(['status' => StatusKaryawan::Nonaktif]);
+            $this->batalkanPenampungan($konfirmasi->karyawan);
         });
     }
 
@@ -411,6 +412,19 @@ class PeriodeCutiService
         }
 
         $konfirmasi->karyawan->update(['status' => StatusKaryawan::Nonaktif]);
+        $this->batalkanPenampungan($konfirmasi->karyawan);
+    }
+
+    /**
+     * Kontrak tidak diperpanjang: periode saldo baru tidak akan pernah ada,
+     * jadi pengajuan di penampungan milik karyawan ini dibatalkan.
+     */
+    protected function batalkanPenampungan(Karyawan $karyawan): void
+    {
+        PengajuanCuti::query()
+            ->where('karyawan_id', $karyawan->id)
+            ->where('status', StatusPengajuan::Ditampung)
+            ->update(['status' => StatusPengajuan::Dibatalkan]);
     }
 
     /**
