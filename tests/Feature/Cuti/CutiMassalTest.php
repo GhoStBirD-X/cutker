@@ -3,7 +3,9 @@
 namespace Tests\Feature\Cuti;
 
 use App\Enums\JenisKelamin;
+use App\Enums\StatusAntrianWhatsapp;
 use App\Enums\TipeKaryawan;
+use App\Models\AntrianWhatsapp;
 use App\Models\CutiMassal;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
@@ -13,6 +15,7 @@ use App\Services\CutiMassalService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 use Tests\Concerns\InteractsWithKaryawan;
 use Tests\TestCase;
 
@@ -73,6 +76,46 @@ class CutiMassalTest extends TestCase
             'cuti_massal_id' => $cutiMassal->id,
             'status' => 'disetujui',
         ]);
+    }
+
+    public function test_whatsapp_notifications_are_queued_instead_of_sent_immediately(): void
+    {
+        config(['services.evolution.enabled' => true]);
+        Http::fake();
+
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+        $jenisCuti = JenisCuti::factory()->create();
+        $karyawanA = $this->karyawanUser('karyawan', ['no_hp' => '081111111111'])->karyawan;
+        $karyawanB = $this->karyawanUser('karyawan', ['no_hp' => '082222222222'])->karyawan;
+
+        foreach ([$karyawanA, $karyawanB] as $karyawan) {
+            SaldoCuti::factory()->create([
+                'karyawan_id' => $karyawan->id,
+                'jenis_cuti_id' => $jenisCuti->id,
+                'kuota' => 12,
+                'terpakai' => 0,
+                'sisa' => 12,
+            ]);
+        }
+
+        $this->actingAs($hrd->user)->post(route('cuti.massal.store'), [
+            'jenis_cuti_id' => $jenisCuti->id,
+            'tanggal_mulai' => now()->addDays(10)->toDateString(),
+            'tanggal_selesai' => now()->addDays(11)->toDateString(),
+            'alasan' => 'Cuti bersama Lebaran',
+            'karyawan_ids' => [$karyawanA->id, $karyawanB->id],
+        ])->assertSessionDoesntHaveErrors();
+
+        Http::assertNothingSent();
+
+        $antrian = AntrianWhatsapp::query()->orderBy('id')->get();
+        $this->assertSame(['6281111111111', '6282222222222'], $antrian->pluck('nomor')->all());
+
+        foreach ($antrian as $item) {
+            $this->assertSame(StatusAntrianWhatsapp::Pending, $item->status);
+            $this->assertSame(0, $item->percobaan);
+            $this->assertStringStartsWith('Pengajuan Cuti Disetujui', $item->pesan);
+        }
     }
 
     public function test_balance_is_deducted_correctly_for_employees_with_sufficient_balance(): void

@@ -156,7 +156,9 @@ class CutiMassalService
      * lihat hitungPotongan(). Karyawan yang konflik (gender, overlap
      * pengajuan lain, bentrok jadwal shift, atau tidak punya baris saldo
      * aktif) dilewati dengan alasan tercatat, bukan menggagalkan seluruh
-     * batch.
+     * batch. Notifikasi WhatsApp tidak dikirim langsung tapi diantrikan dan
+     * dicicil `whatsapp:kirim-antrian` dengan jeda antar pesan — kiriman
+     * beruntun ke banyak nomor sekaligus memicu pembatasan WhatsApp.
      *
      * @param  array{jenis_cuti_id: int, tanggal_mulai: string, tanggal_selesai: string, alasan: string, karyawan_ids: int[]}  $data
      */
@@ -247,7 +249,7 @@ class CutiMassalService
                     'sisa' => $potongan['sisa'],
                 ]);
 
-                $karyawan->user?->notify(new PengajuanCutiDisetujui($pengajuan));
+                $karyawan->user?->notify(new PengajuanCutiDisetujui($pengajuan, lewatAntrianWhatsapp: true));
 
                 $diproses++;
             }

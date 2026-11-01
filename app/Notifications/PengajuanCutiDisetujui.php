@@ -13,8 +13,12 @@ use Illuminate\Notifications\Notification;
  */
 class PengajuanCutiDisetujui extends Notification
 {
+    /**
+     * @param  bool  $lewatAntrianWhatsapp  true untuk kiriman massal (Cuti Massal) — WA diantrikan & dicicil scheduler, bukan dikirim langsung
+     */
     public function __construct(
         public PengajuanCuti $pengajuanCuti,
+        public bool $lewatAntrianWhatsapp = false,
     ) {}
 
     /**

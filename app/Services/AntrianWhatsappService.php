@@ -50,6 +50,22 @@ class AntrianWhatsappService
     }
 
     /**
+     * Simpan pesan sebagai pending tanpa mengirimnya sekarang — dipakai untuk
+     * kiriman massal (mis. Cuti Massal) supaya puluhan pesan tidak dikirim
+     * beruntun dalam satu request (memicu pembatasan anti-spam WhatsApp, ack
+     * 463), melainkan dicicil `prosesAntrian()` dengan jeda antar pesan.
+     */
+    public function antrikan(string $nomor, string $pesan): AntrianWhatsapp
+    {
+        return AntrianWhatsapp::create([
+            'nomor' => $this->keNomorInternasional($nomor),
+            'pesan' => $pesan,
+            'status' => StatusAntrianWhatsapp::Pending,
+            'percobaan' => 0,
+        ]);
+    }
+
+    /**
      * Kirim ulang pesan pending hanya saat instance tersambung, dengan jeda acak
      * 2–5 detik antar pesan agar nomor tidak dibatasi WhatsApp karena lonjakan.
      * Berhenti di tengah jalan kalau koneksi putus lagi.

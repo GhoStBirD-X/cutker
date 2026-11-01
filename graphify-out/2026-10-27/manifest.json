@@ -1,0 +1,2750 @@
+{
+  ".mcp.json": {
+    "mtime": 1787814264.9840918,
+    "seen": 1791168094.4567547,
+    "ast_hash": "ee8f920cd448a8a5036dda43d44c1d64",
+    "semantic_hash": ""
+  },
+  "app/Actions/Fortify/CreateNewUser.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4567728,
+    "ast_hash": "0d3f62f3dad1521c95d13144cbe9b3cd",
+    "semantic_hash": ""
+  },
+  "app/Actions/Fortify/ResetUserPassword.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4567814,
+    "ast_hash": "5df279bfa3bece0c9d5884c9a1973ab2",
+    "semantic_hash": ""
+  },
+  "app/Concerns/PasswordValidationRules.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.456786,
+    "ast_hash": "9952ba0578167275cc748c01e92b1a25",
+    "semantic_hash": ""
+  },
+  "app/Concerns/ProfileValidationRules.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4567897,
+    "ast_hash": "9da65916eac719381c3ab04cb3a6320c",
+    "semantic_hash": ""
+  },
+  "app/Console/Commands/HariLiburSync.php": {
+    "mtime": 1788604056.027488,
+    "seen": 1791168094.4567935,
+    "ast_hash": "8f45b40660caa3feec387ade0eac40cd",
+    "semantic_hash": ""
+  },
+  "app/Console/Commands/ProsesSiklusCutiTahunan.php": {
+    "mtime": 1788604061.3543563,
+    "seen": 1791168094.4567976,
+    "ast_hash": "648aa9c136d9315e69e0b43e2477017d",
+    "semantic_hash": ""
+  },
+  "app/Console/Commands/ResetSaldoCutiTahunan.php": {
+    "mtime": 1787840837.0622354,
+    "seen": 1791168094.4568005,
+    "ast_hash": "5f9106674c0b9e710f0fb72bd1139f65",
+    "semantic_hash": ""
+  },
+  "app/Enums/JenisKelamin.php": {
+    "mtime": 1788603598.7304451,
+    "seen": 1791168094.456803,
+    "ast_hash": "74f06bec7645fe2fa034555e7d4745f5",
+    "semantic_hash": ""
+  },
+  "app/Enums/StatusApproval.php": {
+    "mtime": 1788933745.5483463,
+    "seen": 1791168094.4568057,
+    "ast_hash": "44d56e60a7a935f871848335ffc852b6",
+    "semantic_hash": ""
+  },
+  "app/Enums/StatusCutiMassal.php": {
+    "mtime": 1789061485.6488016,
+    "seen": 1791168094.4568086,
+    "ast_hash": "c69bed6ac142dcfb9103877790c5dba5",
+    "semantic_hash": ""
+  },
+  "app/Enums/StatusKaryawan.php": {
+    "mtime": 1787840260.4299664,
+    "seen": 1791168094.4568117,
+    "ast_hash": "ad0b416a6d589377b5c29ddf7311741b",
+    "semantic_hash": ""
+  },
+  "app/Enums/StatusKompensasiCuti.php": {
+    "mtime": 1788603609.5832057,
+    "seen": 1791168094.4568145,
+    "ast_hash": "365a03e7756e3d6ce3dd74b541d831c4",
+    "semantic_hash": ""
+  },
+  "app/Enums/StatusKonfirmasiKontrak.php": {
+    "mtime": 1791792612.0136647,
+    "seen": 1791796944.9144466,
+    "ast_hash": "3f457ce2043a94cfcff0fb66f883d639",
+    "semantic_hash": ""
+  },
+  "app/Enums/StatusPengajuan.php": {
+    "mtime": 1787840257.993,
+    "seen": 1791168094.4568202,
+    "ast_hash": "2f769feeaa00cbe941abe0792545c063",
+    "semantic_hash": ""
+  },
+  "app/Enums/SumberHariLibur.php": {
+    "mtime": 1788603614.0571072,
+    "seen": 1791168094.4568229,
+    "ast_hash": "2d67454eda948122dcc0c26847979ea2",
+    "semantic_hash": ""
+  },
+  "app/Enums/TipeKaryawan.php": {
+    "mtime": 1788603602.0423722,
+    "seen": 1791168094.4568255,
+    "ast_hash": "e3f46c47529041953a535fcdddf6ee48",
+    "semantic_hash": ""
+  },
+  "app/Exceptions/ApprovalSudahDiprosesException.php": {
+    "mtime": 1791261162.5605962,
+    "seen": 1791261188.3801224,
+    "ast_hash": "9ef8c5d9e813606d68984ac50faa48e4",
+    "semantic_hash": ""
+  },
+  "app/Exceptions/CutiMassalSudahDibatalkanException.php": {
+    "mtime": 1789061519.8252742,
+    "seen": 1791168094.4568307,
+    "ast_hash": "479d7dbd4f817c7cb35b22585f0d977f",
+    "semantic_hash": ""
+  },
+  "app/Exceptions/SaldoCutiTidakCukupException.php": {
+    "mtime": 1787840572.9587357,
+    "seen": 1791168094.4568336,
+    "ast_hash": "7188e0faf667ccb048877b9ef7b770be",
+    "semantic_hash": ""
+  },
+  "app/Exports/KaryawanImportDataSheet.php": {
+    "mtime": 1791275588.703849,
+    "seen": 1791275666.5641413,
+    "ast_hash": "78610f7dea0196cb8a088eb552d5a57b",
+    "semantic_hash": ""
+  },
+  "app/Exports/KaryawanImportPanduanRoleSheet.php": {
+    "mtime": 1790248970.731416,
+    "seen": 1791168094.4568388,
+    "ast_hash": "04f6ae2b3d2c14063806301b6e48530d",
+    "semantic_hash": ""
+  },
+  "app/Exports/KaryawanImportTemplateExport.php": {
+    "mtime": 1789457935.930977,
+    "seen": 1791168094.4568434,
+    "ast_hash": "48ba5e3e6a4e698d3b49c78157eed124",
+    "semantic_hash": ""
+  },
+  "app/Exports/PengajuanCutiExport.php": {
+    "mtime": 1791852789.2486043,
+    "seen": 1791852838.3319135,
+    "ast_hash": "5808d438eb271395df3bbb8b5be0f3a9",
+    "semantic_hash": ""
+  },
+  "app/Exports/SaldoCutiExport.php": {
+    "mtime": 1792378722.1296918,
+    "seen": 1792378756.690803,
+    "ast_hash": "6bc1e33d80297e799e46349539cbde78",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Approval/ApprovalController.php": {
+    "mtime": 1791792612.0141945,
+    "seen": 1791796944.9144802,
+    "ast_hash": "afc6fda205a5e73711076526e6f44a5f",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Concerns/HasPerPage.php": {
+    "mtime": 1791171204.6523235,
+    "seen": 1791171800.1086721,
+    "ast_hash": "fc815cd33b6c8043fc4f1f5d57dfd8d5",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Controller.php": {
+    "mtime": 1787840962.97457,
+    "seen": 1791168094.4568565,
+    "ast_hash": "27901d57a11cae63eb649a00dba8a400",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Cuti/CutiMassalController.php": {
+    "mtime": 1789537179.570513,
+    "seen": 1791168094.456859,
+    "ast_hash": "7346e94647e88c4a3004823b77fcbeaa",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Cuti/KompensasiCutiController.php": {
+    "mtime": 1791275588.6958442,
+    "seen": 1791275666.56415,
+    "ast_hash": "33159a2400054fbedd3b2052b948683d",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Cuti/KonfirmasiKontrakController.php": {
+    "mtime": 1791792612.0141945,
+    "seen": 1791796944.914498,
+    "ast_hash": "243aebde5b2fb7ba68dc891b6da0c01f",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Cuti/PengajuanCutiController.php": {
+    "mtime": 1791792612.0151408,
+    "seen": 1791796944.9144998,
+    "ast_hash": "06f1d5b4fc8511d9ee68f64a5a6b586a",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/DashboardController.php": {
+    "mtime": 1790222367.0915027,
+    "seen": 1791168094.4568698,
+    "ast_hash": "d63406dd7e465697c9c5752e19fdf4d1",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/JadwalShift/JadwalShiftController.php": {
+    "mtime": 1789525187.6097121,
+    "seen": 1791168094.4568725,
+    "ast_hash": "288559a481526dceafdea4c7a365c7f3",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Laporan/LaporanCutiController.php": {
+    "mtime": 1791852789.258145,
+    "seen": 1791852838.3319774,
+    "ast_hash": "4183530fd97b3d804a74bc07f225b63e",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Laporan/SaldoCutiController.php": {
+    "mtime": 1792378722.12924,
+    "seen": 1792378756.6908147,
+    "ast_hash": "cb67e7a85383009fc24cc50cc9358898",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Master/AlasanCutiController.php": {
+    "mtime": 1789524735.4583879,
+    "seen": 1791168094.45688,
+    "ast_hash": "51761b795dc9689ee019dc8bbfc01ee1",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Master/DepartemenController.php": {
+    "mtime": 1789524799.941793,
+    "seen": 1791168094.456883,
+    "ast_hash": "f875c902702ef873ef6a80c19b70b145",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Master/HariLiburController.php": {
+    "mtime": 1789524788.9703872,
+    "seen": 1791168094.4568856,
+    "ast_hash": "4343ee4a2ed6f247946349232af666d4",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Master/JabatanController.php": {
+    "mtime": 1789524795.8376412,
+    "seen": 1791168094.4568884,
+    "ast_hash": "617d9c8f3432626dec8787a425c676b7",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Master/JenisCutiController.php": {
+    "mtime": 1789524766.06454,
+    "seen": 1791168094.4568908,
+    "ast_hash": "a831fbf654bb6d86c52e62db7b3692a2",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Master/KaryawanController.php": {
+    "mtime": 1791792612.0155408,
+    "seen": 1791796944.9145238,
+    "ast_hash": "6c39e7f89091d755cffaa4d2efb3a0f0",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Master/SaldoCutiController.php": {
+    "mtime": 1791275588.6952255,
+    "seen": 1791275666.564159,
+    "ast_hash": "65b4ab8cd0b509206e2b7ba1bfdd293d",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Master/ShiftController.php": {
+    "mtime": 1789524743.199017,
+    "seen": 1791168094.4569016,
+    "ast_hash": "a7a6ee066a5cba5ce1d2c6f5955eaebc",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/NotificationController.php": {
+    "mtime": 1787842264.063483,
+    "seen": 1791168094.4569042,
+    "ast_hash": "a3c65242d4b7d3df25893412bd9fa30e",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Settings/ProfileController.php": {
+    "mtime": 1791792612.0155408,
+    "seen": 1791796944.914533,
+    "ast_hash": "778188a1849534575e9e62690638cd36",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Settings/SecurityController.php": {
+    "mtime": 1787813872.3773587,
+    "seen": 1791168094.4569094,
+    "ast_hash": "acdaed4a2a3099647aba7d4359d7caa9",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/UserManagement/UserController.php": {
+    "mtime": 1792037241.2719717,
+    "seen": 1792037313.751242,
+    "ast_hash": "59662de66787cc33036eddb6ce9e9d4d",
+    "semantic_hash": ""
+  },
+  "app/Http/Middleware/EnsureKaryawanLinked.php": {
+    "mtime": 1791792612.0155408,
+    "seen": 1791796944.914539,
+    "ast_hash": "01af646c69b45b64131cb29bc15df2ff",
+    "semantic_hash": ""
+  },
+  "app/Http/Middleware/HandleAppearance.php": {
+    "mtime": 1789371412.468737,
+    "seen": 1791168094.4569168,
+    "ast_hash": "915ae89097132fdc91176d5b71104705",
+    "semantic_hash": ""
+  },
+  "app/Http/Middleware/HandleInertiaRequests.php": {
+    "mtime": 1787842256.3175862,
+    "seen": 1791168094.4569197,
+    "ast_hash": "ce4deb150004514098d615d31f4ce5dd",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Approval/ApprovalActionRequest.php": {
+    "mtime": 1791792612.0155408,
+    "seen": 1791796944.9145458,
+    "ast_hash": "e0fa712e66e858167b7f5fe911675ebb",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Cuti/StoreCutiMassalRequest.php": {
+    "mtime": 1789061618.4097533,
+    "seen": 1791168094.4569247,
+    "ast_hash": "ef26e41349f6df2c79b75a410669c19b",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Cuti/StorePengajuanCutiRequest.php": {
+    "mtime": 1791854131.7987638,
+    "seen": 1791854416.2727334,
+    "ast_hash": "3f520274f516ca4b9a70572e745bd35a",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Cuti/TambahKaryawanBaruCutiMassalRequest.php": {
+    "mtime": 1789537149.5169494,
+    "seen": 1791168094.4569306,
+    "ast_hash": "0feed892fc655e3b39c89093a22ee716",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/JadwalShift/StoreJadwalShiftRequest.php": {
+    "mtime": 1787849580.5704572,
+    "seen": 1791168094.4569333,
+    "ast_hash": "7a24dab5eae18f44a7a420078aafc45d",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/JadwalShift/UpdateLemburRequest.php": {
+    "mtime": 1787932080.9331727,
+    "seen": 1791168094.456936,
+    "ast_hash": "c5480407600a1b85fa18efd2799a8f44",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Master/AlasanCutiRequest.php": {
+    "mtime": 1787929326.3631291,
+    "seen": 1791168094.4569385,
+    "ast_hash": "ebba0d7c7d52da8ec661780791985914",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Master/DepartemenRequest.php": {
+    "mtime": 1787840991.6711903,
+    "seen": 1791168094.4569411,
+    "ast_hash": "42f9012fa5daa05d53a84dee31517c60",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Master/HariLiburRequest.php": {
+    "mtime": 1788604000.268866,
+    "seen": 1791168094.456944,
+    "ast_hash": "0ddac6af55ab5459803bbc343909d8be",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Master/JabatanRequest.php": {
+    "mtime": 1787840995.5941384,
+    "seen": 1791168094.4569466,
+    "ast_hash": "be803f132aea103a96018f684555dcea",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Master/JenisCutiRequest.php": {
+    "mtime": 1791853723.2064478,
+    "seen": 1791853811.49432,
+    "ast_hash": "0bdc61434f26023e097abe1014606ab3",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Master/KaryawanImportRequest.php": {
+    "mtime": 1789432787.2384028,
+    "seen": 1791168094.456952,
+    "ast_hash": "6dce94174b4be9f3b71948eda321c4b7",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Master/KaryawanRequest.php": {
+    "mtime": 1791275595.2723286,
+    "seen": 1791275666.5641732,
+    "ast_hash": "4d513dddadc7a28dc1dd211d59b89867",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Master/ResetDataKaryawanRequest.php": {
+    "mtime": 1789455540.422526,
+    "seen": 1791168094.456957,
+    "ast_hash": "408c0ce395cb1158ca70d501228e3e42",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Master/SaldoCutiRequest.php": {
+    "mtime": 1791792612.016711,
+    "seen": 1791796944.9145844,
+    "ast_hash": "a24b90ca7e47328651f4667d6fa1ef31",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Master/ShiftRequest.php": {
+    "mtime": 1787841003.3480358,
+    "seen": 1791168094.456962,
+    "ast_hash": "abc05e5333637f8621c702d9c4ebedb7",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Settings/PasswordUpdateRequest.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4569645,
+    "ast_hash": "a1bf06d7db8c652a71a358969ca89472",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Settings/ProfileDeleteRequest.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.456967,
+    "ast_hash": "58b33239167751eb5dfb62f81f4f41da",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Settings/ProfileUpdateRequest.php": {
+    "mtime": 1791792612.0170152,
+    "seen": 1791796944.9146008,
+    "ast_hash": "270f510dd9c5d3edd190159bf0e3698a",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Settings/TwoFactorAuthenticationRequest.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4569726,
+    "ast_hash": "28f0ef771e78133e6ac4ca7c1a3887c2",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/UserManagement/UserRequest.php": {
+    "mtime": 1789368109.063393,
+    "seen": 1791168094.4569752,
+    "ast_hash": "0ae33fcb18c95291b11ef1b23cabd2d0",
+    "semantic_hash": ""
+  },
+  "app/Imports/KaryawanImport.php": {
+    "mtime": 1791275588.7041583,
+    "seen": 1791275666.5641832,
+    "ast_hash": "60aa5c79931d5a1c022ab925450937a9",
+    "semantic_hash": ""
+  },
+  "app/Models/AlasanCuti.php": {
+    "mtime": 1787929258.3885145,
+    "seen": 1791168094.4569805,
+    "ast_hash": "4e6532303cc7a56dfd3032287fa108cc",
+    "semantic_hash": ""
+  },
+  "app/Models/Approval.php": {
+    "mtime": 1787842038.1484973,
+    "seen": 1791168094.4569829,
+    "ast_hash": "34a33a0894cae95763e5b1acd81f4494",
+    "semantic_hash": ""
+  },
+  "app/Models/CutiMassal.php": {
+    "mtime": 1789061497.5256183,
+    "seen": 1791168094.4569852,
+    "ast_hash": "8eb0a6d15a9fc6447d7c760d58543d66",
+    "semantic_hash": ""
+  },
+  "app/Models/Departemen.php": {
+    "mtime": 1787840329.2580206,
+    "seen": 1791168094.456988,
+    "ast_hash": "705b2e5b8d4152d945879b95a788d217",
+    "semantic_hash": ""
+  },
+  "app/Models/HariLibur.php": {
+    "mtime": 1788604409.6376793,
+    "seen": 1791168094.4569907,
+    "ast_hash": "441f23befc336e1224776be8ae0e4b96",
+    "semantic_hash": ""
+  },
+  "app/Models/Jabatan.php": {
+    "mtime": 1787840330.9329975,
+    "seen": 1791168094.4569948,
+    "ast_hash": "7e77de0e842f1f7f8cc55c23535db068",
+    "semantic_hash": ""
+  },
+  "app/Models/JadwalShift.php": {
+    "mtime": 1789523399.840165,
+    "seen": 1791168094.4569972,
+    "ast_hash": "8fe3a1783fec6dd108399179eefebb2f",
+    "semantic_hash": ""
+  },
+  "app/Models/JenisCuti.php": {
+    "mtime": 1791868834.4614303,
+    "seen": 1791868935.3874345,
+    "ast_hash": "8d889884acbb9245f4c4e002354ed4ac",
+    "semantic_hash": ""
+  },
+  "app/Models/Karyawan.php": {
+    "mtime": 1791792612.0170152,
+    "seen": 1791796944.9146385,
+    "ast_hash": "d6bba5280fefcd61ea190e2ce9d5e117",
+    "semantic_hash": ""
+  },
+  "app/Models/KompensasiCuti.php": {
+    "mtime": 1789541024.177784,
+    "seen": 1791168094.457005,
+    "ast_hash": "f5af7aa40f92bc94e100648ef00f6db3",
+    "semantic_hash": ""
+  },
+  "app/Models/KonfirmasiKontrakCuti.php": {
+    "mtime": 1791792612.0170152,
+    "seen": 1791796944.9146435,
+    "ast_hash": "74b0264a9311dc156c7681d84056c424",
+    "semantic_hash": ""
+  },
+  "app/Models/PengajuanCuti.php": {
+    "mtime": 1789450607.3817227,
+    "seen": 1791168094.4570112,
+    "ast_hash": "94da305aeadf0eb4cfe00ffb55565d92",
+    "semantic_hash": ""
+  },
+  "app/Models/RiwayatSaldoCuti.php": {
+    "mtime": 1788603721.5151746,
+    "seen": 1791168094.4570138,
+    "ast_hash": "5612e2461e7f8d77b7fea7c4bf85c2f3",
+    "semantic_hash": ""
+  },
+  "app/Models/SaldoCuti.php": {
+    "mtime": 1792129521.711088,
+    "seen": 1792129581.947734,
+    "ast_hash": "2c75533813446f0a2b70f8e5cb054c7b",
+    "semantic_hash": ""
+  },
+  "app/Models/Shift.php": {
+    "mtime": 1787842051.747316,
+    "seen": 1791168094.4570222,
+    "ast_hash": "bf0abab0f53c3173f2117f181a068b86",
+    "semantic_hash": ""
+  },
+  "app/Models/User.php": {
+    "mtime": 1791792612.0173311,
+    "seen": 1791796944.9146543,
+    "ast_hash": "ddad4816a92de2447e73b4e0a7c676c9",
+    "semantic_hash": ""
+  },
+  "app/Notifications/Channels/WhatsAppChannel.php": {
+    "mtime": 1793069617.9765475,
+    "seen": 1793069661.01594,
+    "ast_hash": "7d9e4df7c81b8b009d4a411a97ce637f",
+    "semantic_hash": ""
+  },
+  "app/Notifications/PengajuanCutiDiajukan.php": {
+    "mtime": 1792483738.8506072,
+    "seen": 1792483770.9620934,
+    "ast_hash": "f3faf2908b33d2c083fcafda82141ac0",
+    "semantic_hash": ""
+  },
+  "app/Notifications/PengajuanCutiDisetujui.php": {
+    "mtime": 1791259060.5542595,
+    "seen": 1791259785.3654823,
+    "ast_hash": "cc07e528fe9eeddb00dd4e9b6505fdef",
+    "semantic_hash": ""
+  },
+  "app/Notifications/PengajuanCutiDitolak.php": {
+    "mtime": 1791259060.5542595,
+    "seen": 1791259785.3654845,
+    "ast_hash": "8c95472f0e658a93b9c7872f6fb39c13",
+    "semantic_hash": ""
+  },
+  "app/Policies/ApprovalPolicy.php": {
+    "mtime": 1789359522.9145873,
+    "seen": 1791168094.4570382,
+    "ast_hash": "acdf8c809095805ce8d53cb7401e70bc",
+    "semantic_hash": ""
+  },
+  "app/Policies/JadwalShiftPolicy.php": {
+    "mtime": 1789357784.5909474,
+    "seen": 1791168094.4570405,
+    "ast_hash": "1b0150733fda477f1f49511528af44ad",
+    "semantic_hash": ""
+  },
+  "app/Policies/PengajuanCutiPolicy.php": {
+    "mtime": 1787933395.0419605,
+    "seen": 1791168094.4570432,
+    "ast_hash": "f784e15bd203459e899d19843b0dcfa8",
+    "semantic_hash": ""
+  },
+  "app/Providers/AppServiceProvider.php": {
+    "mtime": 1791792612.0173311,
+    "seen": 1791796944.9146755,
+    "ast_hash": "8f251dbb238fc2c115147934f28543ab",
+    "semantic_hash": ""
+  },
+  "app/Providers/FortifyServiceProvider.php": {
+    "mtime": 1790216104.6544816,
+    "seen": 1791168094.4570482,
+    "ast_hash": "2697f72b4cf21b9a57a904e0f1cba7ff",
+    "semantic_hash": ""
+  },
+  "app/Rules/MasaKerjaMencukupi.php": {
+    "mtime": 1787933346.7315857,
+    "seen": 1791168094.4570532,
+    "ast_hash": "1541d0b4efbb27ec40be8a158f98e002",
+    "semantic_hash": ""
+  },
+  "app/Rules/SesuaiDurasiAlasanCuti.php": {
+    "mtime": 1791792612.0173311,
+    "seen": 1791796944.914689,
+    "ast_hash": "2faf87f67271f53184808d0db6b1f4c0",
+    "semantic_hash": ""
+  },
+  "app/Rules/SesuaiGenderJenisCuti.php": {
+    "mtime": 1788603887.7626557,
+    "seen": 1791168094.4570582,
+    "ast_hash": "a903a015a0f8b3c3fdf168576243fd85",
+    "semantic_hash": ""
+  },
+  "app/Rules/TidakBentrokJadwalShift.php": {
+    "mtime": 1787840705.3139806,
+    "seen": 1791168094.4570608,
+    "ast_hash": "51b025dd8d042e861e072fb84719ede0",
+    "semantic_hash": ""
+  },
+  "app/Rules/TidakOverlapPengajuanCuti.php": {
+    "mtime": 1787849757.0852795,
+    "seen": 1791168094.4570632,
+    "ast_hash": "54ddde8fa0d0da0e6b642ce1e4665a73",
+    "semantic_hash": ""
+  },
+  "app/Services/ApprovalService.php": {
+    "mtime": 1792129308.064412,
+    "seen": 1792129357.668114,
+    "ast_hash": "c02cd80b59d269b690a1c6ddad85ee28",
+    "semantic_hash": ""
+  },
+  "app/Services/CutiMassalService.php": {
+    "mtime": 1791792612.018331,
+    "seen": 1791796944.9147027,
+    "ast_hash": "c08effcbee436ae90b4b8bd9b3afff70",
+    "semantic_hash": ""
+  },
+  "app/Services/HariLiburService.php": {
+    "mtime": 1789440756.1829376,
+    "seen": 1791168094.4570708,
+    "ast_hash": "7bd24c20e4e6f19efa10ef7b5d9dfe3b",
+    "semantic_hash": ""
+  },
+  "app/Services/PengajuanCutiService.php": {
+    "mtime": 1792129308.0647554,
+    "seen": 1792129357.6681175,
+    "ast_hash": "6608bc26850ef44ecb069c29d08cb35b",
+    "semantic_hash": ""
+  },
+  "app/Services/PeriodeCutiService.php": {
+    "mtime": 1791868834.9575417,
+    "seen": 1791868935.3875115,
+    "ast_hash": "5b497330e6bd3d9bb9816c211e492616",
+    "semantic_hash": ""
+  },
+  "app/Services/ResetDataService.php": {
+    "mtime": 1789455530.1416779,
+    "seen": 1791168094.4570796,
+    "ast_hash": "1e860438f6cd1ad74f238db82bae6b83",
+    "semantic_hash": ""
+  },
+  "app/Services/SaldoCutiService.php": {
+    "mtime": 1791868834.959768,
+    "seen": 1791868935.3875163,
+    "ast_hash": "b8326ab9146d0c71e3f56aee4e35c282",
+    "semantic_hash": ""
+  },
+  "app/Support/ExcelStyler.php": {
+    "mtime": 1790248943.5718365,
+    "seen": 1791168094.4570847,
+    "ast_hash": "1818ae4c778923462da82b2c0ddfc61a",
+    "semantic_hash": ""
+  },
+  "app/Support/PetaRoleJabatan.php": {
+    "mtime": 1789456977.7530718,
+    "seen": 1791168094.4570873,
+    "ast_hash": "bbab4b2dbbc03d2b29a2c8105c5c97a1",
+    "semantic_hash": ""
+  },
+  "app/Support/SaldoSeverity.php": {
+    "mtime": 1792129521.7109222,
+    "seen": 1792129581.947767,
+    "ast_hash": "c80731cdd60f72e6bd3d8d5c14af0ed7",
+    "semantic_hash": ""
+  },
+  "artisan": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4570925,
+    "ast_hash": "e66bb13691f6184c762c196427d8e685",
+    "semantic_hash": ""
+  },
+  "boost.json": {
+    "mtime": 1787814264.985148,
+    "seen": 1791168094.457095,
+    "ast_hash": "128b632f5954d1e71951987883fc8022",
+    "semantic_hash": ""
+  },
+  "bootstrap/app.php": {
+    "mtime": 1791306516.1191626,
+    "seen": 1791306690.2020104,
+    "ast_hash": "fe8461e47b48d1719e970126b29a0ce6",
+    "semantic_hash": ""
+  },
+  "bootstrap/providers.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4570997,
+    "ast_hash": "ff696af1e434a9b604bfd14ecc0b2cb0",
+    "semantic_hash": ""
+  },
+  "components.json": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4571023,
+    "ast_hash": "c78a304d2e8f73ae0051a56276bfe9a4",
+    "semantic_hash": ""
+  },
+  "composer.json": {
+    "mtime": 1789540357.6539023,
+    "seen": 1791168094.4571047,
+    "ast_hash": "03eb03e921bcdcd0d18f4ed903786a3c",
+    "semantic_hash": ""
+  },
+  "config/app.php": {
+    "mtime": 1791792612.019887,
+    "seen": 1791796944.9147327,
+    "ast_hash": "9d7cef048a9fc62da7bfd9eaa84dbb97",
+    "semantic_hash": ""
+  },
+  "config/auth.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4571097,
+    "ast_hash": "26354511ab860b301f2a3554bc388b91",
+    "semantic_hash": ""
+  },
+  "config/cache.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.457112,
+    "ast_hash": "399c7a3b4bca7e3cb9b622828682ab56",
+    "semantic_hash": ""
+  },
+  "config/database.php": {
+    "mtime": 1788976916.5971184,
+    "seen": 1791168094.4571145,
+    "ast_hash": "79f98d6e9662e423293ed502e576386a",
+    "semantic_hash": ""
+  },
+  "config/dompdf.php": {
+    "mtime": 1787840212.0292876,
+    "seen": 1791168094.4571166,
+    "ast_hash": "cbb8e40794820b392eafeb512072db20",
+    "semantic_hash": ""
+  },
+  "config/excel.php": {
+    "mtime": 1787840783.0808883,
+    "seen": 1791168094.4571195,
+    "ast_hash": "8bc7ceb4c59ef7a2f6c5460918f18a44",
+    "semantic_hash": ""
+  },
+  "config/filesystems.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4571216,
+    "ast_hash": "c91cb768dba726da69f13d84c43f93e4",
+    "semantic_hash": ""
+  },
+  "config/fortify.php": {
+    "mtime": 1787851850.8882341,
+    "seen": 1791168094.457124,
+    "ast_hash": "3117cfcbbf102a9d7973d1638d1f3fb5",
+    "semantic_hash": ""
+  },
+  "config/inertia.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4571264,
+    "ast_hash": "ff534f30edf37996d53d35977f999c64",
+    "semantic_hash": ""
+  },
+  "config/logging.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.457129,
+    "ast_hash": "57cabdaa04bc44810fedbea9ce77b052",
+    "semantic_hash": ""
+  },
+  "config/mail.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4571311,
+    "ast_hash": "18601a927b48d38337ba2077426a7d60",
+    "semantic_hash": ""
+  },
+  "config/permission.php": {
+    "mtime": 1787840211.7056668,
+    "seen": 1791168094.4571545,
+    "ast_hash": "4e1b4f3cf77c21e8b979bc511af1d4b8",
+    "semantic_hash": ""
+  },
+  "config/queue.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4571579,
+    "ast_hash": "f98ce92e7bf51db1fabaf8a30e12fc5a",
+    "semantic_hash": ""
+  },
+  "config/services.php": {
+    "mtime": 1793069617.9757977,
+    "seen": 1793069661.0159893,
+    "ast_hash": "f614bf2141578d0eaa5c4f27bcd3ff2a",
+    "semantic_hash": ""
+  },
+  "config/session.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4571629,
+    "ast_hash": "61dc261238a9dfcefab26b733d903ba2",
+    "semantic_hash": ""
+  },
+  "database/factories/AlasanCutiFactory.php": {
+    "mtime": 1787929367.6551385,
+    "seen": 1791168094.4571652,
+    "ast_hash": "321b87da1fb08b84a067d98a6118829b",
+    "semantic_hash": ""
+  },
+  "database/factories/ApprovalFactory.php": {
+    "mtime": 1787840424.9977162,
+    "seen": 1791168094.4571679,
+    "ast_hash": "f0063cb25ae55ae48ef41c05b0dd6f39",
+    "semantic_hash": ""
+  },
+  "database/factories/CutiMassalFactory.php": {
+    "mtime": 1789061511.8553972,
+    "seen": 1791168094.4571705,
+    "ast_hash": "9aac1b64c2edfdf67cf5cea2ec2f01dc",
+    "semantic_hash": ""
+  },
+  "database/factories/DepartemenFactory.php": {
+    "mtime": 1787840408.6009371,
+    "seen": 1791168094.4571726,
+    "ast_hash": "054f5f09d374034b50b51f57f06e8058",
+    "semantic_hash": ""
+  },
+  "database/factories/HariLiburFactory.php": {
+    "mtime": 1788603747.0705774,
+    "seen": 1791168094.4571753,
+    "ast_hash": "7b6da7bcc79e0842bc5f73cc7ca764cd",
+    "semantic_hash": ""
+  },
+  "database/factories/JabatanFactory.php": {
+    "mtime": 1787840410.249915,
+    "seen": 1791168094.4571779,
+    "ast_hash": "01d8f41cff9ee16b3137a0dd9b06da43",
+    "semantic_hash": ""
+  },
+  "database/factories/JadwalShiftFactory.php": {
+    "mtime": 1787840426.719693,
+    "seen": 1791168094.4571805,
+    "ast_hash": "8f147727dbdee47fb464484ab8ab229d",
+    "semantic_hash": ""
+  },
+  "database/factories/JenisCutiFactory.php": {
+    "mtime": 1787929361.6830952,
+    "seen": 1791168094.4571826,
+    "ast_hash": "0fbfca5c10742abd50322d00b3b73d55",
+    "semantic_hash": ""
+  },
+  "database/factories/KaryawanFactory.php": {
+    "mtime": 1789350537.7989652,
+    "seen": 1791168094.4571853,
+    "ast_hash": "50c24e0f889363f7fadf445b72db44b9",
+    "semantic_hash": ""
+  },
+  "database/factories/KompensasiCutiFactory.php": {
+    "mtime": 1788603758.6878512,
+    "seen": 1791168094.457188,
+    "ast_hash": "2d14d0ffde9ac3539c1800e3a9406407",
+    "semantic_hash": ""
+  },
+  "database/factories/KonfirmasiKontrakCutiFactory.php": {
+    "mtime": 1788603763.747535,
+    "seen": 1791168094.4571905,
+    "ast_hash": "da49ecd735d8b4ddf4944e1278e5b1f5",
+    "semantic_hash": ""
+  },
+  "database/factories/PengajuanCutiFactory.php": {
+    "mtime": 1788603778.4088335,
+    "seen": 1791168094.4571927,
+    "ast_hash": "bbda5592ccde6316b9d2952d51c319e5",
+    "semantic_hash": ""
+  },
+  "database/factories/RiwayatSaldoCutiFactory.php": {
+    "mtime": 1788603752.5062375,
+    "seen": 1791168094.4571955,
+    "ast_hash": "45688676a973c837975b706c36db1a17",
+    "semantic_hash": ""
+  },
+  "database/factories/SaldoCutiFactory.php": {
+    "mtime": 1787840783.1489336,
+    "seen": 1791168094.4571981,
+    "ast_hash": "c93aa26b37bc1643c75e26721289d167",
+    "semantic_hash": ""
+  },
+  "database/factories/ShiftFactory.php": {
+    "mtime": 1787840411.8898928,
+    "seen": 1791168094.4572012,
+    "ast_hash": "0f7f8f577f57a148efbdcbdcd2436f83",
+    "semantic_hash": ""
+  },
+  "database/factories/UserFactory.php": {
+    "mtime": 1787813872.3737102,
+    "seen": 1791168094.4572036,
+    "ast_hash": "7952c66b16b4a327e48959f054e6554f",
+    "semantic_hash": ""
+  },
+  "database/migrations/0001_01_01_000000_create_users_table.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4572062,
+    "ast_hash": "138280095e9d19f2ba6fb830415602e2",
+    "semantic_hash": ""
+  },
+  "database/migrations/0001_01_01_000001_create_cache_table.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4572089,
+    "ast_hash": "6952fb360e8d8b84e6f47573e4459d48",
+    "semantic_hash": ""
+  },
+  "database/migrations/0001_01_01_000002_create_jobs_table.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.457211,
+    "ast_hash": "b0603b9fa0a27473971da76bb0c42ee1",
+    "semantic_hash": ""
+  },
+  "database/migrations/2024_01_01_000000_create_passkeys_table.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4572136,
+    "ast_hash": "f20f84021dffe6b66d32b088fc2a4231",
+    "semantic_hash": ""
+  },
+  "database/migrations/2025_08_14_170933_add_two_factor_columns_to_users_table.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4572165,
+    "ast_hash": "1d9b3089ef12e1c5dc9e40082664dcfc",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_27_141652_create_permission_tables.php": {
+    "mtime": 1787840211.7065766,
+    "seen": 1791168094.457219,
+    "ast_hash": "d0ce4624021f5b3121a91c406a5f79f2",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_27_141748_create_departemens_table.php": {
+    "mtime": 1787840276.0147524,
+    "seen": 1791168094.457221,
+    "ast_hash": "ac3920d80b2ce1f87ed42d5340dfaef9",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_27_141749_create_jabatans_table.php": {
+    "mtime": 1787840277.6567297,
+    "seen": 1791168094.457224,
+    "ast_hash": "0e6710ec46889616ad129e81b3ef6070",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_27_141750_create_shifts_table.php": {
+    "mtime": 1787840279.2937074,
+    "seen": 1791168094.4572263,
+    "ast_hash": "aadd9a93cd163b30a5a99e28d83020e2",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_27_141751_create_jenis_cutis_table.php": {
+    "mtime": 1787840281.488677,
+    "seen": 1791168094.457229,
+    "ast_hash": "acc0697af75f8be6cf9cb321e762ab0c",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_27_141752_create_karyawans_table.php": {
+    "mtime": 1787840307.251323,
+    "seen": 1791168094.457231,
+    "ast_hash": "9bf3e66284cb6811b96684676f99e144",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_27_141753_add_karyawan_id_to_users_table.php": {
+    "mtime": 1787840286.9446023,
+    "seen": 1791168094.4572337,
+    "ast_hash": "2425fee064adf2a1839b525369614af4",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_27_141754_create_pengajuan_cutis_table.php": {
+    "mtime": 1787840289.6705647,
+    "seen": 1791168094.4572363,
+    "ast_hash": "39dba6a7a2549e3852e1f1ad8a150419",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_27_141755_create_saldo_cutis_table.php": {
+    "mtime": 1787840292.3945272,
+    "seen": 1791168094.4572384,
+    "ast_hash": "5acb1d2b33a6f406c02113f059245ffe",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_27_141756_create_approvals_table.php": {
+    "mtime": 1787840295.1434894,
+    "seen": 1791168094.4572408,
+    "ast_hash": "d5301dc8bea3b516b935a7e2a3ce4c17",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_27_141757_create_jadwal_shifts_table.php": {
+    "mtime": 1787840297.220461,
+    "seen": 1791168094.4572437,
+    "ast_hash": "c5d401122af82bb0b51e43f3151ccce7",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_27_142636_create_notifications_table.php": {
+    "mtime": 1787840796.7484694,
+    "seen": 1791168094.457246,
+    "ast_hash": "fd396841759fbd5474246c762ebef18b",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_28_150006_alter_kuota_default_and_add_masa_kerja_minimal_bulan_to_jenis_cutis_table.php": {
+    "mtime": 1787929232.5626023,
+    "seen": 1791168094.4572484,
+    "ast_hash": "7f8dc4e7d1b62a80c83d586e9c110ca8",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_28_150007_alter_kuota_and_sisa_nullable_on_saldo_cutis_table.php": {
+    "mtime": 1787929233.1455512,
+    "seen": 1791168094.4572508,
+    "ast_hash": "e17826f99da5781a68063601488987a5",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_28_150008_create_alasan_cutis_table.php": {
+    "mtime": 1787929238.0397134,
+    "seen": 1791168094.4572535,
+    "ast_hash": "48e7e082d8fd001725886a21d8d9ae97",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_28_150009_add_alasan_cuti_id_to_pengajuan_cutis_table.php": {
+    "mtime": 1787929238.1439488,
+    "seen": 1791168094.4572618,
+    "ast_hash": "d1107988576cf563e99b5816608412ae",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_08_28_154730_add_jam_lembur_and_catatan_lembur_to_jadwal_shifts_table.php": {
+    "mtime": 1787932053.896057,
+    "seen": 1791168094.4572647,
+    "ast_hash": "4d3f31b1a9a05c495381e38b9da329b5",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_05_172001_add_jenis_kelamin_dan_tipe_ke_karyawans_table.php": {
+    "mtime": 1788603622.267926,
+    "seen": 1791168094.4572673,
+    "ast_hash": "ef4126bc7d5a05d594d9712d43a4c40c",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_05_172002_add_khusus_gender_ke_jenis_cutis_table.php": {
+    "mtime": 1788603626.2818375,
+    "seen": 1791168094.4572697,
+    "ast_hash": "7a044ed3664b350f7b00a0344f5dcc75",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_05_172003_create_hari_liburs_table.php": {
+    "mtime": 1788603630.777738,
+    "seen": 1791168094.457272,
+    "ast_hash": "908b5c22c7cd9fbad055a708fbf357bb",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_05_172004_add_periode_dan_ditutup_pada_ke_saldo_cutis_table.php": {
+    "mtime": 1788603636.0326223,
+    "seen": 1791168094.4572747,
+    "ast_hash": "b5cfdcce13ccb46f4c1491175af245f6",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_05_172005_create_riwayat_saldo_cutis_table.php": {
+    "mtime": 1788603649.0763345,
+    "seen": 1791168094.4572773,
+    "ast_hash": "9022b0b0eff4c87015b02dca7b98bcee",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_05_172006_create_kompensasi_cutis_table.php": {
+    "mtime": 1788603656.104158,
+    "seen": 1791168094.4572794,
+    "ast_hash": "22f71279d86e347198ebaf692e9a5285",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_05_172007_create_konfirmasi_kontrak_cutis_table.php": {
+    "mtime": 1788603661.108018,
+    "seen": 1791168094.457282,
+    "ast_hash": "6d3389631b8748c14edfd413664d6498",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_05_172008_add_kolom_penyesuaian_manual_ke_saldo_cutis_table.php": {
+    "mtime": 1788603665.886884,
+    "seen": 1791168094.4572847,
+    "ast_hash": "fbf11ecd5868d773d3ee09b04a77b860",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_05_172009_add_jumlah_hari_kalender_ke_pengajuan_cutis_table.php": {
+    "mtime": 1788603675.0906265,
+    "seen": 1791168094.457287,
+    "ast_hash": "c7a8eee470e78d059ecbd50ea8f41380",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_05_172010_drop_unique_tahun_dari_saldo_cutis_table.php": {
+    "mtime": 1788604534.566566,
+    "seen": 1791168094.4572897,
+    "ast_hash": "8814c82309125cb60c8923c50280516f",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_10_173105_alter_terpakai_dan_sisa_signed_on_saldo_cutis_table.php": {
+    "mtime": 1789061472.9509974,
+    "seen": 1791168094.4572923,
+    "ast_hash": "136ffc010869eeee0d2ca08031c524f5",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_10_173106_create_cuti_massals_table.php": {
+    "mtime": 1789061477.587926,
+    "seen": 1791168094.4572947,
+    "ast_hash": "d6683bb866dbc3374df5b758add3aa7d",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_10_173107_add_cuti_massal_id_to_pengajuan_cutis_table.php": {
+    "mtime": 1789061480.7698767,
+    "seen": 1791168094.4572968,
+    "ast_hash": "0b15d97072703b6e8a0f8634b7df6696",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_14_021107_add_minimal_hari_pengajuan_ke_jenis_cutis_table.php": {
+    "mtime": 1789351888.099767,
+    "seen": 1791168094.4572995,
+    "ast_hash": "1abea3bb4a7fd91b2133e7a38c47fecf",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_14_021108_add_mendadak_ke_pengajuan_cutis_table.php": {
+    "mtime": 1789351894.0324101,
+    "seen": 1791168094.4573019,
+    "ast_hash": "6d8cbd2ffa4630eb7115e72880e1d36e",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_15_053519_add_bonus_kuota_kontrak_pertama_ke_pengajuan_cutis_table.php": {
+    "mtime": 1789450545.6785789,
+    "seen": 1791168094.457304,
+    "ast_hash": "39adfa4d27ce573d7b61f3889f580534",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_09_15_063408_make_approver_id_nullable_ke_approvals_table.php": {
+    "mtime": 1789454069.134851,
+    "seen": 1791168094.4573064,
+    "ast_hash": "a11177c09dce11e3e5a51a07b4744b72",
+    "semantic_hash": ""
+  },
+  "database/seeders/AlasanCutiSeeder.php": {
+    "mtime": 1787929358.2451353,
+    "seen": 1791168094.457309,
+    "ast_hash": "1fe0badcdcb968b982121c5bc365239a",
+    "semantic_hash": ""
+  },
+  "database/seeders/DatabaseSeeder.php": {
+    "mtime": 1787929359.9104629,
+    "seen": 1791168094.4573114,
+    "ast_hash": "4e76f3cd3f83d3d317667ce786453d31",
+    "semantic_hash": ""
+  },
+  "database/seeders/DepartemenSeeder.php": {
+    "mtime": 1787920815.8734646,
+    "seen": 1791168094.457314,
+    "ast_hash": "952036a1a655374c57d85eafa46f0433",
+    "semantic_hash": ""
+  },
+  "database/seeders/JabatanSeeder.php": {
+    "mtime": 1787933226.9263036,
+    "seen": 1791168094.4573164,
+    "ast_hash": "bbc1606e01ba1713b8c5d7901ed96cb2",
+    "semantic_hash": ""
+  },
+  "database/seeders/JenisCutiSeeder.php": {
+    "mtime": 1791853723.2075179,
+    "seen": 1791853811.4947808,
+    "ast_hash": "936c119344294d76b1f3857637d990af",
+    "semantic_hash": ""
+  },
+  "database/seeders/KaryawanSeeder.php": {
+    "mtime": 1789357814.9645603,
+    "seen": 1791168094.4573214,
+    "ast_hash": "08083fb578e91ddc12147b8793e14ed7",
+    "semantic_hash": ""
+  },
+  "database/seeders/RoleSeeder.php": {
+    "mtime": 1789061646.5073197,
+    "seen": 1791168094.457324,
+    "ast_hash": "c7c8cf7d405ef7217fba6d1d5053069b",
+    "semantic_hash": ""
+  },
+  "database/seeders/ShiftSeeder.php": {
+    "mtime": 1787908060.4264338,
+    "seen": 1791168094.4573264,
+    "ast_hash": "aad8f6121931d1fc485894fbf08f1759",
+    "semantic_hash": ""
+  },
+  "eslint.config.js": {
+    "mtime": 1787813872.383365,
+    "seen": 1791168094.4573288,
+    "ast_hash": "ecb97dfbdde96234761d89d3857e570c",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1791183337.379712,
+    "seen": 1791189260.77726,
+    "ast_hash": "3edeff861b86e40a98e28e493e250bf2",
+    "semantic_hash": ""
+  },
+  "pint.json": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4573336,
+    "ast_hash": "9c531f6d95560c5446b38c900f7061a8",
+    "semantic_hash": ""
+  },
+  "public/index.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4573364,
+    "ast_hash": "d8eda274115af5fd2aaa8230af329ef7",
+    "semantic_hash": ""
+  },
+  "resources/js/app.tsx": {
+    "mtime": 1791792612.0833302,
+    "seen": 1791796944.9149246,
+    "ast_hash": "feb246d53a7d3a17ccc751cc362d2505",
+    "semantic_hash": ""
+  },
+  "resources/js/components/alert-error.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4573414,
+    "ast_hash": "396c8d1400aa30585d15da210a316c80",
+    "semantic_hash": ""
+  },
+  "resources/js/components/app-content.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4573438,
+    "ast_hash": "499c8657bfc7c17680d4e7c5b87b06b1",
+    "semantic_hash": ""
+  },
+  "resources/js/components/app-header.tsx": {
+    "mtime": 1791792612.0833302,
+    "seen": 1791796944.9149313,
+    "ast_hash": "d3ce431168b986998c78afd03dffb118",
+    "semantic_hash": ""
+  },
+  "resources/js/components/app-logo-full.tsx": {
+    "mtime": 1789546257.1509182,
+    "seen": 1791168094.4573488,
+    "ast_hash": "d24d2ba4801cfd4916067b0e9c5995d2",
+    "semantic_hash": ""
+  },
+  "resources/js/components/app-logo-icon.tsx": {
+    "mtime": 1787846527.4963577,
+    "seen": 1791168094.4573514,
+    "ast_hash": "1c58598459c2f783ad52016991449c81",
+    "semantic_hash": ""
+  },
+  "resources/js/components/app-logo.tsx": {
+    "mtime": 1787846535.909252,
+    "seen": 1791168094.457354,
+    "ast_hash": "c1947efec360291f200b05d19b6b64d0",
+    "semantic_hash": ""
+  },
+  "resources/js/components/app-shell.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4573562,
+    "ast_hash": "43d57ddd508e18190ffeca0a11f5e0e4",
+    "semantic_hash": ""
+  },
+  "resources/js/components/app-sidebar-header.tsx": {
+    "mtime": 1791792612.0833302,
+    "seen": 1791796944.9149418,
+    "ast_hash": "4eb1412412b68d32959046937a85ff3c",
+    "semantic_hash": ""
+  },
+  "resources/js/components/app-sidebar.tsx": {
+    "mtime": 1791792612.0843039,
+    "seen": 1791796944.9149435,
+    "ast_hash": "f272ba59c6f01cfe5b5f075db2a05942",
+    "semantic_hash": ""
+  },
+  "resources/js/components/appearance-tabs.tsx": {
+    "mtime": 1791792612.0843039,
+    "seen": 1791796944.9149458,
+    "ast_hash": "9aa46e25dd03b0eef4d724d56adcb806",
+    "semantic_hash": ""
+  },
+  "resources/js/components/breadcrumbs.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.457366,
+    "ast_hash": "b4bea168fb49a02e768a11a307a9ca21",
+    "semantic_hash": ""
+  },
+  "resources/js/components/delete-user.tsx": {
+    "mtime": 1791792612.0848067,
+    "seen": 1791796944.9149525,
+    "ast_hash": "7a6b01f51273728632446f554ecb259e",
+    "semantic_hash": ""
+  },
+  "resources/js/components/heading.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4573712,
+    "ast_hash": "ad277bd7f2e57ccad43e9077fc25e082",
+    "semantic_hash": ""
+  },
+  "resources/js/components/input-error.tsx": {
+    "mtime": 1791792612.0848067,
+    "seen": 1791796944.9149582,
+    "ast_hash": "550bf0e4c77e9436e784c48c84677026",
+    "semantic_hash": ""
+  },
+  "resources/js/components/manage-passkeys.tsx": {
+    "mtime": 1791792612.0851376,
+    "seen": 1791796944.9149604,
+    "ast_hash": "c2e04b2a5c5635010d06446c4406e65c",
+    "semantic_hash": ""
+  },
+  "resources/js/components/manage-two-factor.tsx": {
+    "mtime": 1791792612.0851376,
+    "seen": 1791796944.9149625,
+    "ast_hash": "94bdcd4a2ef305524fd7b3bf3cd60ff3",
+    "semantic_hash": ""
+  },
+  "resources/js/components/master-nav.tsx": {
+    "mtime": 1789438433.4057314,
+    "seen": 1791168094.4573808,
+    "ast_hash": "e025a9b9a10094ab7f9b46adec083254",
+    "semantic_hash": ""
+  },
+  "resources/js/components/nav-footer.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4573832,
+    "ast_hash": "fd6e1f918479834e9e7561a64fb44ce7",
+    "semantic_hash": ""
+  },
+  "resources/js/components/nav-main.tsx": {
+    "mtime": 1791792612.0851376,
+    "seen": 1791796944.9149687,
+    "ast_hash": "70a617b4acbe11f54ad666cc8d4d604c",
+    "semantic_hash": ""
+  },
+  "resources/js/components/nav-user.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.457388,
+    "ast_hash": "139cc3e475910384da1cfd9c7470b0c8",
+    "semantic_hash": ""
+  },
+  "resources/js/components/notification-bell.tsx": {
+    "mtime": 1787842315.5867953,
+    "seen": 1791168094.4573903,
+    "ast_hash": "d413b85ca304a47092c59dc3ea718aca",
+    "semantic_hash": ""
+  },
+  "resources/js/components/pagination.tsx": {
+    "mtime": 1791171204.6576304,
+    "seen": 1791171800.109503,
+    "ast_hash": "35f78dced326097b1810a885515e1e1a",
+    "semantic_hash": ""
+  },
+  "resources/js/components/passkey-item.tsx": {
+    "mtime": 1791792612.0851376,
+    "seen": 1791796944.9149776,
+    "ast_hash": "ae616bf70668565966eefbbc8d9146c7",
+    "semantic_hash": ""
+  },
+  "resources/js/components/passkey-register.tsx": {
+    "mtime": 1791792612.0851376,
+    "seen": 1791796944.9149797,
+    "ast_hash": "1c7a853b8fadfffbd805105ad50dba86",
+    "semantic_hash": ""
+  },
+  "resources/js/components/passkey-verify.tsx": {
+    "mtime": 1791792612.0851376,
+    "seen": 1791796944.9149814,
+    "ast_hash": "8543406ece507d2aacf69f4ecceeb726",
+    "semantic_hash": ""
+  },
+  "resources/js/components/password-input.tsx": {
+    "mtime": 1791792612.08533,
+    "seen": 1791796944.9149833,
+    "ast_hash": "e06e5e2198ab1590a5b29ae56113c713",
+    "semantic_hash": ""
+  },
+  "resources/js/components/saldo-cuti-meter.tsx": {
+    "mtime": 1792130046.157821,
+    "seen": 1792130065.7253766,
+    "ast_hash": "cddda84c289f70b0e8bef7782716be4b",
+    "semantic_hash": ""
+  },
+  "resources/js/components/status-badge.tsx": {
+    "mtime": 1787841758.975206,
+    "seen": 1791168094.4574077,
+    "ast_hash": "7cf0894622188c3ef952b69fae31a483",
+    "semantic_hash": ""
+  },
+  "resources/js/components/text-link.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.45741,
+    "ast_hash": "9268d8e028f79564dcb670cc40a1070a",
+    "semantic_hash": ""
+  },
+  "resources/js/components/theme-color-picker.tsx": {
+    "mtime": 1789373556.1085422,
+    "seen": 1791168094.4574127,
+    "ast_hash": "bfd02117a5bce64a0f369a577b199f64",
+    "semantic_hash": ""
+  },
+  "resources/js/components/theme-toggle.tsx": {
+    "mtime": 1789039652.6548915,
+    "seen": 1791168094.4574149,
+    "ast_hash": "f4b951aada0cb436b3736f27db89406f",
+    "semantic_hash": ""
+  },
+  "resources/js/components/two-factor-recovery-codes.tsx": {
+    "mtime": 1791792612.0864694,
+    "seen": 1791796944.915006,
+    "ast_hash": "e713d2d8adc5f8f4266c07a406d50861",
+    "semantic_hash": ""
+  },
+  "resources/js/components/two-factor-setup-modal.tsx": {
+    "mtime": 1791792612.0864694,
+    "seen": 1791796944.9150078,
+    "ast_hash": "9960a2cd882629ab95913493d4e4906c",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/alert.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574223,
+    "ast_hash": "7619350dd91783451f14c705e6b82d43",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/avatar.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574246,
+    "ast_hash": "ddab5d536877f962065019e7175e6a16",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/badge.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574273,
+    "ast_hash": "495ef4f29185f54e73e38ece6596676c",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/breadcrumb.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574301,
+    "ast_hash": "ad6287b10391b337221fa24355cc79b4",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/button.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574323,
+    "ast_hash": "f8f78a8454bf1b53e8cf1c25069439e9",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/card.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574347,
+    "ast_hash": "46788dcb5cff09b5e60b1833d2eed458",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/checkbox.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.457437,
+    "ast_hash": "69875fff3945a5fd78860762e46fe158",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/collapsible.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574394,
+    "ast_hash": "e978727a4d734730f3b7bfd0c2e22ea6",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/dialog.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574423,
+    "ast_hash": "03d5590e02a1c9f96f838983776caf73",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/dropdown-menu.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574447,
+    "ast_hash": "351c11e43e827503aede8fc3df60bb5a",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/icon.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.457447,
+    "ast_hash": "d9f18f70339bb79b21ad186e679742f3",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/input-otp.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574497,
+    "ast_hash": "adb62bf70abffa7262c5c6fd2d32d5c7",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/input.tsx": {
+    "mtime": 1789445428.5899196,
+    "seen": 1791168094.4574523,
+    "ast_hash": "d7efa43acf28f5264d5d293fef3f62d3",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/label.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574547,
+    "ast_hash": "338ea3373a60e2ad7221a5be399a95d6",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/navigation-menu.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574568,
+    "ast_hash": "e90df20a45a4088c1999383d0fb8d6bc",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/placeholder-pattern.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574592,
+    "ast_hash": "e20d946bc857e61a360206d5899b4952",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/select.tsx": {
+    "mtime": 1791792612.0864694,
+    "seen": 1791796944.9150453,
+    "ast_hash": "6c416f59597ce8819da04a8ea0e151a0",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/separator.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574647,
+    "ast_hash": "50aa7b24462aa2159921b962b033f5a1",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/sheet.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.457467,
+    "ast_hash": "97031edcca0e69b11e207d85fafcaae7",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/sidebar.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574697,
+    "ast_hash": "ac155b0010ba8090b317627265ab3587",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/skeleton.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.457472,
+    "ast_hash": "218065cf50eada638a5ef54fb44d9646",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/sonner.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574742,
+    "ast_hash": "7c51a3cfbf07fdee2656a8cfd2ecffd5",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/spinner.tsx": {
+    "mtime": 1791792612.0864694,
+    "seen": 1791796944.9150577,
+    "ast_hash": "5c963a2529be4b88f12196452072c89f",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/textarea.tsx": {
+    "mtime": 1787841462.821065,
+    "seen": 1791168094.457479,
+    "ast_hash": "18bbd3e383a9b68534b0943671264216",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/toggle-group.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574814,
+    "ast_hash": "be3f0c46882b26cbcf052f53d9295723",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/toggle.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574838,
+    "ast_hash": "338b5ffeddd29f83f5562ca0da2396fe",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/tooltip.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4574864,
+    "ast_hash": "8c0542c180664fa0f13646be732363a9",
+    "semantic_hash": ""
+  },
+  "resources/js/components/unlimited-badge.tsx": {
+    "mtime": 1787934720.3537915,
+    "seen": 1791168094.457489,
+    "ast_hash": "0b4258815a073e40a1646d4dab96ca0b",
+    "semantic_hash": ""
+  },
+  "resources/js/components/user-info.tsx": {
+    "mtime": 1791792612.0864694,
+    "seen": 1791796944.91507,
+    "ast_hash": "ebc80997931bc4a18568e254e62dc09c",
+    "semantic_hash": ""
+  },
+  "resources/js/components/user-menu-content.tsx": {
+    "mtime": 1791792612.0864694,
+    "seen": 1791796944.9150717,
+    "ast_hash": "4571a542c302c33f997275430ce265ff",
+    "semantic_hash": ""
+  },
+  "resources/js/hooks/use-appearance.tsx": {
+    "mtime": 1789039674.8595178,
+    "seen": 1791168094.4574971,
+    "ast_hash": "d15876b543da3d0cb820bc3b8e934dfc",
+    "semantic_hash": ""
+  },
+  "resources/js/hooks/use-clipboard.ts": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4575,
+    "ast_hash": "6811ca6171b243d1ee3810b8b3dfb591",
+    "semantic_hash": ""
+  },
+  "resources/js/hooks/use-current-url.ts": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4575024,
+    "ast_hash": "21e6d4e5382112bc29ff111b5efe6e35",
+    "semantic_hash": ""
+  },
+  "resources/js/hooks/use-flash-toast.ts": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4575052,
+    "ast_hash": "fb32bc7239a68b9da34019676695ee04",
+    "semantic_hash": ""
+  },
+  "resources/js/hooks/use-initials.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4575083,
+    "ast_hash": "7bb1404a1dfff0ecb162c7590d1815b4",
+    "semantic_hash": ""
+  },
+  "resources/js/hooks/use-mobile-navigation.ts": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.457511,
+    "ast_hash": "492eec9bce9ad3ae29118c8298765c38",
+    "semantic_hash": ""
+  },
+  "resources/js/hooks/use-mobile.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4575136,
+    "ast_hash": "867c2034160dc07267ab237e51e2452b",
+    "semantic_hash": ""
+  },
+  "resources/js/hooks/use-theme.tsx": {
+    "mtime": 1789373538.746934,
+    "seen": 1791168094.457516,
+    "ast_hash": "99f6f996ce2877e9c183852d4bbe91c1",
+    "semantic_hash": ""
+  },
+  "resources/js/hooks/use-two-factor-auth.ts": {
+    "mtime": 1791792612.0864694,
+    "seen": 1791796944.9150918,
+    "ast_hash": "60f6caf1fa4679ef7eed8df9087ab5f7",
+    "semantic_hash": ""
+  },
+  "resources/js/layouts/app-layout.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4575212,
+    "ast_hash": "052db20145ee8f0c7ee4171c284cbb0e",
+    "semantic_hash": ""
+  },
+  "resources/js/layouts/app/app-header-layout.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4575238,
+    "ast_hash": "2df9cb95fd63e716420d0fb69097e25f",
+    "semantic_hash": ""
+  },
+  "resources/js/layouts/app/app-sidebar-layout.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4575262,
+    "ast_hash": "0663275e0b83a087b6b1cf642b972148",
+    "semantic_hash": ""
+  },
+  "resources/js/layouts/auth-layout.tsx": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4575288,
+    "ast_hash": "8ad4492ff3b9a4accb5f1b73201f4ce5",
+    "semantic_hash": ""
+  },
+  "resources/js/layouts/auth/auth-card-layout.tsx": {
+    "mtime": 1787846556.824989,
+    "seen": 1791168094.4575315,
+    "ast_hash": "d454359e5000414acb570b2e84e12f05",
+    "semantic_hash": ""
+  },
+  "resources/js/layouts/auth/auth-simple-layout.tsx": {
+    "mtime": 1789546714.3683362,
+    "seen": 1791168094.4575336,
+    "ast_hash": "8bdf9ae126386f2ab31ab94802043192",
+    "semantic_hash": ""
+  },
+  "resources/js/layouts/auth/auth-split-layout.tsx": {
+    "mtime": 1787846553.1390352,
+    "seen": 1791168094.4575362,
+    "ast_hash": "2c2b9a6cabb45154f7be364726b128e1",
+    "semantic_hash": ""
+  },
+  "resources/js/layouts/settings/layout.tsx": {
+    "mtime": 1791792612.0864694,
+    "seen": 1791796944.9151137,
+    "ast_hash": "31144ab1dee2d38bceddbcc62e573247",
+    "semantic_hash": ""
+  },
+  "resources/js/lib/format.ts": {
+    "mtime": 1791792612.0864694,
+    "seen": 1791796944.9151165,
+    "ast_hash": "e7ec5a1ca4dce596dd32cc98356aecee",
+    "semantic_hash": ""
+  },
+  "resources/js/lib/saldo-severity.ts": {
+    "mtime": 1792129522.5932217,
+    "seen": 1792129581.947962,
+    "ast_hash": "8710fc4ea3f9342f69d802e3be6bfe98",
+    "semantic_hash": ""
+  },
+  "resources/js/lib/utils.ts": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.457546,
+    "ast_hash": "124815982d54f0f237a784890b464a1b",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/approval/index.tsx": {
+    "mtime": 1791792612.0881824,
+    "seen": 1791796944.9151294,
+    "ast_hash": "80f32a84dbf8859302eaf6df8ede30ce",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/approval/show.tsx": {
+    "mtime": 1792123123.5809085,
+    "seen": 1792123226.4476616,
+    "ast_hash": "270e3ab4044988013bbcfb9e3e9a48bc",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/auth/confirm-password.tsx": {
+    "mtime": 1791792612.0881824,
+    "seen": 1791796944.9151342,
+    "ast_hash": "ae8b055beeac869290465e44b346bb2d",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/auth/forgot-password.tsx": {
+    "mtime": 1791792612.0881824,
+    "seen": 1791796944.915136,
+    "ast_hash": "a46b400df4ac079ded75dfa17273f1df",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/auth/login.tsx": {
+    "mtime": 1791792612.0881824,
+    "seen": 1791796944.915138,
+    "ast_hash": "2bc85e29258b210dc359d5cbb782c91a",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/auth/reset-password.tsx": {
+    "mtime": 1791792612.0881824,
+    "seen": 1791796944.9151402,
+    "ast_hash": "e0cc43a070b25c9cd463b9bca5db4118",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/auth/two-factor-challenge.tsx": {
+    "mtime": 1791792612.08833,
+    "seen": 1791796944.915142,
+    "ast_hash": "d499d18a1e69a1ded84e2603e886d30b",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/auth/verify-email.tsx": {
+    "mtime": 1791792612.08833,
+    "seen": 1791796944.915144,
+    "ast_hash": "22893d546cb750165f839cd8727014aa",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/cuti/ajukan-mendadak.tsx": {
+    "mtime": 1791853494.0588398,
+    "seen": 1791853607.6853392,
+    "ast_hash": "68d430f172de520e4c4fe4bca14006a9",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/cuti/ajukan.tsx": {
+    "mtime": 1791854381.3943994,
+    "seen": 1791854416.273444,
+    "ast_hash": "8a8c82fc67ea4978d8e31862e9057e28",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/cuti/index.tsx": {
+    "mtime": 1791792612.08833,
+    "seen": 1791796944.9151506,
+    "ast_hash": "aa74d27dbac1bcc90d0b7fb875015e1d",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/cuti/kompensasi/index.tsx": {
+    "mtime": 1791792612.08933,
+    "seen": 1791796944.915155,
+    "ast_hash": "0f50cb84c3d419dbd6a2e41c4b6c0238",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/cuti/konfirmasi-kontrak/index.tsx": {
+    "mtime": 1791792612.08933,
+    "seen": 1791796944.9151573,
+    "ast_hash": "b66301188d7a58197f586ad9719783c8",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/cuti/massal/create.tsx": {
+    "mtime": 1791167046.1375113,
+    "seen": 1791168094.457582,
+    "ast_hash": "09eb677324ab944ae9324f9e7a4b0972",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/cuti/massal/index.tsx": {
+    "mtime": 1791167046.1382086,
+    "seen": 1791168094.4575849,
+    "ast_hash": "e81ccf63d3a15edc47af811a4d4135d9",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/cuti/massal/show.tsx": {
+    "mtime": 1791792612.08933,
+    "seen": 1791796944.915164,
+    "ast_hash": "5d076b9ca1ab5c27405b817d07205215",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/cuti/show.tsx": {
+    "mtime": 1791792612.08933,
+    "seen": 1791796944.915166,
+    "ast_hash": "178d8bf519ed76b48d1ea5632a413e03",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/dashboard.tsx": {
+    "mtime": 1791167046.1340563,
+    "seen": 1791168094.457592,
+    "ast_hash": "6872f87217c1e955d7c8a0e4f4f97ee5",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/jadwal-shift/calendar.tsx": {
+    "mtime": 1791792612.09033,
+    "seen": 1791796944.9151723,
+    "ast_hash": "f82af9f79084b5d3252dd55ff670dcfd",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/laporan/index.tsx": {
+    "mtime": 1791852683.3695657,
+    "seen": 1791852743.9743028,
+    "ast_hash": "a40b9e5bd8be387a84cf3a9b821e2f60",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/laporan/saldo-cuti-riwayat.tsx": {
+    "mtime": 1791167046.1447096,
+    "seen": 1791168094.4575996,
+    "ast_hash": "87fea58fbe61da4b0918593958dc1071",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/laporan/saldo-cuti.tsx": {
+    "mtime": 1792378722.1301231,
+    "seen": 1792378756.6910326,
+    "ast_hash": "abcb1c603af7e10d20c0e1de9b4a0e1a",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/master/alasan-cuti.tsx": {
+    "mtime": 1791792612.09033,
+    "seen": 1791796944.9151824,
+    "ast_hash": "35cc328321c2d35e36b78f74da22492a",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/master/departemen.tsx": {
+    "mtime": 1791792612.09033,
+    "seen": 1791796944.915184,
+    "ast_hash": "c46ff702693190f80c417d2465c9d30b",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/master/hari-libur.tsx": {
+    "mtime": 1791792612.09033,
+    "seen": 1791796944.9151862,
+    "ast_hash": "8e8883a98c4d9d4ba7504b88860a84d6",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/master/jabatan.tsx": {
+    "mtime": 1791792612.09033,
+    "seen": 1791796944.915188,
+    "ast_hash": "97814eee4700120e155f92dfdbece288",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/master/jenis-cuti.tsx": {
+    "mtime": 1791853723.2084887,
+    "seen": 1791853811.4951859,
+    "ast_hash": "decac996f1a283b5360ea81b506fa858",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/master/karyawan.tsx": {
+    "mtime": 1791792612.092532,
+    "seen": 1791796944.9151921,
+    "ast_hash": "999422d4c680fddd44c8cc19494480c6",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/master/saldo-cuti.tsx": {
+    "mtime": 1791792612.092532,
+    "seen": 1791796944.9151938,
+    "ast_hash": "3a82de3277783a510b14624b3db017dd",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/master/shift.tsx": {
+    "mtime": 1791792612.092532,
+    "seen": 1791796944.915196,
+    "ast_hash": "6403728ae18a50d8e7d6d04a61a216be",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/settings/appearance.tsx": {
+    "mtime": 1791792612.092532,
+    "seen": 1791796944.9151978,
+    "ast_hash": "718f7f7e0406c55223ca782b44b831cb",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/settings/profile.tsx": {
+    "mtime": 1791792612.0933828,
+    "seen": 1791796944.9152005,
+    "ast_hash": "3190e34cb464c1e1b7c1f02bd1f01bef",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/settings/security.tsx": {
+    "mtime": 1791792612.093529,
+    "seen": 1791796944.9152026,
+    "ast_hash": "dea349c2bcf55ec96e081652179aa428",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/users/index.tsx": {
+    "mtime": 1792037251.9435217,
+    "seen": 1792037313.751496,
+    "ast_hash": "e31de0de039d4bd9f5831da6b8fc3fa9",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/welcome.tsx": {
+    "mtime": 1791274069.8032196,
+    "seen": 1791275666.5643513,
+    "ast_hash": "0532c2000cdf7e0e6e033b84cac906dc",
+    "semantic_hash": ""
+  },
+  "resources/js/types/auth.ts": {
+    "mtime": 1791792612.093529,
+    "seen": 1791796944.9152088,
+    "ast_hash": "ec8bce4e65088161230845ad69a4e183",
+    "semantic_hash": ""
+  },
+  "resources/js/types/domain.ts": {
+    "mtime": 1791853723.2068927,
+    "seen": 1791853811.4952133,
+    "ast_hash": "5cc74126493d81cf06c5789c65fbecc1",
+    "semantic_hash": ""
+  },
+  "resources/js/types/global.d.ts": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4576426,
+    "ast_hash": "e0e764b6f787ba65dd6a07da5d57a5bb",
+    "semantic_hash": ""
+  },
+  "resources/js/types/index.ts": {
+    "mtime": 1787841362.5943708,
+    "seen": 1791168094.457645,
+    "ast_hash": "9190976f9d57eef69b96c996077904bf",
+    "semantic_hash": ""
+  },
+  "resources/js/types/navigation.ts": {
+    "mtime": 1789149612.0137117,
+    "seen": 1791168094.4576476,
+    "ast_hash": "c8ea7f448782c1a38db00673358b2d3b",
+    "semantic_hash": ""
+  },
+  "resources/js/types/pagination.ts": {
+    "mtime": 1787841359.5014112,
+    "seen": 1791168094.45765,
+    "ast_hash": "30442e523c9653cafd34b24e44c07bd1",
+    "semantic_hash": ""
+  },
+  "resources/js/types/ui.ts": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4576526,
+    "ast_hash": "706eb20733e599eb276ac72a93905ab5",
+    "semantic_hash": ""
+  },
+  "resources/js/types/vite-env.d.ts": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.457655,
+    "ast_hash": "0352474ba2918efe13895edbc3780d94",
+    "semantic_hash": ""
+  },
+  "resources/views/app.blade.php": {
+    "mtime": 1789373591.3846254,
+    "seen": 1791168094.4576578,
+    "ast_hash": "9d7b374dd35171a463af30aa44f8aba1",
+    "semantic_hash": ""
+  },
+  "resources/views/laporan/cuti-pdf.blade.php": {
+    "mtime": 1791852789.2575123,
+    "seen": 1791852838.3331084,
+    "ast_hash": "dfa4ac0e04bb14de131a730c334c0da6",
+    "semantic_hash": ""
+  },
+  "resources/views/laporan/saldo-cuti-pdf.blade.php": {
+    "mtime": 1792378722.1298497,
+    "seen": 1792378756.6910489,
+    "ast_hash": "84cd95187aa1102c913fe9d20b304a14",
+    "semantic_hash": ""
+  },
+  "routes/approval.php": {
+    "mtime": 1787933399.7813554,
+    "seen": 1791168094.4576654,
+    "ast_hash": "8536c9bad45da2a56a4ce41fab7c4ded",
+    "semantic_hash": ""
+  },
+  "routes/console.php": {
+    "mtime": 1791792612.6593208,
+    "seen": 1791796944.9152322,
+    "ast_hash": "d091a49aa351fcbf1238bf49cf3bd2fd",
+    "semantic_hash": ""
+  },
+  "routes/cuti.php": {
+    "mtime": 1789352020.0707886,
+    "seen": 1791168094.4576705,
+    "ast_hash": "f1758b2fde043620ac924c587ee4f630",
+    "semantic_hash": ""
+  },
+  "routes/jadwal-shift.php": {
+    "mtime": 1789525230.121437,
+    "seen": 1791168094.457673,
+    "ast_hash": "ff8a7024f4f79037ccfecb692adaddd5",
+    "semantic_hash": ""
+  },
+  "routes/laporan.php": {
+    "mtime": 1790250135.5556579,
+    "seen": 1791168094.4576755,
+    "ast_hash": "b587e149db197e60e4d64b042aced2ce",
+    "semantic_hash": ""
+  },
+  "routes/master.php": {
+    "mtime": 1791171204.7118726,
+    "seen": 1791171800.1099336,
+    "ast_hash": "e0c2fd83bc54187ecdf09af419030b25",
+    "semantic_hash": ""
+  },
+  "routes/notifications.php": {
+    "mtime": 1787842267.067443,
+    "seen": 1791168094.4576805,
+    "ast_hash": "a798bd541bc815cb196a312dd662da4c",
+    "semantic_hash": ""
+  },
+  "routes/settings.php": {
+    "mtime": 1791792612.093529,
+    "seen": 1791796944.915244,
+    "ast_hash": "2b31bc8acca526b881d6984ce272eb91",
+    "semantic_hash": ""
+  },
+  "routes/siklus-cuti.php": {
+    "mtime": 1791792612.093529,
+    "seen": 1791796944.915246,
+    "ast_hash": "1b9a6cd951cd1c8b10ff6d0831aa4b94",
+    "semantic_hash": ""
+  },
+  "routes/users.php": {
+    "mtime": 1792037241.2717772,
+    "seen": 1792037313.7515118,
+    "ast_hash": "823f1fe6c976bdc4deee142a1b991582",
+    "semantic_hash": ""
+  },
+  "routes/web.php": {
+    "mtime": 1788604118.760081,
+    "seen": 1791168094.4577,
+    "ast_hash": "5d7fbc322a2b7f7c01bfa925331eaea1",
+    "semantic_hash": ""
+  },
+  "tests/Concerns/InteractsWithKaryawan.php": {
+    "mtime": 1787852415.4562466,
+    "seen": 1791168094.4577026,
+    "ast_hash": "21ed8e6ce0e721578e4cc1b8d4e6e4f8",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Approval/ApprovalFlowTest.php": {
+    "mtime": 1791792612.093529,
+    "seen": 1791796944.9152546,
+    "ast_hash": "2cbe9907d8f55df5b434bf96d6466b6a",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Auth/AuthenticationTest.php": {
+    "mtime": 1791792612.093529,
+    "seen": 1791796944.915256,
+    "ast_hash": "516ed49e8c618a4f3c8ca1e925f4826e",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Auth/EmailVerificationTest.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.45771,
+    "ast_hash": "dfdbaa82f39fb284935f6f207cb3c736",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Auth/PasswordConfirmationTest.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4577127,
+    "ast_hash": "90c5cb8914fee9531006e63998608935",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Auth/PasswordResetTest.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4577153,
+    "ast_hash": "9935d83f6cf234fab42039328fa6ecc9",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Auth/RegistrationTest.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4577177,
+    "ast_hash": "112e43060e55a5a99d553283d71f4a14",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Auth/TwoFactorChallengeTest.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.45772,
+    "ast_hash": "d32b2e4e6fdf6dd4f923fad89f90b305",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Auth/VerificationNotificationTest.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4577227,
+    "ast_hash": "80aacaf513e5f684f53db03c9b34a7b7",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Console/ResetSaldoCutiTahunanTest.php": {
+    "mtime": 1788604479.939244,
+    "seen": 1791168094.4577248,
+    "ast_hash": "1cfcd464c621d6bd315967d0610f51bd",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Cuti/CutiMassalTest.php": {
+    "mtime": 1791792612.0950775,
+    "seen": 1791796944.9152799,
+    "ast_hash": "744dc8035ba09d50bd8b018e130ca827",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Cuti/KompensasiCutiTest.php": {
+    "mtime": 1791179044.552403,
+    "seen": 1791179262.2747118,
+    "ast_hash": "eb9fc32ed99c8de17ea270d8afc1c255",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Cuti/KonfirmasiKontrakTest.php": {
+    "mtime": 1791792612.095533,
+    "seen": 1791796944.9152856,
+    "ast_hash": "3fc604b196323de466b2732f97504a30",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Cuti/PengajuanCutiFormTest.php": {
+    "mtime": 1791792612.095533,
+    "seen": 1791796944.9152875,
+    "ast_hash": "db139147aaaef7ac74b54285b2495c08",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Cuti/PengajuanCutiTest.php": {
+    "mtime": 1792129322.5135381,
+    "seen": 1792129357.668399,
+    "ast_hash": "17c55460bdff50baf55ac7a31e1bfa81",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Cuti/PeriodeCutiSiklusTest.php": {
+    "mtime": 1791868866.9735868,
+    "seen": 1791868935.388171,
+    "ast_hash": "7b2fa26be73a8afa57745be06a79c390",
+    "semantic_hash": ""
+  },
+  "tests/Feature/DashboardTest.php": {
+    "mtime": 1789362366.9542506,
+    "seen": 1791168094.4577432,
+    "ast_hash": "acf3d538148d290106360dcb6d0c77b8",
+    "semantic_hash": ""
+  },
+  "tests/Feature/EnsureKaryawanLinkedTest.php": {
+    "mtime": 1787852424.3961365,
+    "seen": 1791168094.4577453,
+    "ast_hash": "143c08c20914665060668860f7211ced",
+    "semantic_hash": ""
+  },
+  "tests/Feature/ExampleTest.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4577482,
+    "ast_hash": "1c64692feae8975c6b27413e5acb8cba",
+    "semantic_hash": ""
+  },
+  "tests/Feature/JadwalShift/JadwalShiftManagementTest.php": {
+    "mtime": 1789525306.4623592,
+    "seen": 1791168094.457751,
+    "ast_hash": "f0f5e2b29fb16cd5a6bbcb1c73535b78",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Laporan/LaporanCutiTest.php": {
+    "mtime": 1791852806.0623696,
+    "seen": 1791852838.3332222,
+    "ast_hash": "5cc17f62a522a12c34e7af13708631e3",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Laporan/SaldoCutiTest.php": {
+    "mtime": 1792378734.3411806,
+    "seen": 1792378756.6910765,
+    "ast_hash": "7b25b15a76a4429963ac0f94572df2bc",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Master/AlasanCutiManagementTest.php": {
+    "mtime": 1787930566.6441882,
+    "seen": 1791168094.4577584,
+    "ast_hash": "b72308089f7d61e488ba7e17f724e8f3",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Master/HariLiburManagementTest.php": {
+    "mtime": 1788604291.7584238,
+    "seen": 1791168094.4577608,
+    "ast_hash": "b49f9f263ad43a02ce2d5fd2af28e5d0",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Master/JenisCutiManagementTest.php": {
+    "mtime": 1791853723.2097096,
+    "seen": 1791853811.4953551,
+    "ast_hash": "d1d8b937298a4b3452be930867d3391e",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Master/KaryawanImportTest.php": {
+    "mtime": 1789457987.7372074,
+    "seen": 1791168094.457766,
+    "ast_hash": "5ee16d0cbeea87ee4d2f5440f3b87f5f",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Master/KaryawanManagementTest.php": {
+    "mtime": 1791868866.9749715,
+    "seen": 1791868935.3882043,
+    "ast_hash": "2c6b006c3549943fc337ed38bf74332d",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Master/ResetDataKaryawanTest.php": {
+    "mtime": 1789455796.784742,
+    "seen": 1791168094.4577713,
+    "ast_hash": "a6f31b1fa9dc183fcb7ef012fc1f5894",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Master/SaldoCutiManagementTest.php": {
+    "mtime": 1791792612.095533,
+    "seen": 1791796944.915331,
+    "ast_hash": "32b81b5ea096f230e8895a18d3c7ef76",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Notifications/PengajuanCutiWhatsAppTest.php": {
+    "mtime": 1793069626.764517,
+    "seen": 1793069661.0162685,
+    "ast_hash": "6875c384e363815b62c197ca57806c6c",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Settings/ProfileUpdateTest.php": {
+    "mtime": 1791792612.09633,
+    "seen": 1791796944.9153407,
+    "ast_hash": "1b08c7cffd78acda2bc861a3d7d91cd5",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Settings/SecurityTest.php": {
+    "mtime": 1787813872.3833148,
+    "seen": 1791168094.4577823,
+    "ast_hash": "8d1b867909cdcf9f147e4f407f4dd8d5",
+    "semantic_hash": ""
+  },
+  "tests/Feature/UserManagement/UserManagementTest.php": {
+    "mtime": 1792037294.1738825,
+    "seen": 1792037313.7515419,
+    "ast_hash": "73bf80e964f5db86d4e99db64469dd96",
+    "semantic_hash": ""
+  },
+  "tests/TestCase.php": {
+    "mtime": 1791258774.4717984,
+    "seen": 1791258798.5585566,
+    "ast_hash": "9b168c70272eed7a1c57c3a5703ac2b6",
+    "semantic_hash": ""
+  },
+  "tests/Unit/ExampleTest.php": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4577894,
+    "ast_hash": "1a3a9cc72a35eea8c120f991a197484a",
+    "semantic_hash": ""
+  },
+  "tests/Unit/HasPerPageTest.php": {
+    "mtime": 1789524949.90494,
+    "seen": 1791168094.457792,
+    "ast_hash": "c7fd94290f55544a7eea6bc1d5587f28",
+    "semantic_hash": ""
+  },
+  "tests/Unit/SaldoSeverityTest.php": {
+    "mtime": 1792129547.473508,
+    "seen": 1792129581.9481163,
+    "ast_hash": "37794692cc72bf4277b46fe3fbe81cd2",
+    "semantic_hash": ""
+  },
+  "tsconfig.json": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4577966,
+    "ast_hash": "ef2a57adc7462b7f867b284f44ecd342",
+    "semantic_hash": ""
+  },
+  "vite.config.ts": {
+    "mtime": 1789373455.559887,
+    "seen": 1791168094.457799,
+    "ast_hash": "191d164be5cbabd86d2f83c1be241607",
+    "semantic_hash": ""
+  },
+  ".ai/rules/config.md": {
+    "mtime": 1788976948.8508322,
+    "seen": 1791168094.4578016,
+    "ast_hash": "8d96c2c3b0922dbefc4c460b9a7f59a6",
+    "semantic_hash": ""
+  },
+  ".ai/rules/general.md": {
+    "mtime": 1789448043.1770697,
+    "seen": 1791168094.4578042,
+    "ast_hash": "649c222e36dd8faa0bfbb40a0c3f34d1",
+    "semantic_hash": ""
+  },
+  ".ai/rules/imports.md": {
+    "mtime": 1789458280.676568,
+    "seen": 1791168094.4578066,
+    "ast_hash": "5e9ee08bd75ad402b0932196e21d5b02",
+    "semantic_hash": ""
+  },
+  ".ai/rules/index.md": {
+    "mtime": 1789536831.0782814,
+    "seen": 1791168094.4578092,
+    "ast_hash": "761869ded37b85c4fa401a37ce786cea",
+    "semantic_hash": ""
+  },
+  ".ai/rules/notifications.md": {
+    "mtime": 1789445531.793927,
+    "seen": 1791168094.457811,
+    "ast_hash": "c56837b2a07c82df29729913abcdee71",
+    "semantic_hash": ""
+  },
+  ".ai/rules/services-services.md": {
+    "mtime": 1789536831.0777137,
+    "seen": 1791168094.4578137,
+    "ast_hash": "d97d29583373bcfe0cee8a2a88d658af",
+    "semantic_hash": ""
+  },
+  ".ai/rules/services.md": {
+    "mtime": 1789456095.2505982,
+    "seen": 1791168094.4578161,
+    "ast_hash": "5f3e5faf610ca5416343f1446fd134da",
+    "semantic_hash": ""
+  },
+  ".github/dependabot.yml": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4578185,
+    "ast_hash": "2d1dafbc9ecfd469752dbd29e997d413",
+    "semantic_hash": ""
+  },
+  ".github/workflows/tests.yml": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4578211,
+    "ast_hash": "6b598f402144fb54c048212679f35ffe",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1791166232.0060685,
+    "seen": 1791168094.4578238,
+    "ast_hash": "d62b543f8fa714871e951b4d4f308510",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1791797331.7846265,
+    "seen": 1791851482.7509136,
+    "ast_hash": "9f605876686e518a1035bbecf1546673",
+    "semantic_hash": ""
+  },
+  "docker-compose.yml": {
+    "mtime": 1792045726.8261533,
+    "seen": 1792121282.0099785,
+    "ast_hash": "26cd3ae5ed919cece31ace36fcaabeb6",
+    "semantic_hash": ""
+  },
+  "erd_cuti_kerja_pabrik.html": {
+    "mtime": 1787839546.5206816,
+    "seen": 1791168094.4578316,
+    "ast_hash": "cd0e5706588a64926f2d89d2845f1750",
+    "semantic_hash": ""
+  },
+  "pnpm-workspace.yaml": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4578342,
+    "ast_hash": "773c1506870ff24d2587e280e215b12a",
+    "semantic_hash": ""
+  },
+  "public/robots.txt": {
+    "mtime": 1787315451.0,
+    "seen": 1791168094.4578369,
+    "ast_hash": "b6216d61c03e6ce0c9aea6ca7808f7ca",
+    "semantic_hash": ""
+  },
+  "public/apple-touch-icon.png": {
+    "mtime": 1787846584.3696427,
+    "seen": 1791168094.4578397,
+    "ast_hash": "816563adf212ae3caf70cd47fb1d029c",
+    "semantic_hash": ""
+  },
+  "resources/js/images/logo-kkp-full-dark.png": {
+    "mtime": 1789546157.0301826,
+    "seen": 1791168094.4578424,
+    "ast_hash": "b9ed3b992b59c0c6925f42661ba8fce5",
+    "semantic_hash": ""
+  },
+  "resources/js/images/logo-kkp-full.png": {
+    "mtime": 1789546031.0569265,
+    "seen": 1791168094.4578452,
+    "ast_hash": "139f985251e02070e7e7763c78a7e4b3",
+    "semantic_hash": ""
+  },
+  "resources/js/images/logo-kkp-icon.png": {
+    "mtime": 1789546031.0519266,
+    "seen": 1791168094.4578478,
+    "ast_hash": "f269d3b8f273fefa5db883b4d8bb85fa",
+    "semantic_hash": ""
+  },
+  "resources/js/components/ui/native-select.tsx": {
+    "mtime": 1791168426.3734014,
+    "seen": 1791168783.4442124,
+    "ast_hash": "6b32fb52d61ec438963e9ae00efc34ee",
+    "semantic_hash": ""
+  },
+  "app/Enums/AksiMassalSaldoCuti.php": {
+    "mtime": 1791171089.9789817,
+    "seen": 1791171800.1085894,
+    "ast_hash": "86f00b77c2aa787af5d43b391661dd02",
+    "semantic_hash": ""
+  },
+  "app/Exports/SaldoCutiMasterExport.php": {
+    "mtime": 1791792612.0141945,
+    "seen": 1791796944.9144778,
+    "ast_hash": "d61e123039588394faba85c9d28f5116",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Master/SaldoCutiAksiMassalRequest.php": {
+    "mtime": 1791171090.1379793,
+    "seen": 1791171800.108816,
+    "ast_hash": "433163a060fda52d76a7e37ddfeeb4f1",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Master/SaldoCutiImportRequest.php": {
+    "mtime": 1791171090.2439778,
+    "seen": 1791171800.1088207,
+    "ast_hash": "09260a1d3a191378191410d602908090",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Master/SaldoCutiStoreMassalRequest.php": {
+    "mtime": 1791171090.09298,
+    "seen": 1791171800.1088288,
+    "ast_hash": "f71d907df71d48b9f4ffefe59a7d610b",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Master/SaldoCutiUpdateMassalRequest.php": {
+    "mtime": 1791171204.6473234,
+    "seen": 1791171800.108832,
+    "ast_hash": "d0c54079d3cb51eb6bc29c44a4dc45ef",
+    "semantic_hash": ""
+  },
+  "app/Imports/SaldoCutiImport.php": {
+    "mtime": 1791792612.0170152,
+    "seen": 1791796944.9146175,
+    "ast_hash": "5d127c2b4dfb349bfb005908519f2dfa",
+    "semantic_hash": ""
+  },
+  "resources/js/components/saldo-cuti-aksi-massal-dialog.tsx": {
+    "mtime": 1791171607.577569,
+    "seen": 1791171800.1095212,
+    "ast_hash": "e576de3ab98f02978b641f929742e787",
+    "semantic_hash": ""
+  },
+  "resources/js/components/saldo-cuti-import-dialog.tsx": {
+    "mtime": 1791792612.0864694,
+    "seen": 1791796944.9149914,
+    "ast_hash": "97d007627ef5f8120f7ae42cb19cbabc",
+    "semantic_hash": ""
+  },
+  "resources/js/components/saldo-cuti-tambah-dialog.tsx": {
+    "mtime": 1791275588.6997883,
+    "seen": 1791275666.5642898,
+    "ast_hash": "716204e90343d42652ba6de0a27804b0",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Master/SaldoCutiMassalTest.php": {
+    "mtime": 1791792612.09633,
+    "seen": 1791796944.915333,
+    "ast_hash": "bfe58c3006acdc281a09edf84bb416f0",
+    "semantic_hash": ""
+  },
+  "resources/js/components/globe.tsx": {
+    "mtime": 1791183681.0838852,
+    "seen": 1791189260.777308,
+    "ast_hash": "29346b558ce9d555ee267baa90125f08",
+    "semantic_hash": ""
+  },
+  "app/Notifications/PengajuanCutiDiteruskan.php": {
+    "mtime": 1791259060.5542595,
+    "seen": 1791259785.3654835,
+    "ast_hash": "799c0746d2f7bfb95a33d204468220d2",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Notifications/StatusPengajuanCutiWhatsAppTest.php": {
+    "mtime": 1791259060.5683854,
+    "seen": 1791259785.3657794,
+    "ast_hash": "0c1e32188ae32bae8fcddc0d8fa4af1c",
+    "semantic_hash": ""
+  },
+  "app/Rules/CutiBesarSetelahCutiTahunanHabis.php": {
+    "mtime": 1791272909.5907853,
+    "seen": 1791273498.1588774,
+    "ast_hash": "25dfb4a5210f5e79f707a8bfd53bca5b",
+    "semantic_hash": ""
+  },
+  "public/demo/index.html": {
+    "mtime": 1791868415.257623,
+    "seen": 1791868935.3882718,
+    "ast_hash": "84425b271a6b29543597c327dc6d12e7",
+    "semantic_hash": ""
+  },
+  "lang/id.json": {
+    "mtime": 1791792612.0827997,
+    "seen": 1791796944.914907,
+    "ast_hash": "055046165a12181dcc744beef8511786",
+    "semantic_hash": ""
+  },
+  "lang/id/auth.php": {
+    "mtime": 1791792612.0831769,
+    "seen": 1791796944.9149094,
+    "ast_hash": "556fe526486aec00c784ee113c472f65",
+    "semantic_hash": ""
+  },
+  "lang/id/pagination.php": {
+    "mtime": 1791792612.0833302,
+    "seen": 1791796944.9149115,
+    "ast_hash": "d7d318e784162ebd611310fc0db22cf2",
+    "semantic_hash": ""
+  },
+  "lang/id/passwords.php": {
+    "mtime": 1791792612.0833302,
+    "seen": 1791796944.9149132,
+    "ast_hash": "2e4ff3fb4efc40fdd31fc640aec73663",
+    "semantic_hash": ""
+  },
+  "lang/id/validation.php": {
+    "mtime": 1791853723.2081175,
+    "seen": 1791853811.4948087,
+    "ast_hash": "9d2178dc5309d3ff43103c042dfae3e3",
+    "semantic_hash": ""
+  },
+  "resources/js/components/confirm-dialog.tsx": {
+    "mtime": 1791792612.0845485,
+    "seen": 1791796944.9149501,
+    "ast_hash": "2d7cac30d3945ddf476c571d82cc5f84",
+    "semantic_hash": ""
+  },
+  "resources/js/components/pratinjau-hari-cuti.tsx": {
+    "mtime": 1792123123.580864,
+    "seen": 1792123226.4475937,
+    "ast_hash": "eb5ca5d9de842637f921d472509dbbff",
+    "semantic_hash": ""
+  },
+  "resources/js/components/riwayat-approval-list.tsx": {
+    "mtime": 1791792612.0864694,
+    "seen": 1791796944.914987,
+    "ast_hash": "77640691c13648b976e49188c39d77e5",
+    "semantic_hash": ""
+  },
+  "resources/js/lib/hari-kerja.ts": {
+    "mtime": 1791851318.9388402,
+    "seen": 1791851482.7505865,
+    "ast_hash": "4af864088b3ae35cf9d62c66e0d4f70a",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/error.tsx": {
+    "mtime": 1791792612.08933,
+    "seen": 1791796944.91517,
+    "ast_hash": "74dc881cc5fa59712c91e9729f2cbd1d",
+    "semantic_hash": ""
+  },
+  "tests/Feature/ErrorPageTest.php": {
+    "mtime": 1791792612.095533,
+    "seen": 1791796944.915304,
+    "ast_hash": "0e1cac3d381fb7e7d99300730fb350c7",
+    "semantic_hash": ""
+  },
+  "app/Rules/CutiBesarKhususKaryawanTetap.php": {
+    "mtime": 1791792612.0173311,
+    "seen": 1791796944.9146824,
+    "ast_hash": "a73afb05e5d508f340c1ce61b10c662b",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_10_06_175043_hapus_saldo_cuti_besar_karyawan_kontrak.php": {
+    "mtime": 1791792612.019887,
+    "seen": 1791796944.9148781,
+    "ast_hash": "0e2a83317cbd66234a579aea667a065a",
+    "semantic_hash": ""
+  },
+  "tests/Feature/HapusSaldoCutiBesarKontrakMigrationTest.php": {
+    "mtime": 1791792612.095533,
+    "seen": 1791796944.9153097,
+    "ast_hash": "0d5700251b2c6872033bcda9b8c73c01",
+    "semantic_hash": ""
+  },
+  "app/Console/Commands/TinjauSiklusKontrak.php": {
+    "mtime": 1791792612.0136647,
+    "seen": 1791796944.9144247,
+    "ast_hash": "a7755a92f32df365a0f24d292fdde23a",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_10_06_180701_add_tinjauan_siklus_ke_konfirmasi_kontrak_cutis_table.php": {
+    "mtime": 1791792612.019887,
+    "seen": 1791796944.9148803,
+    "ast_hash": "10155f3a42500c0c3b81ad8808149042",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Console/TinjauSiklusKontrakTest.php": {
+    "mtime": 1791792612.0950775,
+    "seen": 1791796944.9152775,
+    "ast_hash": "9e52bbdbebe54e96da91709cbcbb98fd",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/UserManagement/ResetPasswordNpkRequest.php": {
+    "mtime": 1791792612.0170152,
+    "seen": 1791796944.9146059,
+    "ast_hash": "bdabc77f0529c324c01ae40207b5be90",
+    "semantic_hash": ""
+  },
+  "app/Exceptions/KeputusanKontrakTidakBisaDibatalkanException.php": {
+    "mtime": 1791792612.0136647,
+    "seen": 1791796944.9144616,
+    "ast_hash": "831ab6e378b42abbc24d0f073e3124c3",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Concerns/DataFormPengajuanCuti.php": {
+    "mtime": 1791792612.0141945,
+    "seen": 1791796944.9144826,
+    "ast_hash": "7d5a82d377d16c3425feb5fe233c37e2",
+    "semantic_hash": ""
+  },
+  "app/Http/Controllers/Cuti/InputCutiKaryawanController.php": {
+    "mtime": 1791792612.0141945,
+    "seen": 1791796944.914493,
+    "ast_hash": "2f1756fd5b861f3dfb80ee954511adf8",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Cuti/StoreInputCutiKaryawanRequest.php": {
+    "mtime": 1791792612.0155408,
+    "seen": 1791796944.9145498,
+    "ast_hash": "4ae977e22a4456771a27e7a2142d6bd7",
+    "semantic_hash": ""
+  },
+  "resources/js/pages/cuti/input-karyawan.tsx": {
+    "mtime": 1791792612.08833,
+    "seen": 1791796944.9151528,
+    "ast_hash": "a9f398db4fa3bedefe5a94e3f4b6f0df",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Cuti/InputCutiKaryawanTest.php": {
+    "mtime": 1791792612.095533,
+    "seen": 1791796944.9152818,
+    "ast_hash": "3130b43438599fe93bae7d168557663b",
+    "semantic_hash": ""
+  },
+  "app/Http/Requests/Settings/ProfileAvatarRequest.php": {
+    "mtime": 1791792612.0170152,
+    "seen": 1791796944.9145968,
+    "ast_hash": "58e047b82f883cdc5c2e989904b58eb1",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_10_09_011032_add_avatar_path_to_users_table.php": {
+    "mtime": 1791792612.019887,
+    "seen": 1791796944.914882,
+    "ast_hash": "e4e1032f251e26710c84e689a27bf2b0",
+    "semantic_hash": ""
+  },
+  "app/Console/Commands/KirimAntrianWhatsapp.php": {
+    "mtime": 1793069617.97671,
+    "seen": 1793069661.0158207,
+    "ast_hash": "7dd2a232ce7ce4e77a797204fc228f28",
+    "semantic_hash": ""
+  },
+  "app/Console/Commands/KirimUlangWhatsappDitolak.php": {
+    "mtime": 1791796863.248513,
+    "seen": 1791796944.9144144,
+    "ast_hash": "194b2f6145816e2c2791addcd7cc067c",
+    "semantic_hash": ""
+  },
+  "app/Enums/StatusAntrianWhatsapp.php": {
+    "mtime": 1791792612.6583207,
+    "seen": 1791796944.9144335,
+    "ast_hash": "fed797f696f189d72b947b8e3cfcca91",
+    "semantic_hash": ""
+  },
+  "app/Models/AntrianWhatsapp.php": {
+    "mtime": 1791792612.6583207,
+    "seen": 1791796944.9146216,
+    "ast_hash": "ba7990322d8e253784030dabb9ed1c74",
+    "semantic_hash": ""
+  },
+  "app/Services/AntrianWhatsappService.php": {
+    "mtime": 1791796841.194104,
+    "seen": 1791796944.9146981,
+    "ast_hash": "80bb52823700a07879792671b63c5db3",
+    "semantic_hash": ""
+  },
+  "database/factories/AntrianWhatsappFactory.php": {
+    "mtime": 1791792612.6593208,
+    "seen": 1791796944.9147637,
+    "ast_hash": "034de1849bd0008d700ca48ac260f10d",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_10_12_073408_create_antrian_whatsapps_table.php": {
+    "mtime": 1791792612.6593208,
+    "seen": 1791796944.9148839,
+    "ast_hash": "4a86535949029090681d631f57d7836e",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Console/KirimAntrianWhatsappTest.php": {
+    "mtime": 1793069626.764872,
+    "seen": 1793069661.016239,
+    "ast_hash": "bc778f2f7d4d69eec1d81dd67af508b4",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Console/KirimUlangWhatsappDitolakTest.php": {
+    "mtime": 1791796883.4262009,
+    "seen": 1791796944.9152725,
+    "ast_hash": "a650ce52fa9a8589feefc22aaff11ec3",
+    "semantic_hash": ""
+  },
+  "database/migrations/2026_10_13_010844_hapus_minimal_hari_pengajuan_dari_jenis_cutis_table.php": {
+    "mtime": 1791853731.271356,
+    "seen": 1791853811.494764,
+    "ast_hash": "20d3749f3e2df1156ff080a73a4fb5f5",
+    "semantic_hash": ""
+  },
+  "app/Console/Commands/SesuaikanCutiTahunanAwalSiklus.php": {
+    "mtime": 1791869081.3097837,
+    "seen": 1791869158.2801728,
+    "ast_hash": "0b8e03c55162037fef8083f80ebb4123",
+    "semantic_hash": ""
+  },
+  "tests/Feature/Console/SesuaikanCutiTahunanAwalSiklusTest.php": {
+    "mtime": 1791869095.8855684,
+    "seen": 1791869158.2811146,
+    "ast_hash": "7f78af4dd6228775b00c6c8f3ff97498",
+    "semantic_hash": ""
+  },
+  "tests/Feature/SecurityPenetrationTest.php": {
+    "mtime": 1792049662.2047653,
+    "seen": 1792121282.0099568,
+    "ast_hash": "f70e93b5ab7201d6c6c7e568ca40f96f",
+    "semantic_hash": ""
+  },
+  "tests/Feature/SaldoCutiScopeKritisTest.php": {
+    "mtime": 1792129547.4736207,
+    "seen": 1792129581.9481044,
+    "ast_hash": "b9e875e7f4a7560d3e9eb2466656a9d3",
+    "semantic_hash": ""
+  },
+  "app/Notifications/PengajuanCutiDibatalkan.php": {
+    "mtime": 1792129289.4870644,
+    "seen": 1792129357.6680937,
+    "ast_hash": "b2c4433a5f3034d656464151b76562f7",
+    "semantic_hash": ""
+  }
+}
