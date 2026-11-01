@@ -95,7 +95,7 @@ class CutiMassalController extends Controller
 
     public function show(Request $request, CutiMassal $cuti_massal, CutiMassalService $service): Response
     {
-        $cuti_massal->load(['jenisCuti', 'dibuatOleh', 'dibatalkanOleh', 'pengajuanCutis.karyawan']);
+        $cuti_massal->load(['jenisCuti', 'dibuatOleh', 'dibatalkanOleh', 'pengajuanCutis.karyawan', 'pengajuanCutis.jenisCuti']);
 
         return Inertia::render('cuti/massal/show', [
             'cutiMassal' => $cuti_massal,

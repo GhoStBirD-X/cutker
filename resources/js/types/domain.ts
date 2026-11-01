@@ -121,6 +121,7 @@ export type KaryawanEligiblePreview = {
     akan_minus: boolean;
     akan_dapat_bonus: boolean;
     akan_ditampung: boolean;
+    dari_cuti_besar: number;
 };
 
 export type HariLibur = {

@@ -149,7 +149,21 @@ export default function CutiMassalShow() {
                                     key={pengajuan.id}
                                     className="flex items-center justify-between gap-2 px-4 py-2 text-sm"
                                 >
-                                    {pengajuan.karyawan?.nama}
+                                    <span>
+                                        {pengajuan.karyawan?.nama}
+                                        {pengajuan.jenis_cuti_id !==
+                                            cutiMassal.jenis_cuti_id && (
+                                            <span className="text-muted-foreground">
+                                                {' '}
+                                                — {pengajuan.jumlah_hari} hari
+                                                dari{' '}
+                                                {
+                                                    pengajuan.jenis_cuti
+                                                        ?.nama_jenis
+                                                }
+                                            </span>
+                                        )}
+                                    </span>
                                     {pengajuan.status === 'ditampung' && (
                                         <StatusBadge
                                             status={pengajuan.status}
@@ -323,6 +337,12 @@ export default function CutiMassalShow() {
                                             {row.akan_dapat_bonus && (
                                                 <Badge className="border-blue-200 bg-blue-100 text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300">
                                                     Dapat bonus cuti
+                                                </Badge>
+                                            )}
+                                            {row.dari_cuti_besar > 0 && (
+                                                <Badge className="border-violet-200 bg-violet-100 text-violet-800 dark:border-violet-900 dark:bg-violet-950 dark:text-violet-300">
+                                                    {row.dari_cuti_besar} hari
+                                                    dari Cuti Besar
                                                 </Badge>
                                             )}
                                             {row.akan_ditampung && (

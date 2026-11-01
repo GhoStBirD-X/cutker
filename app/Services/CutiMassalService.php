@@ -17,6 +17,7 @@ use App\Models\PengajuanCuti;
 use App\Models\SaldoCuti;
 use App\Notifications\CutiMassalDibatalkan;
 use App\Notifications\PengajuanCutiDisetujui;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as SupportCollection;
@@ -53,7 +54,7 @@ class CutiMassalService
      * pertama — lihat hitungPotongan()) jika cuti massal ini jadi diajukan,
      * untuk preview sebelum HRD submit.
      *
-     * @return SupportCollection<int, array{karyawan: Karyawan, saldo: ?SaldoCuti, akan_minus: bool, akan_dapat_bonus: bool, akan_ditampung: bool}>
+     * @return SupportCollection<int, array{karyawan: Karyawan, saldo: ?SaldoCuti, akan_minus: bool, akan_dapat_bonus: bool, akan_ditampung: bool, dari_cuti_besar: int}>
      */
     public function previewKaryawan(JenisCuti $jenisCuti, Carbon $mulai, Carbon $selesai): SupportCollection
     {
@@ -64,14 +65,19 @@ class CutiMassalService
         foreach ($this->eligibleKaryawan($jenisCuti) as $karyawan) {
             $saldo = $this->saldoCutiService->untukPeriodeAktif($karyawan, $jenisCuti);
             $akanDitampung = $saldo?->berakhirSebelum($selesai) ?? false;
-            $potongan = $saldo && ! $akanDitampung ? $this->hitungPotongan($saldo, $karyawan, $jumlahHari) : null;
+            $dariCutiBesar = $saldo && ! $akanDitampung
+                ? $this->pengalihanCutiBesar($karyawan, $jenisCuti, $saldo, $jumlahHari, $selesai)['hari']
+                : 0;
+            $hariDariSaldo = $jumlahHari - $dariCutiBesar;
+            $potongan = $saldo && ! $akanDitampung ? $this->hitungPotongan($saldo, $karyawan, $hariDariSaldo) : null;
 
             $preview[] = [
                 'karyawan' => $karyawan,
                 'saldo' => $saldo,
-                'akan_minus' => $potongan !== null && $saldo->kuota !== null && ($saldo->sisa - $jumlahHari) < 0 && $potongan['bonus'] === 0,
+                'akan_minus' => $potongan !== null && $saldo->kuota !== null && ($saldo->sisa - $hariDariSaldo) < 0 && $potongan['bonus'] === 0,
                 'akan_dapat_bonus' => ($potongan['bonus'] ?? 0) > 0,
                 'akan_ditampung' => $akanDitampung,
+                'dari_cuti_besar' => $dariCutiBesar,
             ];
         }
 
@@ -85,7 +91,7 @@ class CutiMassalService
      * ke batch yang sudah berjalan tanpa mengulang isi jenis cuti/
      * tanggal/alasan dari awal.
      *
-     * @return SupportCollection<int, array{karyawan: Karyawan, saldo: ?SaldoCuti, akan_minus: bool, akan_dapat_bonus: bool, akan_ditampung: bool}>
+     * @return SupportCollection<int, array{karyawan: Karyawan, saldo: ?SaldoCuti, akan_minus: bool, akan_dapat_bonus: bool, akan_ditampung: bool, dari_cuti_besar: int}>
      */
     public function previewKaryawanBaruUntukBatch(CutiMassal $cutiMassal): SupportCollection
     {
@@ -349,10 +355,87 @@ class CutiMassalService
     }
 
     /**
-     * Setujui satu pengajuan cuti massal: 3 Approval langsung Disetujui,
-     * saldo dipotong (lihat hitungPotongan()), lalu karyawan diberi tahu.
+     * Setujui satu pengajuan cuti massal. Untuk karyawan tetap yang saldo
+     * Cuti Tahunannya tidak cukup, kekurangannya dialihkan ke Cuti Besar
+     * (sampai saldo Cuti Besar habis) sebagai pengajuan Cuti Besar terpisah
+     * pada tanggal yang sama — sisanya tetap minus di Cuti Tahunan. Jika
+     * seluruh hari dialihkan, pengajuan ini sendiri diubah jadi Cuti Besar.
      */
     protected function setujui(PengajuanCuti $pengajuan, SaldoCuti $saldo, Karyawan $karyawan, Karyawan $olehSiapa): void
+    {
+        ['saldo_besar' => $saldoBesar, 'hari' => $dariCutiBesar] = $this->pengalihanCutiBesar(
+            $karyawan,
+            $pengajuan->jenisCuti,
+            $saldo,
+            $pengajuan->jumlah_hari,
+            $pengajuan->tanggal_selesai,
+            lock: true,
+        );
+
+        if ($dariCutiBesar === $pengajuan->jumlah_hari) {
+            $pengajuan->update(['jenis_cuti_id' => $saldoBesar->jenis_cuti_id]);
+            $this->setujuiDariSaldo($pengajuan, $saldoBesar, $karyawan, $olehSiapa);
+
+            return;
+        }
+
+        if ($dariCutiBesar > 0) {
+            $pengajuan->update(['jumlah_hari' => $pengajuan->jumlah_hari - $dariCutiBesar]);
+
+            $pengajuanCutiBesar = $pengajuan->replicate();
+            $pengajuanCutiBesar->fill([
+                'jenis_cuti_id' => $saldoBesar->jenis_cuti_id,
+                'jumlah_hari' => $dariCutiBesar,
+            ])->save();
+
+            $this->setujuiDariSaldo($pengajuanCutiBesar, $saldoBesar, $karyawan, $olehSiapa);
+        }
+
+        $this->setujuiDariSaldo($pengajuan, $saldo, $karyawan, $olehSiapa);
+    }
+
+    /**
+     * Berapa hari cuti massal Cuti Tahunan yang dialihkan ke Cuti Besar:
+     * hanya untuk karyawan tetap, hanya kekurangan saldo Cuti Tahunan, dan
+     * paling banyak sebesar sisa Cuti Besar yang periodenya mencakup
+     * tanggal cuti.
+     *
+     * @return array{saldo_besar: ?SaldoCuti, hari: int}
+     */
+    protected function pengalihanCutiBesar(Karyawan $karyawan, JenisCuti $jenisCuti, SaldoCuti $saldo, int $jumlahHari, CarbonInterface $tanggalSelesai, bool $lock = false): array
+    {
+        $tidakDialihkan = ['saldo_besar' => null, 'hari' => 0];
+        $kekurangan = $jumlahHari - max(0, $saldo->sisa ?? $jumlahHari);
+
+        if ($karyawan->tipe_karyawan !== TipeKaryawan::Tetap
+            || $jenisCuti->nama_jenis !== JenisCuti::NAMA_CUTI_TAHUNAN
+            || $saldo->kuota === null
+            || $kekurangan <= 0) {
+            return $tidakDialihkan;
+        }
+
+        $saldoBesar = SaldoCuti::query()
+            ->where('karyawan_id', $karyawan->id)
+            ->whereHas('jenisCuti', fn ($query) => $query->where('nama_jenis', JenisCuti::NAMA_CUTI_BESAR))
+            ->aktif()
+            ->when($lock, fn ($query) => $query->lockForUpdate())
+            ->latest('id')
+            ->first();
+
+        if (! $saldoBesar || $saldoBesar->berakhirSebelum($tanggalSelesai)) {
+            return $tidakDialihkan;
+        }
+
+        $hari = $saldoBesar->kuota === null ? $kekurangan : min($kekurangan, max(0, $saldoBesar->sisa));
+
+        return $hari > 0 ? ['saldo_besar' => $saldoBesar, 'hari' => $hari] : $tidakDialihkan;
+    }
+
+    /**
+     * 3 Approval langsung Disetujui, saldo dipotong (lihat
+     * hitungPotongan()), lalu karyawan diberi tahu.
+     */
+    protected function setujuiDariSaldo(PengajuanCuti $pengajuan, SaldoCuti $saldo, Karyawan $karyawan, Karyawan $olehSiapa): void
     {
         $potongan = $this->hitungPotongan($saldo, $karyawan, $pengajuan->jumlah_hari);
 
@@ -378,7 +461,7 @@ class CutiMassalService
             'sisa' => $potongan['sisa'],
         ]);
 
-        $karyawan->user?->notify(new PengajuanCutiDisetujui($pengajuan, tanpaWhatsapp: true));
+        $karyawan->user?->notify(new PengajuanCutiDisetujui($pengajuan->fresh('jenisCuti'), tanpaWhatsapp: true));
     }
 
     /**

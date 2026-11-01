@@ -324,6 +324,16 @@ export default function CutiMassalCreate() {
                                                                 Dapat bonus cuti
                                                             </Badge>
                                                         )}
+                                                        {row.dari_cuti_besar >
+                                                            0 && (
+                                                            <Badge className="border-violet-200 bg-violet-100 text-violet-800 dark:border-violet-900 dark:bg-violet-950 dark:text-violet-300">
+                                                                {
+                                                                    row.dari_cuti_besar
+                                                                }{' '}
+                                                                hari dari Cuti
+                                                                Besar
+                                                            </Badge>
+                                                        )}
                                                         {row.akan_ditampung && (
                                                             <Badge className="border-sky-200 bg-sky-100 text-sky-800 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-300">
                                                                 Akan ditampung

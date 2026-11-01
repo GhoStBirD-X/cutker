@@ -749,6 +749,66 @@ class CutiMassalTest extends TestCase
         $this->assertSame(12, $saldoLama->fresh()->sisa);
     }
 
+    public function test_shortfall_of_cuti_tahunan_is_taken_from_cuti_besar_for_tetap_employee(): void
+    {
+        [$karyawan, $tahunan, $besar] = $this->karyawanTetapDenganCutiBesar(sisaTahunan: 1, sisaBesar: 10);
+
+        $this->buatCutiMassalCutiTahunan($karyawan);
+
+        $this->assertSame(0, $tahunan->fresh()->sisa);
+        $this->assertSame(9, $besar->fresh()->sisa);
+        $this->assertEqualsCanonicalizing(
+            [[$tahunan->jenis_cuti_id, 1], [$besar->jenis_cuti_id, 1]],
+            PengajuanCuti::query()->where('karyawan_id', $karyawan->id)->where('status', 'disetujui')->get()
+                ->map(fn (PengajuanCuti $pengajuan) => [$pengajuan->jenis_cuti_id, $pengajuan->jumlah_hari])->all(),
+        );
+    }
+
+    public function test_remaining_shortfall_stays_negative_on_cuti_tahunan_when_cuti_besar_runs_out(): void
+    {
+        [$karyawan, $tahunan, $besar] = $this->karyawanTetapDenganCutiBesar(sisaTahunan: 0, sisaBesar: 1);
+
+        $this->buatCutiMassalCutiTahunan($karyawan);
+
+        $this->assertSame(-1, $tahunan->fresh()->sisa);
+        $this->assertSame(0, $besar->fresh()->sisa);
+    }
+
+    public function test_whole_mass_leave_moves_to_cuti_besar_when_cuti_tahunan_is_empty(): void
+    {
+        [$karyawan, $tahunan, $besar] = $this->karyawanTetapDenganCutiBesar(sisaTahunan: 0, sisaBesar: 10);
+
+        $this->buatCutiMassalCutiTahunan($karyawan);
+
+        $pengajuan = PengajuanCuti::query()->where('karyawan_id', $karyawan->id)->sole();
+        $this->assertSame($besar->jenis_cuti_id, $pengajuan->jenis_cuti_id);
+        $this->assertSame(0, $tahunan->fresh()->sisa);
+        $this->assertSame(8, $besar->fresh()->sisa);
+    }
+
+    public function test_cancelling_batch_restores_both_cuti_tahunan_and_cuti_besar(): void
+    {
+        [$karyawan, $tahunan, $besar] = $this->karyawanTetapDenganCutiBesar(sisaTahunan: 1, sisaBesar: 10);
+        $hrd = $this->buatCutiMassalCutiTahunan($karyawan);
+
+        $this->actingAs($hrd->user)->patch(route('cuti.massal.batalkan', CutiMassal::query()->firstOrFail()))->assertRedirect();
+
+        $this->assertSame(1, $tahunan->fresh()->sisa);
+        $this->assertSame(10, $besar->fresh()->sisa);
+    }
+
+    public function test_preview_shows_days_taken_from_cuti_besar(): void
+    {
+        [$karyawan, $tahunan] = $this->karyawanTetapDenganCutiBesar(sisaTahunan: 1, sisaBesar: 10);
+
+        $baris = app(CutiMassalService::class)
+            ->previewKaryawan($tahunan->jenisCuti, Carbon::parse('2026-10-13'), Carbon::parse('2026-10-14'))
+            ->firstWhere('karyawan.id', $karyawan->id);
+
+        $this->assertSame(1, $baris['dari_cuti_besar']);
+        $this->assertFalse($baris['akan_minus']);
+    }
+
     public function test_cancelling_an_already_cancelled_batch_is_rejected(): void
     {
         $hrd = $this->karyawanUser('hrd')->karyawan;
@@ -1008,5 +1068,40 @@ class CutiMassalTest extends TestCase
         ])->assertSessionDoesntHaveErrors();
 
         return [$hrd, $karyawan, $saldo, CutiMassal::query()->firstOrFail()];
+    }
+
+    /**
+     * @return array{0: Karyawan, 1: SaldoCuti, 2: SaldoCuti}
+     */
+    protected function karyawanTetapDenganCutiBesar(int $sisaTahunan, int $sisaBesar): array
+    {
+        $karyawan = $this->karyawanUser('karyawan', ['tipe_karyawan' => TipeKaryawan::Tetap])->karyawan;
+        $saldo = fn (string $namaJenis, int $sisa) => SaldoCuti::factory()->create([
+            'karyawan_id' => $karyawan->id,
+            'jenis_cuti_id' => JenisCuti::factory()->create(['nama_jenis' => $namaJenis])->id,
+            'kuota' => 12,
+            'terpakai' => 12 - $sisa,
+            'sisa' => $sisa,
+        ]);
+
+        return [$karyawan, $saldo(JenisCuti::NAMA_CUTI_TAHUNAN, $sisaTahunan), $saldo(JenisCuti::NAMA_CUTI_BESAR, $sisaBesar)];
+    }
+
+    /**
+     * Cuti Massal Cuti Tahunan 2 hari kerja (13–14 Okt) untuk $karyawan.
+     */
+    protected function buatCutiMassalCutiTahunan(Karyawan $karyawan): Karyawan
+    {
+        $hrd = $this->karyawanUser('hrd')->karyawan;
+
+        $this->actingAs($hrd->user)->post(route('cuti.massal.store'), [
+            'jenis_cuti_id' => JenisCuti::query()->where('nama_jenis', JenisCuti::NAMA_CUTI_TAHUNAN)->value('id'),
+            'tanggal_mulai' => now()->addDays(10)->toDateString(),
+            'tanggal_selesai' => now()->addDays(11)->toDateString(),
+            'alasan' => 'Cuti bersama',
+            'karyawan_ids' => [$karyawan->id],
+        ])->assertSessionDoesntHaveErrors();
+
+        return $hrd;
     }
 }
